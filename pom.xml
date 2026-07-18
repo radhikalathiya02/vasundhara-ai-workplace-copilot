@@ -24,6 +24,10 @@
     <appium.java-client.version>9.3.0</appium.java-client.version>
     <apk-parser.version>2.6.10</apk-parser.version>
     <ddmlib.version>32.2.1</ddmlib.version>
+    <!-- Website Testing module -->
+    <jsoup.version>1.18.1</jsoup.version>
+    <playwright.version>1.47.0</playwright.version>
+    <axe-core.version>4.10.0</axe-core.version>
   </properties>
 
   <repositories>
@@ -96,6 +100,30 @@
       <groupId>org.apache.poi</groupId>
       <artifactId>poi-ooxml</artifactId>
       <version>5.2.5</version>
+    </dependency>
+
+    <!-- ── Website Testing module ─────────────────────────────────────────── -->
+    <!-- jsoup: HTML fetch + DOM parsing for the crawler and static analyzers.
+         Pure Java, no external runtime — this is the always-on baseline tier. -->
+    <dependency>
+      <groupId>org.jsoup</groupId>
+      <artifactId>jsoup</artifactId>
+      <version>${jsoup.version}</version>
+    </dependency>
+    <!-- Playwright for Java: real-browser tier (rendered DOM, screenshots, console/network
+         errors, responsive emulation). OPTIONAL at runtime — WebBrowserService degrades
+         gracefully to the jsoup baseline when the browser binaries are not installed. -->
+    <dependency>
+      <groupId>com.microsoft.playwright</groupId>
+      <artifactId>playwright</artifactId>
+      <version>${playwright.version}</version>
+    </dependency>
+    <!-- Deque axe-core official Java bindings for Playwright: WCAG 2.x accessibility scanning.
+         Also runtime-optional (needs the browser tier). -->
+    <dependency>
+      <groupId>com.deque.html.axe-core</groupId>
+      <artifactId>playwright</artifactId>
+      <version>${axe-core.version}</version>
     </dependency>
 
     <!-- ── Database: JPA + H2 (default embedded) + PostgreSQL (prod profile) ── -->

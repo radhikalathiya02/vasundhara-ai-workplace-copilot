@@ -30,7 +30,8 @@ public class SpaController {
         "/devices",
         "/reports",
         "/ai-qa-automation",
-        "/ai-qa-automation/android"
+        "/ai-qa-automation/android",
+        "/website-testing"
     })
     public String spaPage() {
         return "forward:/index.html";
@@ -39,6 +40,12 @@ public class SpaController {
     /** Run detail page — /runs/{id} where id is a UUID with no dots. */
     @GetMapping("/runs/{id:[^.]+}")
     public String spaRunDetail(@PathVariable String id) {
+        return "forward:/index.html";
+    }
+
+    /** Website-scan detail page — /website-testing/{id} (shareable scan link). */
+    @GetMapping("/website-testing/{id:[^.]+}")
+    public String spaWebScan(@PathVariable String id) {
         return "forward:/index.html";
     }
 }

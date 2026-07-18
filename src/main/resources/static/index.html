@@ -28,7 +28,7 @@
   html[data-theme="light"]{
     --bg:#f5f7fb; --surface:#ffffff; --surface-2:#f7f9fd; --line:#e7ebf3; --line-2:#eff2f8;
     --txt:#0e1524; --txt-2:#4a5369; --txt-3:#aab2c6; --mut:#7c869e;
-    --side:#ffffff; --side-txt:#4a5369; --side-active:#eef2ff; --side-line:#e9edf5;
+    --side:linear-gradient(180deg,#f4f7fd 0%,#eaeff9 100%); --side-txt:#4b5573; --side-active:#ffffff; --side-line:#e2e7f3;
     --track:#eef1f8; --logo-bg:#ffffff; --logo-pad:7px 10px;
     --input:#ffffff; --hover:#f1f4fb;
   }
@@ -351,12 +351,12 @@
   .avatar{box-shadow:0 0 0 2px rgba(255,255,255,.12)}
 
   /* --- Light mode: sidebar is light, so override the dark-background redesign rules --- */
-  html[data-theme="light"] .nav-label{color:var(--txt-2)}
-  html[data-theme="light"] .nav-item:hover{background:var(--hover);color:var(--txt)}
-  html[data-theme="light"] .nav-item.active{background:var(--side-active);color:var(--brand)}
-  html[data-theme="light"] .iconbtn:hover{background:var(--hover);color:var(--txt)}
+  html[data-theme="light"] .nav-label{color:#7a85a3}
+  html[data-theme="light"] .nav-item:hover{background:rgba(255,255,255,.7);color:var(--txt)}
+  html[data-theme="light"] .nav-item.active{background:#ffffff;color:var(--brand);box-shadow:0 1px 2px rgba(16,24,40,.06),0 1px 3px rgba(59,108,246,.08)}
+  html[data-theme="light"] .iconbtn:hover{background:rgba(255,255,255,.7);color:var(--txt)}
   html[data-theme="light"] .signout{color:var(--mut)}
-  html[data-theme="light"] .avatar{box-shadow:0 0 0 2px var(--line)}
+  html[data-theme="light"] .avatar{box-shadow:0 0 0 2px rgba(255,255,255,.9)}
 
   /* --- topbar --- */
   /* Same fixed height as the sidebar's .brand block so the header row and the logo lockup align. */
@@ -1130,10 +1130,10 @@ function closeConnectModal(){
 
 /* ---------- nav / router ---------- */
 // Maps view keys to their canonical browser URL paths.
-const VIEW_TO_PATH={overview:'/overview',runs:'/runs',smartexec:'/smart-execution',l10n:'/localization',tc:'/test-cases',tcgen:'/generate-test-case',settings:'/settings',compat:'/compat',devices:'/devices',reports:'/reports',aiqa:'/ai-qa-automation',androidqa:'/ai-qa-automation/android'};
+const VIEW_TO_PATH={overview:'/overview',runs:'/runs',smartexec:'/smart-execution',l10n:'/localization',tc:'/test-cases',tcgen:'/generate-test-case',settings:'/settings',compat:'/compat',devices:'/devices',reports:'/reports',aiqa:'/ai-qa-automation',androidqa:'/ai-qa-automation/android',webqa:'/website-testing'};
 // Views relocated under the Android Application Testing page (no longer in the sidebar) —
 // their breadcrumb "back" link returns here instead of the default group behavior.
-const PARENT_VIEW={androidqa:'aiqa',smartexec:'androidqa',smartexecRunning:'androidqa',l10n:'androidqa',compat:'androidqa',tc:'androidqa',tcgen:'androidqa'};
+const PARENT_VIEW={androidqa:'aiqa',smartexec:'androidqa',smartexecRunning:'androidqa',l10n:'androidqa',compat:'androidqa',tc:'androidqa',tcgen:'androidqa',webqa:'aiqa'};
 // Reverse map — URL path → view key (detail is handled separately via /runs/{id} regex).
 const PATH_TO_VIEW=Object.fromEntries(Object.entries(VIEW_TO_PATH).map(([k,v])=>[v,k]));
 
@@ -1191,7 +1191,8 @@ function go(view,runId,replace,urlOverride,mod){
     devices:['Device Manager','Manage emulators and physical devices — multi-device parallel testing'],
     reports:['Reports','Consolidated per-run reports — view, download and export'],
     aiqa:['AI QA Automation',''],
-    androidqa:['Android Application Testing','Automation modules available for Android apps']};
+    androidqa:['Android Application Testing','Automation modules available for Android apps'],
+    webqa:['Website Testing','Enter a URL — automated full-site audit (performance, a11y, SEO, security & more)']};
   const VIEW_GROUP={overview:'Workspace',runs:'Workspace',detail:'Workspace',
     reports:'Analysis',
     devices:'Infrastructure',aiqa:'Workspace',settings:'System'};
@@ -1201,7 +1202,7 @@ function go(view,runId,replace,urlOverride,mod){
   $('#crumbGroup').onclick=PARENT_VIEW[view]?(()=>go(PARENT_VIEW[view])):null;
   $('#crumbTitle').textContent=C[view][0];
   startExecLockPolling();
-  ({overview:renderOverview,runs:renderRuns,detail:renderDetail,smartexec:renderSmartExec,smartexecRunning:renderSmartExecRunning,compat:renderCompat,l10n:renderL10n,tc:renderTc,tcgen:renderTcgenPage,settings:renderSettings,devices:renderDeviceManager,reports:renderReports,aiqa:renderAiQa,androidqa:renderAndroidQa})[view]();
+  ({overview:renderOverview,runs:renderRuns,detail:renderDetail,smartexec:renderSmartExec,smartexecRunning:renderSmartExecRunning,compat:renderCompat,l10n:renderL10n,tc:renderTc,tcgen:renderTcgenPage,settings:renderSettings,devices:renderDeviceManager,reports:renderReports,aiqa:renderAiQa,androidqa:renderAndroidQa,webqa:renderWebQa})[view]();
 }
 
 /**
@@ -1237,6 +1238,9 @@ async function navigateFromUrl(){
   // /runs/{uuid} → detail view
   const dm=path.match(/^\/runs\/([^/]+)$/);
   if(dm){go('detail',dm[1],true);return;}
+  // /website-testing/{id} → open that scan directly (shareable link)
+  const wm=path.match(/^\/website-testing\/([^/]+)$/);
+  if(wm){state.web=state.web||{};state.web.sessionId=wm[1];go('webqa',undefined,true);return;}
   // all other known paths, default to overview
   const view=PATH_TO_VIEW[path]||'overview';
   go(view,undefined,true);
@@ -1253,17 +1257,26 @@ async function renderOverview(){
     <div id="ovTrends" style="margin-top:18px"></div>
     <div id="ovRuns" style="margin-top:18px"></div>`;
 
-  const [runs, dev] = await Promise.all([
+  const [apkRuns, dev, webSessions] = await Promise.all([
     jget('/api/runs').catch(()=>[]),
-    jget('/api/device').catch(()=>({}))
+    jget('/api/device').catch(()=>({})),
+    jget('/api/web/sessions').catch(()=>[])
   ]);
+
+  // Fold website scans into the workspace-wide dashboard by normalising each scan into the same
+  // run-like shape the Android runs use (canonical state, per-severity tally, duration). This lets
+  // every aggregate metric below — counts, success rate, findings, trends — treat both uniformly.
+  const webRuns=(webSessions||[]).map(webRunLike);
+  // Unified activity feed: Android APK runs + website scans, most-recent first.
+  const runs=[...apkRuns, ...webRuns].sort((a,b)=>(b.createdAtMillis||0)-(a.createdAtMillis||0));
 
   /* ── KPIs ── */
   const completed=runs.filter(r=>r.state==='COMPLETED');
   const failed=runs.filter(r=>r.state==='FAILED');
   const agg={}; SEV.forEach(([k])=>agg[k]=0);
   runs.forEach(r=>SEV.forEach(([k])=>agg[k]+=(r.severity?.[k]||0)));
-  const avg=completed.length?completed.reduce((a,r)=>a+r.durationMillis,0)/completed.length:0;
+  const durRuns=completed.filter(r=>r.durationMillis>0);
+  const avg=durRuns.length?durRuns.reduce((a,r)=>a+r.durationMillis,0)/durRuns.length:0;
   const crit=agg.CRITICAL+agg.HIGH;
   const bugsFound=sevTotal(agg);
   // Total AI-guided test scenarios (positive/negative/boundary/edge-case) actually executed across
@@ -1272,7 +1285,8 @@ async function renderOverview(){
   const scenariosTested7=(rs)=>rs.reduce((a,r)=>a+(r.scenariosTested||0),0);
   const finished=completed.length+failed.length;
   const successRate=finished?Math.round(completed.length/finished*100):0;
-  const appsTested=new Set(runs.map(r=>r.packageName||r.apkFileName).filter(Boolean)).size;
+  // "Apps tested" = distinct Android apps + distinct websites scanned.
+  const appsTested=new Set(runs.map(r=>r.__web?('web:'+r.webHost):(r.packageName||r.apkFileName)).filter(Boolean)).size;
   const onlineCount=(dev.online||[]).length;
 
   /* ── period-over-period deltas (last 7d vs prior 7d), derived client-side from /api/runs ── */
@@ -1312,7 +1326,7 @@ async function renderOverview(){
     <div class="grid" style="grid-template-columns:1fr 1.4fr 1fr">
       <div class="card"><div class="card-h"><h3>Available Platform</h3></div>
         <div class="card-b" style="padding:8px;display:flex;flex-direction:column;gap:6px">${PLATFORMS.map(m=>`
-          <div onclick="${m.k==='android'?"go('smartexec')":"toast('"+m.n+" is on our roadmap.')"}" style="display:flex;align-items:center;gap:9px;padding:7px 8px;border:1px solid var(--line);border-radius:9px;cursor:pointer;transition:border-color .15s" onmouseenter="this.style.borderColor='var(--brand)'" onmouseleave="this.style.borderColor='var(--line)'">
+          <div onclick="${m.k==='android'?"go('smartexec')":m.k==='web'?"go('webqa')":"toast('"+m.n+" is on our roadmap.')"}" style="display:flex;align-items:center;gap:9px;padding:7px 8px;border:1px solid var(--line);border-radius:9px;cursor:pointer;transition:border-color .15s" onmouseenter="this.style.borderColor='var(--brand)'" onmouseleave="this.style.borderColor='var(--line)'">
             <span class="mod-ic mod-ic-sm" style="margin-bottom:0;flex:none">${m.ic}</span>
             <div style="flex:1;min-width:0"><div style="font-weight:600;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.n}</div></div>
             <span class="mod-badge ${m.s==='active'?'ok':''}" style="position:static;flex:none;font-size:9.5px;padding:2px 7px">${m.s==='active'?'Available':'Soon'}</span>
@@ -1341,15 +1355,50 @@ function emptyState(msg){return `<div class="empty">${ICONS.box}<div>${msg}</div
 
 /* Returns a human-readable display name for a run. */
 function runDisplayName(r){
+  if(r.__web) return r.webHost||r.url||'—';
   return r.packageName||r.apkFileName||'—';
+}
+
+/* Host part of a URL, best-effort (used for the "Apps tested" tally and row labels). */
+function urlHost(u){ try{ return new URL(u).host; }catch(e){ return (u||'').replace(/^https?:\/\//,'').split('/')[0]||u; } }
+
+/* Normalise a /api/web/sessions summary into the same run-like shape the Dashboard's
+ * Android runs use, so aggregate metrics (counts, findings, trends) treat both uniformly.
+ *   COMPLETED → COMPLETED · FAILED → FAILED · STOPPED → CANCELLED · everything else → RUNNING */
+function webRunLike(s){
+  const canon = s.state==='COMPLETED' ? 'COMPLETED'
+    : s.state==='FAILED' ? 'FAILED'
+    : s.state==='STOPPED' ? 'CANCELLED'
+    : 'RUNNING';
+  const finished = s.state==='COMPLETED'||s.state==='FAILED'||s.state==='STOPPED';
+  return {
+    id: s.id,
+    __web: true,
+    url: s.url,
+    webHost: urlHost(s.url),
+    apkFileName: s.url,               // secondary label in the runs table
+    module: 'Website Testing',
+    state: canon,
+    severity: s.severity||{},
+    durationMillis: finished && s.finishedAtMillis ? Math.max(0, s.finishedAtMillis - s.createdAtMillis) : 0,
+    createdAtMillis: s.createdAtMillis,
+    scenariosTested: 0
+  };
+}
+
+/* Open a website scan from the Dashboard (Recent Runs) — mirrors the shareable /website-testing/{id} route. */
+function openWebScan(id){
+  state.web=state.web||{};
+  state.web.sessionId=id;
+  go('webqa',undefined,false,'/website-testing/'+id);
 }
 
 /* ---------- runs table (shared — overview uses this, no checkboxes/delete) ---------- */
 function runsTable(runs){
   return `<table><thead><tr><th>Application</th><th>Module</th><th>Status</th><th>Findings</th><th>Duration</th><th>Started</th></tr></thead>
-   <tbody>${runs.map(r=>`<tr onclick="go('detail','${r.id}')">
+   <tbody>${runs.map(r=>`<tr onclick="${r.__web?`openWebScan('${r.id}')`:`go('detail','${r.id}')`}">
      <td><div style="font-weight:600">${esc(runDisplayName(r))}</div>
-         <div class="muted" style="font-size:12px">${esc(r.apkFileName)}${r.versionName?' · v'+esc(r.versionName):''}</div></td>
+         <div class="muted" style="font-size:12px">${esc(r.__web?r.url:r.apkFileName)}${!r.__web&&r.versionName?' · v'+esc(r.versionName):''}</div></td>
      <td><span class="muted" style="font-size:12px">${esc(r.module||'—')}</span></td>
      <td><span class="badge b-${r.state}">${r.state}</span></td>
      <td>${sevMini(r.severity)}</td>
@@ -1580,7 +1629,7 @@ const PLATFORMS=[
    ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 9h10v6a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1z"/><path d="M7 9a5 5 0 0 1 10 0"/><path d="M4.5 10v4M19.5 10v4"/><path d="M8 5.5L6.5 4M16 5.5L17.5 4"/><circle cx="9.5" cy="8" r=".5" fill="currentColor" stroke="none"/><circle cx="14.5" cy="8" r=".5" fill="currentColor" stroke="none"/></svg>'},
   {k:'ios',n:'iOS Application Testing',d:'Automated testing for iOS apps',s:'soon',
    ic:'<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M17.05 12.5c-.03-2.7 2.2-4 2.3-4.05-1.25-1.83-3.2-2.08-3.9-2.1-1.66-.17-3.24.98-4.08.98-.85 0-2.15-.96-3.53-.93-1.82.03-3.5 1.06-4.43 2.7-1.9 3.3-.5 8.15 1.35 10.82.9 1.3 1.98 2.77 3.4 2.72 1.36-.05 1.88-.88 3.53-.88 1.64 0 2.1.88 3.55.85 1.46-.03 2.4-1.32 3.3-2.63 1.03-1.5 1.46-2.96 1.48-3.03-.03-.02-2.85-1.1-2.87-4.37z"/><path d="M14.6 4.3c.75-.9 1.24-2.16.98-3.3-1.06.04-2.36.7-3.13 1.6-.7.8-1.3 2.1-1.05 3.2 1.2.1 2.44-.6 3.2-1.5z"/></svg>'},
-  {k:'web',n:'Web Application Testing',d:'Automated testing for web apps',s:'soon',
+  {k:'web',n:'Web Application Testing',d:'Enter a URL — auto-audit the whole site',s:'active',
    ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.7 2.6 15.3 0 18M12 3c-2.6 2.7-2.6 15.3 0 18" stroke-linecap="round"/></svg>'}
 ];
 function switchConnTab(mode){
@@ -5998,7 +6047,7 @@ function dmCleanup(){
 
 function renderAiQa(){
   $('#content').innerHTML=`<div class="grid" style="grid-template-columns:repeat(3,1fr)">${PLATFORMS.map(m=>`
-    <div class="mod-card" onclick="${m.k==='android'?"go('androidqa')":"toast('"+esc(m.n)+" is on our roadmap.')"}">
+    <div class="mod-card" onclick="${m.s==='active'?("go('"+(m.k==='android'?'androidqa':'webqa')+"')"):("toast('"+esc(m.n)+" is on our roadmap.')")}">
       <span class="mod-badge ${m.s==='active'?'ok':''}">${m.s==='active'?'Available':'Soon'}</span>
       <div class="mod-ic">${m.ic}</div>
       <div class="mod-t">${esc(m.n)}</div>
@@ -6025,6 +6074,339 @@ function renderAndroidQa(){
       <div class="mod-t">${esc(m.n)}</div>
       <div class="mod-d">${esc(m.d)}</div>
     </div>`).join('')}</div>`;
+}
+
+/* ============================ Website Testing ============================ */
+const WEB_CAT_LABELS={PERFORMANCE:'Performance',ACCESSIBILITY:'Accessibility',SEO:'SEO',SECURITY:'Security',BEST_PRACTICE:'Best Practices',BROKEN_LINK:'Broken Links',JS_ERROR:'JavaScript Errors',NETWORK:'Network',RESPONSIVE:'Responsive Design',UI_UX:'UI / UX',FORM_VALIDATION:'Forms & Input Validation',HTML_VALIDATION:'HTML Validation'};
+const WEB_SEV_COLORS={CRITICAL:'#dc2626',HIGH:'#ea580c',MEDIUM:'#d97706',LOW:'#4f46e5',INFO:'#71717a'};
+const WEB_ACTIVE_STATES=['QUEUED','CRAWLING','ANALYZING','ENRICHING'];
+state.web=state.web||{sessionId:null};
+
+function renderWebQa(){
+  $('#content').innerHTML=`
+    <div style="max-width:1440px">
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-b" style="padding:20px">
+          <div style="font-weight:700;font-size:15px;margin-bottom:4px">Scan a website</div>
+          <div style="color:var(--mut);font-size:13px;margin-bottom:14px">Enter a URL and the platform crawls the whole site and produces a professional QA report — performance, accessibility (WCAG), SEO, security, forms &amp; input validation, broken links, JavaScript &amp; network errors, responsive design and best practices. Every finding includes impact, root cause, the violated standard, a code-level fix, reproduction steps and a real annotated screenshot of the affected page.</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <input id="webUrl" type="text" placeholder="example.com" spellcheck="false"
+              style="flex:1;min-width:240px;padding:11px 14px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--txt);font-size:14px"
+              onkeydown="if(event.key==='Enter')webStartScan()">
+            <button class="btn" onclick="webStartScan()" style="font-size:14px">${ic('play',15)} Start Scan</button>
+          </div>
+        </div>
+      </div>
+      <div id="webResult"></div>
+      <div id="webHistory" style="margin-top:18px"></div>
+    </div>`;
+  const s=state.web.sessionId;
+  if(s){ webPoll(); } else { webLoadHistory(); }
+}
+
+async function webStartScan(){
+  const url=($('#webUrl').value||'').trim();
+  if(!url){toast('Please enter a website URL.');return;}
+  try{
+    const r=await api('/api/web/scan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url})});
+    if(!r.ok){const e=await r.json().catch(()=>({}));toast(e.message||'Could not start scan.');return;}
+    const d=await r.json();
+    state.web.sessionId=d.id;
+    if(window.location.pathname!=='/website-testing/'+d.id) history.pushState({view:'webqa'},'','/website-testing/'+d.id);
+    webPoll();  // self-schedules the live polling loop
+  }catch(e){toast('Failed to start scan: '+e.message);}
+}
+
+async function webPoll(){
+  const id=state.web.sessionId; if(!id)return;
+  let s;
+  try{ s=await jget('/api/web/sessions/'+id); }catch(e){ return; }
+  const active=WEB_ACTIVE_STATES.includes(s.state);
+  if(active){ webPaintProgress(s); if(!pollTimer) pollTimer=setInterval(webPoll,1800); }
+  else { if(pollTimer){clearInterval(pollTimer);pollTimer=null;} webPaintReport(s); }
+}
+
+function webStopScan(){
+  const id=state.web.sessionId; if(!id)return;
+  api('/api/web/sessions/'+id+'/stop',{method:'POST'}).then(()=>toast('Stop requested — finishing current step…'));
+}
+function webNewScan(){
+  if(pollTimer){clearInterval(pollTimer);pollTimer=null;}
+  state.web.sessionId=null;
+  if(window.location.pathname!=='/website-testing') history.pushState({view:'webqa'},'','/website-testing');
+  renderWebQa();
+}
+
+function webShotUrl(s){ return s&&s.screenshot?('/api/web/sessions/'+s.id+'/'+s.screenshot):null; }
+
+function webPaintProgress(s){
+  const el=$('#webResult'); if(!el)return;
+  webEnsureStyle();
+  // Build the skeleton once, then update fields in place so the live screenshot never flickers.
+  if(!el.querySelector('#webProg')){
+    el.innerHTML=`<div class="card" id="webProg"><div class="card-b" style="padding:20px">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:6px">
+        <div style="font-weight:700;font-size:15px" id="webPhase"></div>
+        <button class="btn ghost sm" onclick="webStopScan()">${ic('stop',13)} Stop</button>
+      </div>
+      <div style="color:var(--mut);font-size:12.5px;margin-bottom:10px;word-break:break-all" id="webPurl"></div>
+      <div style="height:8px;background:var(--surface-2,#eee);border-radius:6px;overflow:hidden">
+        <div id="webBar" style="height:100%;width:0;background:var(--grad,#4f46e5);transition:width .4s"></div>
+      </div>
+      <div id="webCounts" style="display:flex;gap:18px;margin-top:10px;font-size:12.5px;color:var(--txt-2)"></div>
+      <div id="webCur" style="margin-top:8px;font-size:12px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+      <div class="webprog-grid">
+        <div>
+          <div id="webShotFrame" style="position:relative;background:#0b0b0f;border:1px solid var(--line);border-radius:12px;overflow-y:auto;overflow-x:hidden;height:520px">
+            <div id="webShotPh" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#a1a1aa;font-size:12.5px;text-align:center;padding:20px">
+              <div class="webspin" style="width:26px;height:26px;border:3px solid #3f3f46;border-top-color:#818cf8;border-radius:50%;animation:webspin 0.9s linear infinite"></div>
+              <div>Live page previews appear here during deep&nbsp;browser&nbsp;analysis…</div>
+            </div>
+            <img id="webShot" alt="" style="width:100%;height:auto;display:none;vertical-align:top">
+          </div>
+          <div id="webShotCap" style="margin-top:7px;font-size:11.5px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:none"></div>
+          <div style="margin-top:3px;font-size:11px;color:var(--mut)">Full-page capture — scroll inside the frame to view the whole page (header → footer).</div>
+        </div>
+        <div style="border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:12px 14px;display:flex;flex-direction:column;min-height:0">
+          <div style="font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--mut);margin-bottom:8px">Activity log</div>
+          <div id="webLogs" style="flex:1;overflow:auto;max-height:320px"></div>
+        </div>
+      </div>
+    </div></div>`;
+    if(!document.getElementById('webspin-kf')){const st=document.createElement('style');st.id='webspin-kf';st.textContent='@keyframes webspin{to{transform:rotate(360deg)}}';document.head.appendChild(st);}
+  }
+  const pct=s.percent||0;
+  $('#webPhase').textContent=s.phase||'Scanning…';
+  $('#webPurl').textContent=s.url;
+  $('#webBar').style.width=pct+'%';
+  $('#webCounts').innerHTML=`<span><b>${s.pagesAnalyzed||0}</b> analyzed</span><span><b>${s.pagesDiscovered||0}</b> discovered</span><span>${pct}%</span>`;
+  const cur=$('#webCur'); cur.textContent=s.currentPage?('▸ '+s.currentPage):''; cur.style.display=s.currentPage?'':'none';
+  $('#webLogs').innerHTML=(s.logs||[]).slice(-12).map(l=>`<div style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--mut);line-height:1.7;word-break:break-all">${esc(l)}</div>`).join('');
+  // Live screenshot — preload then swap so it never flashes blank. Only reload on a new capture.
+  const url=webShotUrl(s), img=$('#webShot'), ph=$('#webShotPh'), cap=$('#webShotCap');
+  if(url&&img.dataset.src!==url){
+    img.dataset.src=url;
+    const pre=new Image();
+    pre.onload=()=>{ img.src=url; img.style.display=''; ph.style.display='none';
+      cap.style.display=''; cap.textContent='▸ '+(s.currentPage&&s.currentPage.startsWith('http')?s.currentPage:s.url); };
+    pre.onerror=()=>{ img.dataset.src=''; };  // not flushed yet — retry next poll
+    pre.src=url;
+  }
+}
+
+function webScoreCard(label,score){
+  if(score==null||score<0)return '';
+  const c=score>=90?'#16a34a':score>=50?'#d97706':'#dc2626';
+  return `<div style="flex:1;min-width:110px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;text-align:center">
+    <div style="font-size:26px;font-weight:800;color:${c}">${score}</div>
+    <div style="font-size:11.5px;color:var(--mut);margin-top:2px">${esc(label)}</div></div>`;
+}
+
+function webKv(k,v){ return v?`<div style="display:flex;gap:10px;margin:4px 0"><span style="flex:0 0 132px;color:var(--mut);font-size:12px">${k}</span><span style="flex:1;font-size:12.5px;color:var(--txt-2)">${esc(v)}</span></div>`:''; }
+
+function webIssueRow(i,sid){
+  const col=WEB_SEV_COLORS[i.severity]||'#71717a';
+  const badge=(t,bg)=>`<span style="background:${bg||'var(--surface-2,#eef)'};font-size:11px;padding:2px 8px;border-radius:10px;margin-left:6px">${esc(t)}</span>`;
+  const pages=i.affectedPageCount>1?badge(i.affectedPageCount+' pages'):'';
+  const wcag=i.wcag?badge(i.wcag):'';
+  const src=(i.sources&&i.sources.length)?badge(i.sources.join('+'),'#f4f4f5'):'';
+  const eviUrl=i.evidence&&sid?('/api/web/sessions/'+sid+'/'+i.evidence):null;
+  const evi=eviUrl?`<figure style="margin:10px 0;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#0b0b0f">
+      <a href="${eviUrl}" target="_blank" rel="noopener"><img src="${eviUrl}" loading="lazy" style="display:block;max-width:100%;height:auto"></a>
+      <figcaption style="padding:6px 10px;font-size:11.5px;color:var(--mut);background:var(--surface)">${i.evidenceAnnotated?'Screenshot of the affected page — the problem element is outlined in red.':'Screenshot of the affected page.'}</figcaption>
+    </figure>`:'';
+  const lbl=t=>`<div style="font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--mut);margin:10px 0 4px">${t}</div>`;
+  const el=(i.element&&!i.element.startsWith('dup-'))?lbl('Element / locator')+`<code style="display:inline-block;background:var(--surface-2,#f4f4f5);padding:3px 7px;border-radius:5px;font-size:11.5px;word-break:break-all">${esc(i.element.slice(0,220))}</code>`:'';
+  const repro=(i.reproSteps&&i.reproSteps.length)?lbl('Steps to reproduce')+`<ol style="margin:0;padding-left:20px;font-size:12.5px;color:var(--txt-2)">${i.reproSteps.map(s=>`<li style="margin:2px 0">${esc(s)}</li>`).join('')}</ol>`:'';
+  const fix=i.codeFix?lbl('Suggested fix')+`<pre style="background:#0b1020;color:#e5e7eb;padding:11px 13px;border-radius:8px;overflow-x:auto;font-size:12px;font-family:'JetBrains Mono',ui-monospace,monospace;white-space:pre-wrap;word-break:break-word;margin:0">${esc(i.codeFix)}</pre>`:'';
+  const rec=i.recommendation?`<div style="margin-top:8px;color:#3730a3;font-size:12.5px">▸ ${esc(i.recommendation)}</div>`:'';
+  const when=i.detectedAtMillis?fmtTime(i.detectedAtMillis):'';
+  const pgs=(i.affectedPages&&i.affectedPages.length)?(i.affectedPages.length===1?'Page: '+esc(i.affectedPages[0]):'Affected pages: '+esc(i.affectedPages[0])+(i.affectedPages.length>1?' +'+(i.affectedPages.length-1)+' more':'')):'';
+  const conf=(i.confidence!=null&&i.confidence<1)?' · Confidence '+Math.round(i.confidence*100)+'%':'';
+  return `<details style="border:1px solid var(--line);border-left:3px solid ${col};border-radius:8px;margin:7px 0;background:var(--surface)">
+    <summary style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:11px 13px;cursor:pointer;list-style:none">
+      <span style="font-size:10.5px;font-weight:700;color:#fff;background:${col};padding:2px 7px;border-radius:5px">${i.severity}</span>
+      <b style="font-size:13.5px">${esc(i.title)}</b>${pages}${wcag}${src}
+    </summary>
+    <div style="padding:0 13px 13px">
+      ${i.detail?`<div style="margin:2px 0 4px;color:var(--txt-2);font-size:12.5px">${esc(i.detail)}</div>`:''}
+      ${evi}
+      <div style="margin:6px 0">${webKv('Impact',i.impact)}${webKv('Root cause',i.rootCause)}${webKv('Standard / guideline',i.standard)}</div>
+      ${el}${repro}${fix}${rec}
+      <div style="margin-top:10px;border-top:1px dashed var(--line);padding-top:8px;font-size:11px;color:var(--mut);word-break:break-all">${pgs}${when?(pgs?' · ':'')+'Detected '+when:''}${conf}</div>
+    </div>
+  </details>`;
+}
+
+let webRpt=null; const webF={sev:'',cat:'',q:''};
+
+function webEnsureStyle(){
+  if(document.getElementById('webqa-css'))return;
+  const st=document.createElement('style');st.id='webqa-css';
+  st.textContent=`
+  .webgrid{display:grid;grid-template-columns:300px minmax(0,1fr);gap:16px;align-items:start;margin-top:16px}
+  .websticky{position:sticky;top:12px}
+  .webscore-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:12px;margin-top:16px}
+  .webprog-grid{display:grid;grid-template-columns:minmax(0,1.8fr) minmax(0,1fr);gap:16px;margin-top:14px;align-items:stretch}
+  @media(max-width:900px){.webprog-grid{grid-template-columns:1fr}}
+  .webfbtn{display:flex;justify-content:space-between;align-items:center;width:100%;text-align:left;border:1px solid var(--line);background:var(--surface);color:var(--txt);border-radius:8px;padding:7px 10px;margin:5px 0;cursor:pointer;font-size:12.5px;transition:border-color .15s,box-shadow .15s}
+  .webfbtn:hover{border-color:var(--brand,#4f46e5)}
+  .webfbtn.active{border-color:var(--brand,#4f46e5);box-shadow:0 0 0 2px rgba(79,70,229,.16)}
+  @media(max-width:980px){.webgrid{grid-template-columns:1fr}.websticky{position:static}}
+  `;
+  document.head.appendChild(st);
+}
+
+function webFilteredIssues(){
+  const q=(webF.q||'').toLowerCase().trim();
+  return (webRpt.issues||[]).filter(i=>{
+    if(webF.sev && i.severity!==webF.sev)return false;
+    if(webF.cat && i.category!==webF.cat)return false;
+    if(q){const hay=((i.title||'')+' '+(i.detail||'')+' '+(i.impact||'')+' '+(i.rootCause||'')+' '+(i.standard||'')+' '+(i.element||'')).toLowerCase();if(!hay.includes(q))return false;}
+    return true;
+  });
+}
+function webRenderFindings(){
+  const box=$('#webFindings'); if(!box||!webRpt)return;
+  const list=webFilteredIssues(), total=(webRpt.issues||[]).length;
+  const cnt=$('#webFindCount'); if(cnt)cnt.textContent=list.length+' of '+total+(total===1?' finding':' findings')+((webF.sev||webF.cat||webF.q)?' shown':'');
+  if(!list.length){box.innerHTML=`<div style="text-align:center;padding:34px;color:var(--mut)">${total?'No findings match the current filters.':'No issues detected. 🎉'}</div>`;return;}
+  let html='';
+  Object.keys(WEB_CAT_LABELS).forEach(cat=>{
+    const g=list.filter(i=>i.category===cat); if(!g.length)return;
+    html+=`<h3 id="webcat-${cat}" style="font-size:13.5px;margin:18px 0 6px;color:var(--brand,#4f46e5);border-top:1px solid var(--line);padding-top:14px">${WEB_CAT_LABELS[cat]} <span style="color:var(--mut)">(${g.length})</span></h3>`+g.map(i=>webIssueRow(i,webRpt.id)).join('');
+  });
+  box.innerHTML=html;
+}
+function webRenderSevFilters(){
+  const box=$('#webSevFilters'); if(!box||!webRpt)return;
+  const sev=(webRpt.summary||{}).countsBySeverity||{};
+  box.innerHTML=['CRITICAL','HIGH','MEDIUM','LOW','INFO'].map(k=>`<button class="webfbtn ${webF.sev===k?'active':''}" onclick="webToggleSev('${k}')"><span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${WEB_SEV_COLORS[k]};margin-right:8px"></span>${k[0]+k.slice(1).toLowerCase()}</span><b>${sev[k]||0}</b></button>`).join('');
+}
+function webRenderCatNav(){
+  const box=$('#webCatNav'); if(!box||!webRpt)return;
+  const counts={}; (webRpt.issues||[]).forEach(i=>counts[i.category]=(counts[i.category]||0)+1);
+  const cats=Object.keys(WEB_CAT_LABELS).filter(c=>counts[c]);
+  box.innerHTML=cats.length?cats.map(c=>`<button class="webfbtn ${webF.cat===c?'active':''}" onclick="webToggleCat('${c}')"><span>${WEB_CAT_LABELS[c]}</span><b>${counts[c]}</b></button>`).join(''):'<div style="color:var(--mut);font-size:12px;padding:4px 0">No issues to categorise.</div>';
+}
+function webToggleSev(k){webF.sev=(webF.sev===k?'':k);webRenderSevFilters();webRenderFindings();}
+function webToggleCat(c){webF.cat=(webF.cat===c?'':c);webRenderCatNav();webRenderFindings();if(webF.cat){const t=$('#webcat-'+c);if(t)t.scrollIntoView({behavior:'smooth',block:'start'});}}
+function webSearch(v){webF.q=v;webRenderFindings();}
+function webClearFilters(){webF.sev='';webF.cat='';webF.q='';const si=$('#webSearch');if(si)si.value='';webRenderSevFilters();webRenderCatNav();webRenderFindings();}
+function webDownloadPdf(id){toast('Generating PDF — this can take a few seconds…');const a=document.createElement('a');a.href='/api/web/sessions/'+id+'/report.pdf';a.download='';document.body.appendChild(a);a.click();a.remove();}
+function webShare(id){const url=location.origin+'/website-testing/'+id;const done=()=>toast('Report link copied — share it with your team.');if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(url).then(done).catch(()=>prompt('Copy this report link:',url));}else{prompt('Copy this report link:',url);}}
+
+function webPaintReport(s){
+  const el=$('#webResult'); if(!el)return;
+  webEnsureStyle();
+  webRpt=s; webF.sev='';webF.cat='';webF.q='';
+  const sum=s.summary||{}, issues=s.issues||[], sev=sum.countsBySeverity||{};
+  const stateBadge=s.state==='FAILED'?`<span style="color:var(--fail,#dc2626)">${ic('alert',14)} Failed${s.error?': '+esc(s.error):''}</span>`
+    :s.state==='STOPPED'?`<span style="color:var(--warn,#d97706)">Stopped early — partial results</span>`
+    :`<span style="color:var(--pass,#16a34a)">${ic('check',14)} Completed</span>`;
+  // Scorecards
+  let cards=webScoreCard('Overall',sum.overallScore);
+  if(sum.performanceScore>=0)cards+=webScoreCard('Performance',sum.performanceScore);
+  const catScores=sum.categoryScores||{},catCounts=sum.countsByCategory||{};
+  Object.keys(catScores).forEach(k=>{if((catCounts[k]||0)>0)cards+=webScoreCard(WEB_CAT_LABELS[k]||k,catScores[k]);});
+  // CWV
+  const cwv=sum.coreWebVitals||{};
+  const cwvHtml=Object.keys(cwv).length?`<div class="card" style="margin-bottom:16px"><div class="card-b" style="padding:16px"><div style="font-weight:700;margin-bottom:8px">Core Web Vitals</div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:16px">${Object.entries(cwv).map(([k,v])=>`<div style="display:flex;flex-direction:column"><span style="color:var(--mut);font-size:12px">${esc(k)}</span><b style="font-size:16px">${esc(v)}</b></div>`).join('')}</div></div></div>`:'';
+  // Executive summary
+  const crit=(sev.CRITICAL||0),hi=(sev.HIGH||0),score=sum.overallScore;
+  const verdict=score>=90?'in good health':score>=70?'in fair health with clear areas to improve':score>=50?'showing significant quality gaps':'at high risk with serious quality and reliability problems';
+  const top=issues.slice(0,5).map(i=>`<li style="margin:3px 0"><span style="font-size:10px;font-weight:700;color:#fff;background:${WEB_SEV_COLORS[i.severity]||'#71717a'};padding:1px 6px;border-radius:4px">${i.severity}</span> ${esc(i.title)} <span style="color:var(--mut)">(${WEB_CAT_LABELS[i.category]||i.category})</span></li>`).join('');
+  const execHtml=`<div class="card" style="margin-bottom:16px"><div class="card-b" style="padding:18px">
+    <div style="font-weight:700;margin-bottom:6px">Executive summary</div>
+    <div style="font-size:13px;color:var(--txt-2);line-height:1.6">This scan crawled <b>${sum.pagesAnalyzed||0}</b> page(s) of <b>${esc(s.url)}</b> and surfaced <b>${sum.totalIssues||0}</b> distinct issue(s). The site scores <b>${score}/100</b> overall — ${verdict}.${(crit+hi>0)?` <b>${crit}</b> critical and <b>${hi}</b> high-severity issue(s) need prompt attention.`:' No critical or high-severity issues were detected — remaining items are quality and best-practice improvements.'}</div>
+    ${top?`<div style="font-size:11.5px;color:var(--mut);margin:10px 0 3px">Top priorities</div><ol style="margin:0;padding-left:18px;font-size:12.5px">${top}</ol>`:''}
+  </div></div>`;
+  // Page previews
+  const shots=(s.pages||[]).filter(p=>p.screenshot);
+  const galleryHtml=shots.length?`<div class="card" style="margin-bottom:16px"><div class="card-b" style="padding:16px">
+    <div style="font-weight:700;margin-bottom:10px">Page previews (${shots.length})</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px">
+    ${shots.map(p=>`<a href="/api/web/sessions/${s.id}/${p.screenshot}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit">
+      <div style="border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#0b0b0f;height:120px"><img src="/api/web/sessions/${s.id}/${p.screenshot}" loading="lazy" style="width:100%;height:100%;object-fit:cover;object-position:top center"></div>
+      <div style="font-size:11px;color:var(--mut);margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(p.url)}</div></a>`).join('')}
+    </div></div></div>`:'';
+  // Pages table (with thumbnails)
+  const pages=(s.pages||[]).map(p=>`<tr>
+    <td style="padding:6px 8px;width:66px">${p.screenshot?`<img src="/api/web/sessions/${s.id}/${p.screenshot}" loading="lazy" style="width:56px;height:34px;object-fit:cover;object-position:top center;border-radius:4px;border:1px solid var(--line)">`:''}</td>
+    <td style="padding:6px 8px;word-break:break-all">${esc(p.url)}</td><td style="padding:6px 8px">${p.status}</td><td style="padding:6px 8px">${p.issueCount}</td><td style="padding:6px 8px">${p.loadTimeMs} ms</td></tr>`).join('');
+  const tierNote=`Browser tier: <b>${s.browserUsed?'on':'baseline only'}</b> · Lighthouse: <b>${s.pageSpeedUsed?'on':'n/a'}</b>`;
+  const scoreCol=score>=90?'#16a34a':score>=50?'#d97706':'#dc2626';
+
+  el.innerHTML=`
+    <div class="card"><div class="card-b" style="padding:20px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">
+        <div style="min-width:0"><div style="font-weight:700;font-size:16px;word-break:break-all">${esc(s.url)}</div>
+          <div style="font-size:12px;color:var(--mut);margin-top:3px">${stateBadge} · ${sum.pagesAnalyzed||0} pages · ${sum.totalIssues||0} issues · ${tierNote}</div></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn sm" onclick="webDownloadPdf('${s.id}')">${ic('doc',13)} Download PDF</button>
+          <a class="btn ghost sm" href="/api/web/sessions/${s.id}/report.html" target="_blank" rel="noopener">${ic('doc',13)} HTML</a>
+          <button class="btn ghost sm" onclick="webShare('${s.id}')">Share link</button>
+          <button class="btn ghost sm" onclick="webNewScan()">${ic('refresh',13)} New scan</button>
+        </div>
+      </div>
+      <div class="webscore-grid">${cards}</div>
+    </div></div>
+    <div class="webgrid">
+      <aside class="websticky">
+        <div class="card"><div class="card-b" style="padding:16px">
+          <div style="text-align:center;margin-bottom:6px"><div style="font-size:42px;font-weight:800;color:${scoreCol};line-height:1">${score}</div><div style="font-size:11.5px;color:var(--mut);margin-top:2px">Overall score / 100</div></div>
+          <div style="border-top:1px solid var(--line);margin:12px 0 8px"></div>
+          <div style="font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--mut);margin-bottom:2px">Filter by severity</div>
+          <div id="webSevFilters"></div>
+          <div style="font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--mut);margin:14px 0 2px">Categories</div>
+          <div id="webCatNav"></div>
+          <button class="btn ghost sm" style="width:100%;margin-top:12px" onclick="webClearFilters()">Clear filters</button>
+        </div></div>
+      </aside>
+      <main style="min-width:0">
+        ${execHtml}
+        ${cwvHtml}
+        <div class="card" style="margin-bottom:16px"><div class="card-b" style="padding:16px">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:4px">
+            <div style="font-weight:700;font-size:15px">Detailed findings</div>
+            <input id="webSearch" placeholder="Search findings…" oninput="webSearch(this.value)" spellcheck="false" style="flex:1;min-width:180px;max-width:320px;padding:8px 12px;border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--txt);font-size:13px">
+          </div>
+          <div id="webFindCount" style="font-size:12px;color:var(--mut);margin-bottom:6px"></div>
+          <div id="webFindings"></div>
+        </div></div>
+        ${galleryHtml}
+        <div class="card"><div class="card-b" style="padding:16px">
+          <div style="font-weight:700;margin-bottom:8px">Pages analyzed (${(s.pages||[]).length})</div>
+          <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12.5px">
+            <thead><tr style="border-bottom:1px solid var(--line)">${['','URL','Status','Issues','Load'].map(x=>`<th style="text-align:left;padding:6px 8px;color:var(--mut)">${x}</th>`).join('')}</tr></thead>
+            <tbody>${pages}</tbody></table></div>
+        </div></div>
+      </main>
+    </div>`;
+  webRenderSevFilters(); webRenderCatNav(); webRenderFindings();
+}
+
+async function webLoadHistory(){
+  const el=$('#webHistory'); if(!el)return;
+  let list=[];
+  try{ list=await jget('/api/web/sessions'); }catch(e){ return; }
+  if(!list.length){el.innerHTML='';return;}
+  el.innerHTML=`<div class="card"><div class="card-b" style="padding:16px">
+    <div style="font-weight:700;margin-bottom:10px">Recent scans</div>
+    ${list.slice(0,12).map(r=>`<div onclick="webOpen('${r.id}')" style="display:flex;justify-content:space-between;align-items:center;padding:9px 4px;border-bottom:1px solid var(--line);cursor:pointer">
+      <div style="min-width:0"><div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:420px">${esc(r.url)}</div>
+        <div style="font-size:11.5px;color:var(--mut)">${fmtTime(r.createdAtMillis)} · ${r.state}${r.pagesAnalyzed?' · '+r.pagesAnalyzed+' pages':''}</div></div>
+      <div style="display:flex;align-items:center;gap:10px">${r.overallScore!=null?`<span style="font-weight:800;color:${r.overallScore>=90?'#16a34a':r.overallScore>=50?'#d97706':'#dc2626'}">${r.overallScore}</span>`:''}
+        <span style="font-size:11.5px;color:var(--mut)">${r.totalIssues||0} issues</span></div>
+    </div>`).join('')}
+  </div></div>`;
+}
+function webOpen(id){
+  state.web.sessionId=id;
+  if(pollTimer){clearInterval(pollTimer);pollTimer=null;}
+  if(window.location.pathname!=='/website-testing/'+id) history.pushState({view:'webqa'},'','/website-testing/'+id);
+  $('#webHistory').innerHTML='';
+  webPoll();
 }
 
 async function renderDeviceManager(){
