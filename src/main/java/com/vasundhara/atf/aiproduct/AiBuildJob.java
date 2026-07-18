@@ -27,6 +27,8 @@ public class AiBuildJob {
     private List<String> existingScreens;
     private MergeStrategy mergeStrategy;
     private QueueBehavior queueBehavior;
+    private String claudeModel = "claude-sonnet-4-6";
+    private String claudeEffort = "medium";
     private Integer queuePosition;
     private Integer estimatedWaitSeconds;
     private String errorMessage;
@@ -89,6 +91,10 @@ public class AiBuildJob {
     public void setMergeStrategy(MergeStrategy mergeStrategy) { this.mergeStrategy = mergeStrategy; }
     public QueueBehavior getQueueBehavior() { return queueBehavior; }
     public void setQueueBehavior(QueueBehavior queueBehavior) { this.queueBehavior = queueBehavior; }
+    public String getClaudeModel() { return claudeModel; }
+    public void setClaudeModel(String claudeModel) { this.claudeModel = claudeModel; }
+    public String getClaudeEffort() { return claudeEffort; }
+    public void setClaudeEffort(String claudeEffort) { this.claudeEffort = claudeEffort; }
     public Integer getQueuePosition() { return queuePosition; }
     public void setQueuePosition(Integer queuePosition) { this.queuePosition = queuePosition; }
     public Integer getEstimatedWaitSeconds() { return estimatedWaitSeconds; }

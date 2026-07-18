@@ -262,6 +262,20 @@
         <option value="QUEUE">Queue my build</option>
         <option value="REJECT">Reject — notify me immediately</option>
       </select>
+
+      <label>Claude Model</label>
+      <select id="claudeModel">
+        <option value="claude-sonnet-4-6">Sonnet 4.6 — Balanced (Recommended)</option>
+        <option value="claude-opus-4-8">Opus 4.8 — Best quality, slower</option>
+        <option value="claude-haiku-4-5-20251001">Haiku 4.5 — Fastest, lighter tasks</option>
+      </select>
+
+      <label>Claude Effort</label>
+      <select id="claudeEffort">
+        <option value="medium">Medium — Default</option>
+        <option value="high">High — More thorough, slower</option>
+        <option value="low">Low — Fastest</option>
+      </select>
     </div>
     <div class="btn-row">
       <button class="btn btn-secondary" onclick="goStep(2)">← Back</button>
@@ -478,6 +492,8 @@ function buildReview() {
     ['Theme Color', '<span class="badge badge-blue">' + document.getElementById('themeColor').value + '</span>'],
     ['Merge Strategy', '<span class="badge badge-green">' + document.getElementById('mergeStrategy').value + '</span>'],
     ['If Busy', '<span class="badge badge-warn">' + document.getElementById('queueBehavior').value + '</span>'],
+    ['Claude Model', '<span class="badge badge-blue">' + document.getElementById('claudeModel').value + '</span>'],
+    ['Claude Effort', '<span class="badge badge-blue">' + document.getElementById('claudeEffort').value + '</span>'],
     ['Gemini Analysis', geminiSpec ? '<span class="badge badge-green">✓ Included</span>' : '<span class="badge badge-warn">Skipped</span>'],
   ];
   document.getElementById('reviewTable').innerHTML = rows.map(([k,v])=>
@@ -497,6 +513,8 @@ async function submitBuild() {
     themeColor: document.getElementById('themeColor').value.trim(),
     mergeStrategy: document.getElementById('mergeStrategy').value,
     queueBehavior: document.getElementById('queueBehavior').value,
+    claudeModel: document.getElementById('claudeModel').value,
+    claudeEffort: document.getElementById('claudeEffort').value,
     geminiSpecJson: geminiSpec ? JSON.stringify(geminiSpec) : null
   };
 
@@ -619,6 +637,8 @@ function resetWizard() {
   document.getElementById('packageName').value = '';
   document.getElementById('description').value = '';
   document.getElementById('themeColor').value = '#6C63FF';
+  document.getElementById('claudeModel').value = 'claude-sonnet-4-6';
+  document.getElementById('claudeEffort').value = 'medium';
   document.getElementById('screenList').innerHTML = '';
   document.getElementById('analyzeResult').classList.remove('show');
   document.getElementById('detectInfo').classList.remove('show');

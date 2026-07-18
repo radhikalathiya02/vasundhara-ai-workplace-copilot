@@ -75,6 +75,8 @@ public class AiBuildService {
         job.setMergeStrategy(req.getMergeStrategy());
         job.setQueueBehavior(req.getQueueBehavior());
         job.setGeminiSpecJson(req.getGeminiSpecJson());
+        if (req.getClaudeModel() != null && !req.getClaudeModel().isBlank()) job.setClaudeModel(req.getClaudeModel());
+        if (req.getClaudeEffort() != null && !req.getClaudeEffort().isBlank()) job.setClaudeEffort(req.getClaudeEffort());
         job.setWorkspacePath(workspaceBase + "/" + id);
         job.setLogPath(job.getWorkspacePath() + "/build.log");
 
@@ -125,7 +127,8 @@ public class AiBuildService {
             String prompt = claudeCli.buildPrompt(job);
             ClaudeResult claudeResult = claudeCli.run(
                     job.getWorkspacePath(), prompt, null,
-                    line -> writeLog(job, line)
+                    line -> writeLog(job, line),
+                    job.getClaudeModel(), job.getClaudeEffort()
             );
             if (claudeResult.getSessionId() != null) {
                 job.setSessionId(claudeResult.getSessionId());
@@ -149,7 +152,8 @@ public class AiBuildService {
                             "Build failed. Claude is fixing errors (attempt " + attempt + ")…");
                     String healPrompt = claudeCli.buildHealingPrompt(job, lastError);
                     claudeCli.run(job.getWorkspacePath(), healPrompt, job.getSessionId(),
-                            line -> writeLog(job, line));
+                            line -> writeLog(job, line),
+                            job.getClaudeModel(), job.getClaudeEffort());
                 }
             }
 

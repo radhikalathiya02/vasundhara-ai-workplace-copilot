@@ -14,6 +14,8 @@ public class BuildRequest {
     private MergeStrategy mergeStrategy = MergeStrategy.SKIP_DUPLICATES;
     private QueueBehavior queueBehavior = QueueBehavior.QUEUE;
     private String geminiSpecJson;
+    private String claudeModel = "claude-sonnet-4-6";
+    private String claudeEffort = "medium";
 
     public String getReferenceUrl() { return referenceUrl; }
     public void setReferenceUrl(String referenceUrl) { this.referenceUrl = referenceUrl; }
@@ -35,4 +37,8 @@ public class BuildRequest {
     public void setQueueBehavior(QueueBehavior queueBehavior) { this.queueBehavior = queueBehavior; }
     public String getGeminiSpecJson() { return geminiSpecJson; }
     public void setGeminiSpecJson(String geminiSpecJson) { this.geminiSpecJson = geminiSpecJson; }
+    public String getClaudeModel() { return claudeModel; }
+    public void setClaudeModel(String claudeModel) { this.claudeModel = claudeModel; }
+    public String getClaudeEffort() { return claudeEffort; }
+    public void setClaudeEffort(String claudeEffort) { this.claudeEffort = claudeEffort; }
 }

@@ -34,6 +34,11 @@ public class ClaudeCliService {
      * @param logConsumer   called for each line of output (for log tail / file)
      */
     public ClaudeResult run(String workDir, String prompt, String resumeId, Consumer<String> logConsumer) {
+        return run(workDir, prompt, resumeId, logConsumer, null, null);
+    }
+
+    public ClaudeResult run(String workDir, String prompt, String resumeId, Consumer<String> logConsumer,
+                            String model, String effort) {
         List<String> cmd = new ArrayList<>();
         cmd.add("claude");
         cmd.add("-p");
@@ -44,6 +49,15 @@ public class ClaudeCliService {
         cmd.add("--output-format");
         cmd.add("stream-json");
         cmd.add("--verbose");
+
+        if (model != null && !model.isBlank()) {
+            cmd.add("--model");
+            cmd.add(model);
+        }
+        if (effort != null && !effort.isBlank()) {
+            cmd.add("--effort");
+            cmd.add(effort);
+        }
 
         if (resumeId != null && !resumeId.isBlank()) {
             cmd.add("--resume");
@@ -124,6 +138,8 @@ INSTRUCTIONS:
 6. Use Kotlin + Jetpack Compose + Material3
 7. Keep each screen simple: header, content area, basic navigation
 8. ICONS: Only use Icons.Default.* from the base material-icons set (Home, Settings, ArrowBack, Menu, Add, Close, Search, Check, Star, Favorite, Share, Delete, Edit, Info, Warning, Person, Lock, Visibility, VisibilityOff, PlayArrow, Pause, Stop). Do NOT use icons that require material-icons-extended (SmartToy, Public, People, EmojiEvents, Leaderboard, ContentCopy, SportsEsports, etc.)
+9. NAVIGATION: Every screen that is not the root/home screen must include a BackHandler { navController.popBackStack() } and a top AppBar with a back arrow (Icons.Default.ArrowBack) that calls navController.popBackStack().
+10. RESPONSIVE: Use fillMaxWidth(), fillMaxSize(), weight() for layouts. No hardcoded dp widths for content areas. Use BoxWithConstraints if layout needs to adapt to screen size.
 
 Complete the task, then stop.
 """.formatted(job.getWorkspacePath(), job.getAppName(), job.getPackageName(),
@@ -145,6 +161,8 @@ INSTRUCTIONS:
 5. Do NOT run any gradle or build commands
 6. Use Kotlin + Jetpack Compose + Material3
 7. ICONS: Only use Icons.Default.* from the base material-icons set (Home, Settings, ArrowBack, Menu, Add, Close, Search, Check, Star, Favorite, Share, Delete, Edit, Info, Warning, Person, Lock, Visibility, VisibilityOff, PlayArrow, Pause, Stop). Do NOT use icons that require material-icons-extended.
+8. NAVIGATION: Every screen that is not the root/home screen must include a BackHandler { navController.popBackStack() } and a top AppBar with a back arrow (Icons.Default.ArrowBack) that calls navController.popBackStack().
+9. RESPONSIVE: Use fillMaxWidth(), fillMaxSize(), weight() for layouts. No hardcoded dp widths for content areas. Use BoxWithConstraints if layout needs to adapt to screen size.
 
 Complete the task, then stop.
 """.formatted(job.getWorkspacePath(), job.getAppName(), job.getPackageName(),
@@ -169,6 +187,8 @@ INSTRUCTIONS:
 7. Do NOT run any gradle or build commands
 8. Use Kotlin + Jetpack Compose + Material3
 9. ICONS: Only use Icons.Default.* from the base material-icons set (Home, Settings, ArrowBack, Menu, Add, Close, Search, Check, Star, Favorite, Share, Delete, Edit, Info, Warning, Person, Lock, Visibility, VisibilityOff, PlayArrow, Pause, Stop). Do NOT use icons that require material-icons-extended.
+10. NAVIGATION: Every screen that is not the root/home screen must include a BackHandler { navController.popBackStack() } and a top AppBar with a back arrow (Icons.Default.ArrowBack) that calls navController.popBackStack().
+11. RESPONSIVE: Use fillMaxWidth(), fillMaxSize(), weight() for layouts. No hardcoded dp widths for content areas. Use BoxWithConstraints if layout needs to adapt to screen size.
 
 Complete the task, then stop.
 """.formatted(job.getWorkspacePath(), job.getAppName(), job.getPackageName(),
@@ -197,7 +217,9 @@ Fix the compilation errors. Rules:
 3. Do NOT run gradle or any build commands
 4. Fix Kotlin/Compose syntax errors, missing imports, unresolved references
 5. ICONS: Replace any Icons.Default.* that require material-icons-extended (SmartToy, Public, People, EmojiEvents, Leaderboard, ContentCopy, SportsEsports, etc.) with equivalent basic Icons.Default.* available in the base set (Home, Settings, ArrowBack, Add, Star, Person, Info, etc.)
-6. If a screen is unfixable, remove it and clean up its NavGraph entry
+6. NAVIGATION: Ensure every non-root screen has BackHandler { navController.popBackStack() } and AppBar back arrow
+7. RESPONSIVE: Replace any hardcoded dp widths with fillMaxWidth() / weight() / BoxWithConstraints
+8. If a screen is unfixable, remove it and clean up its NavGraph entry
 
 Complete fixes, then stop.
 """.formatted(job.getWorkspacePath(), job.getHealAttempts(), truncatedError);
