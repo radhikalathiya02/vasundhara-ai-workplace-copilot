@@ -124,6 +124,13 @@
       <scope>test</scope>
     </dependency>
 
+    <!-- Hot reload on file changes during development -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-devtools</artifactId>
+      <optional>true</optional>
+    </dependency>
+
     <!-- WebClient for Gemini API calls (V-Legal AI) -->
     <dependency>
       <groupId>org.springframework.boot</groupId>

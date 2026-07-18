@@ -10,9 +10,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 /**
  * Secures the dashboard and API behind a form-based sign-in. A single configurable
@@ -26,27 +24,12 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        // TEMPORARY: login page disabled — all requests permitted without authentication.
+        // To restore login, revert this method to require auth (see git history) and remove
+        // this comment block.
         http
             .csrf(AbstractHttpConfigurer::disable)
-            .authorizeHttpRequests(auth -> auth
-                // Login page + the assets it needs before authentication (logo, favicon).
-                .requestMatchers("/login.html", "/login", "/error", "/favicon.ico", "/logo.svg").permitAll()
-                // V-Legal AI is publicly accessible (client-facing doc generator)
-                .requestMatchers("/vlegal", "/vlegal/**", "/api/vlegal/**").permitAll()
-                .anyRequest().authenticated())
-            .formLogin(form -> form
-                .loginPage("/login.html")
-                .loginProcessingUrl("/login")
-                .defaultSuccessUrl("/", true)
-                .failureUrl("/login.html?error")
-                .permitAll())
-            .logout(logout -> logout
-                // Match any HTTP method so a plain "Sign Out" link works.
-                .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
-                .logoutSuccessUrl("/login.html?logout")
-                .invalidateHttpSession(true)
-                .deleteCookies("JSESSIONID")
-                .permitAll());
+            .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
         return http.build();
     }
 

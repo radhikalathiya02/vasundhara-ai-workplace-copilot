@@ -8,7 +8,7 @@ import java.util.List;
 
 /**
  * Creates and maintains shadow {@link TestRun} records for non-New-Test module sessions
- * (Localization, Remote Config, Test Case, Priority &amp; Logs, Compatibility Testing)
+ * (Localization, Test Case, Compatibility Testing)
  * so every execution from every module appears in the Test Run history.
  */
 @Service

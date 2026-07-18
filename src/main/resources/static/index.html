@@ -74,6 +74,8 @@
     align-items:center;justify-content:space-between;padding:0 26px;position:sticky;top:0;z-index:4}
   .crumb{font-size:18px;font-weight:700;letter-spacing:-.2px;line-height:1.15}
   .crumb-group{display:block;font-size:11px;font-weight:600;color:var(--mut);letter-spacing:.3px;margin-bottom:2px}
+  .crumb-group.is-link{cursor:pointer}
+  .crumb-group.is-link:hover{color:var(--brand);text-decoration:underline}
   .crumb small{display:block;font-size:12px;font-weight:400;color:var(--mut);letter-spacing:0;margin-top:1px}
   .topbar-right{display:flex;align-items:center;gap:10px}
   .topbar-ic{display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:9px;
@@ -294,6 +296,13 @@
   .mod-d{color:var(--mut);font-size:12.5px;margin-top:3px}
   .mod-badge{position:absolute;top:14px;right:14px;font-size:10.5px;font-weight:700;padding:3px 10px;border-radius:20px;background:var(--track);color:var(--mut)}
   .mod-badge.ok{background:color-mix(in srgb,var(--pass) 14%,transparent);color:var(--pass)}
+  .androidqa-stack{display:flex;flex-direction:column;gap:8px}
+  .androidqa-section{padding-top:22px}
+  .androidqa-section:first-child{padding-top:0}
+  .androidqa-section+.androidqa-section{border-top:1px solid var(--line);margin-top:14px}
+  .androidqa-sec-h{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+  .androidqa-sec-t{font-weight:800;font-size:17px}
+  .androidqa-sec-d{color:var(--mut);font-size:12.5px;margin-top:2px}
   .suite.closed .suite-body{display:none}
   .cs-wrap{text-align:center;padding:52px 24px}
   .cs-ic{width:66px;height:66px;border-radius:18px;background:var(--brand-50);color:var(--brand);display:grid;place-items:center;margin:0 auto 18px}
@@ -714,35 +723,16 @@
       <button class="nav-item active" data-view="overview">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg>
         Dashboard</button>
+      <button class="nav-item" data-view="aiqa">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 17l10 5 10-5" stroke-linecap="round"/><path d="M2 12l10 5 10-5" stroke-linecap="round"/></svg>
+        AI QA Automation</button>
       <button class="nav-item" data-view="runs">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6h12M9 12h12M9 18h12" stroke-linecap="round"/><path d="M4 5.5l1.2 1.3L7.5 4M4 11.5l1.2 1.3L7.5 10M4 17.5l1.2 1.3L7.5 16" stroke-linecap="round" stroke-linejoin="round"/></svg>
         Test Runs</button>
-      <button class="nav-item" data-view="smartexec">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2.4"/><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5v2.2M12 18.3v2.2M3.5 12h2.2M18.3 12h2.2" stroke-linecap="round"/></svg>
-        Smart Execution</button>
       <div class="nav-label">Analysis</div>
-      <button class="nav-item" data-view="tc">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M10 8.5v7l6-3.5z" stroke-linejoin="round"/></svg>
-        Test Case Runner</button>
-      <button class="nav-item" data-view="tcgen">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6z" stroke-linejoin="round"/><path d="M19 3.5v3M20.5 5h-3" stroke-linecap="round"/><path d="M5 17v3M6.5 18.5h-3" stroke-linecap="round"/></svg>
-        AI Test Case Generator</button>
-      <button class="nav-item" data-view="compat">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M9 7h6M9 11h6M9 15h4" stroke-linecap="round"/><path d="M14 15l1.5 1.5L18 13" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        Compatibility</button>
-      <button class="nav-item" data-view="ads">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 10v4a1 1 0 0 0 1 1h2l5 4V5L7 9H5a1 1 0 0 0-1 1z" stroke-linejoin="round"/><path d="M16.5 9a3.5 3.5 0 0 1 0 6" stroke-linecap="round"/></svg>
-        Priority &amp; Logs</button>
       <button class="nav-item" data-view="reports">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6" stroke-linecap="round"/></svg>
         Reports</button>
-      <div class="nav-label">Configuration</div>
-      <button class="nav-item" data-view="l10n">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.8 2.5 15.2 0 18M12 3c-2.5 2.8-2.5 15.2 0 18" stroke-linecap="round"/></svg>
-        Localization</button>
-      <button class="nav-item" data-view="rc">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h8M18 7h2M4 17h2M12 17h8M4 12h12M20 12h0" stroke-linecap="round"/><circle cx="15" cy="7" r="2.2"/><circle cx="9" cy="17" r="2.2"/></svg>
-        Remote Config</button>
       <div class="nav-label">Infrastructure</div>
       <button class="nav-item" data-view="devices">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4" stroke-linecap="round"/></svg>
@@ -862,6 +852,11 @@
 
 <script>
 const $=s=>document.querySelector(s);
+// Sub-view root container. Defaults to '#content' (whole page); the Android Application Testing
+// hub page temporarily points this at one of its section containers while rendering each of the
+// combined modules into it, so their existing render functions work unmodified either standalone
+// (own page/route, own execution lock banner) or embedded (hub page, shared banner shown once).
+let RENDER_ROOT='#content';
 const SVG=b=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+b+'</svg>';
 const ICONS={
   grid:SVG('<rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/>'),
@@ -939,10 +934,8 @@ const CAT_SETUP_ICONS={
 const EXEC_ORDER=['security','compatibility','functional','uiux','accessibility','e2e','intelligent','exploratory','negative','performance','monkey','crash','ads','regression','network'];
 const EXEC_NAMES={security:'Security Testing',compatibility:'Compatibility Testing',functional:'Functional Testing',uiux:'UI/UX Testing',accessibility:'Accessibility Testing',e2e:'End-to-End Testing',intelligent:'Intelligent E2E Testing',exploratory:'Exploratory Testing',negative:'Negative Testing',performance:'Performance Testing',monkey:'Monkey Testing',crash:'Crash Testing',ads:'AdMob / Firebase Ads Testing',regression:'Regression Testing',network:'Online/Offline Scenarios Testing'};
 const ACTIVE_STATES=['QUEUED','ANALYZING','INSTALLING','RUNNING'];
-let state={view:'overview',runId:null,categories:[],file:null,runFilter:'',runState:'',runModule:'',rcSessionId:null,adsSessionId:null,compatSessionId:null,l10nSessionId:null,selectedDeviceSerial:null,_renderGen:0,runPage:1,runPageSize:10,_selectedRuns:new Set(),execLock:null};
+let state={view:'overview',runId:null,categories:[],file:null,runFilter:'',runState:'',runModule:'',compatSessionId:null,l10nSessionId:null,selectedDeviceSerial:null,_renderGen:0,runPage:1,runPageSize:10,_selectedRuns:new Set(),execLock:null};
 let pollTimer=null;
-let rcPollTimer=null;
-let adsPollTimer=null;
 let compatPollTimer=null;
 let l10nPollTimer=null;
 let compatScreenTimer=null;
@@ -1149,7 +1142,10 @@ function closeConnectModal(){
 
 /* ---------- nav / router ---------- */
 // Maps view keys to their canonical browser URL paths.
-const VIEW_TO_PATH={overview:'/overview',runs:'/runs',smartexec:'/smart-execution',rc:'/remote-config',ads:'/priority-logs',l10n:'/localization',tc:'/test-cases',tcgen:'/generate-test-case',settings:'/settings',compat:'/compat',devices:'/devices',reports:'/reports'};
+const VIEW_TO_PATH={overview:'/overview',runs:'/runs',smartexec:'/smart-execution',l10n:'/localization',tc:'/test-cases',settings:'/settings',compat:'/compat',devices:'/devices',reports:'/reports',aiqa:'/ai-qa-automation',androidqa:'/ai-qa-automation/android'};
+// Views relocated under the Android Application Testing page (no longer in the sidebar) —
+// their breadcrumb "back" link returns here instead of the default group behavior.
+const PARENT_VIEW={androidqa:'aiqa',smartexec:'androidqa',smartexecRunning:'androidqa',l10n:'androidqa',compat:'androidqa',tc:'androidqa'};
 // Reverse map — URL path → view key (detail is handled separately via /runs/{id} regex).
 const PATH_TO_VIEW=Object.fromEntries(Object.entries(VIEW_TO_PATH).map(([k,v])=>[v,k]));
 
@@ -1192,31 +1188,31 @@ function go(view,runId,replace,urlOverride,mod){
   closeQrModal(); // clear QR timers and hide QR pairing modal if open
   closeConnectModal(); // hide Connect Device modal if open
   unmountLogcat();   // stop the client poll; the execution page re-binds streaming from run state
-  // The console streams only on the execution pages (detail/ads/l10n); free the device process elsewhere.
-  if(view!=='detail'&&view!=='ads'&&view!=='l10n'&&view!=='tc'&&view!=='smartexecRunning'){ logcat.streaming=false; fetch('/api/logcat/stop',{method:'POST'}).catch(()=>{}); }
-  setNav(view==='detail'?'runs':view==='devices'?'devices':view==='smartexecRunning'?'smartexec':view);
+  // The console streams only on the execution pages (detail/l10n); free the device process elsewhere.
+  if(view!=='detail'&&view!=='l10n'&&view!=='tc'&&view!=='smartexecRunning'){ logcat.streaming=false; fetch('/api/logcat/stop',{method:'POST'}).catch(()=>{}); }
+  setNav(view==='detail'?'runs':view==='devices'?'devices':PARENT_VIEW[view]?'aiqa':view);
   const C={overview:['Dashboard','Automated APK test runs'],
     runs:['Test Runs','All executed test runs'],detail:['Application Test Run Dashboard','Execution status, findings, and coverage'],
     smartexec:['Smart Execution','AI-powered, generic end-to-end APK testing — no locators, no hardcoding'],
     smartexecRunning:['Smart Execution','Live run status, findings, and coverage'],
-    rc:['Remote Config','Fetch, update and validate Firebase Remote Config flags'],
-    ads:['Priority & Logs','AdMob / Firebase ad placement discovery & lifecycle validation'],
     compat:['Compatibility Testing','Automatic UI & functionality testing across Android 9–16 emulators'],
     l10n:['Localization','Automatic per-language translation & functionality testing'],
     tc:['Test Case Execution','Upload APK + test sheet — AI-driven sequential execution on device'],
-    tcgen:['Generate Test-Case','Upload an APK — AI generates a structured test-case sheet'],
     settings:['Settings','Configure the framework — changes apply to future test runs'],
     devices:['Device Manager','Manage emulators and physical devices — multi-device parallel testing'],
-    reports:['Reports','Consolidated per-run reports — view, download and export']};
+    reports:['Reports','Consolidated per-run reports — view, download and export'],
+    aiqa:['AI QA Automation',''],
+    androidqa:['Android Application Testing','Automation modules available for Android apps']};
   const VIEW_GROUP={overview:'Workspace',runs:'Workspace',detail:'Workspace',
-    smartexec:'Workspace',smartexecRunning:'Workspace',
-    tc:'Analysis',tcgen:'Analysis',compat:'Analysis',ads:'Analysis',reports:'Analysis',
-    l10n:'Configuration',rc:'Configuration',
-    devices:'Infrastructure',settings:'System'};
-  $('#crumbGroup').textContent=VIEW_GROUP[view]||'Workspace';
+    reports:'Analysis',
+    devices:'Infrastructure',aiqa:'Workspace',settings:'System'};
+  const group=PARENT_VIEW[view]?'AI QA Automation':(VIEW_GROUP[view]||'Workspace');
+  $('#crumbGroup').textContent=group;
+  $('#crumbGroup').classList.toggle('is-link',!!PARENT_VIEW[view]);
+  $('#crumbGroup').onclick=PARENT_VIEW[view]?(()=>go(PARENT_VIEW[view])):null;
   $('#crumbTitle').textContent=C[view][0];
   startExecLockPolling();
-  ({overview:renderOverview,runs:renderRuns,detail:renderDetail,smartexec:renderSmartExec,smartexecRunning:renderSmartExecRunning,rc:renderRemoteConfig,ads:renderAds,compat:renderCompat,l10n:renderL10n,tc:renderTc,tcgen:renderTcgenPage,settings:renderSettings,devices:renderDeviceManager,reports:renderReports})[view]();
+  ({overview:renderOverview,runs:renderRuns,detail:renderDetail,smartexec:renderSmartExec,smartexecRunning:renderSmartExecRunning,compat:renderCompat,l10n:renderL10n,tc:renderTc,settings:renderSettings,devices:renderDeviceManager,reports:renderReports,aiqa:renderAiQa,androidqa:renderAndroidQa})[view]();
 }
 
 /**
@@ -1380,7 +1376,7 @@ function sevMini(sv){if(!sv)return '<span class="muted">—</span>';
 async function renderRuns(){
   state._selectedRuns=new Set();
   state.runPage=1;
-  const MODULE_OPTS=['New Test','Localization','Remote Config','Test Case','Priority & Logs','Compatibility Testing'];
+  const MODULE_OPTS=['New Test','Localization','Test Case','Compatibility Testing'];
   $('#content').innerHTML=`<div class="toolbar">
      <input class="input search" id="rSearch" placeholder="Search by package, file or module…" value="${esc(state.runFilter)}"/>
      <select class="input" id="rState">
@@ -1833,58 +1829,16 @@ function wifiMsg(kind,text,output){
   return `<div style="padding:10px 12px;border-radius:9px;background:${bg};color:${col};font-size:13px;font-weight:600">${text}</div>`
     +(output?`<details style="margin-top:8px"><summary class="muted" style="cursor:pointer;font-size:11.5px">adb output</summary><pre class="steps-log" style="margin-top:6px;max-height:160px">${esc(output)}</pre></details>`:'');
 }
-function setFile(f){
-  if(!f)return;
-  if(!f.name.toLowerCase().endsWith('.apk')){toast('Please choose an .apk file');return;}
-  // A previous file's analysis (if any) no longer applies to this new selection.
-  if(state.file!==f)resetAnalyzeState();
-  state.file=f;
-  const ft=$('#fileTag');
-  if(ft)ft.innerHTML=`<div class="file-tag"><div class="fi">APK</div>
-    <div style="flex:1"><div style="font-weight:600;word-break:break-all">${esc(f.name)}</div>
-    <div class="muted" style="font-size:12px">${(f.size/1048576).toFixed(1)} MB</div></div>
-    <button class="btn ghost sm" onclick="clearSelectedFile()">Remove</button></div>`;
-  // #startBtn only exists on the New Test page — the Generate Test-Case page has no Start button.
-  const sb=$('#startBtn'); if(sb)sb.disabled=false;
-  const ab=$('#analyzeBtn'); if(ab)ab.disabled=false;
-}
-
-/** Null-safe reset of the selected APK + any analysis — shared by the New Test and
- *  Generate Test-Case pages (each has a different subset of the buttons). */
-function clearSelectedFile(){
-  state.file=null;
-  resetAnalyzeState();
-  const ft=$('#fileTag'); if(ft)ft.innerHTML='';
-  const sb=$('#startBtn'); if(sb)sb.disabled=true;
-  const ab=$('#analyzeBtn'); if(ab)ab.disabled=true;
-  const ac=$('#analyzeCard'); if(ac){ac.style.display='none';ac.innerHTML='';}
-}
-
-/* ---------- Generate Test-Case (standalone module) ---------- */
-// Reuses the exact same Analyze-APK / AI test-case-generation pipeline as New Test
-// (startAnalyzeApk, pollAnalysis, tcgen* functions, state.file/_analyzeId/_tcgenMerge) —
-// just its own page shell, with no category picker or Start Automated Testing button.
-async function renderTcgenPage(){
-  clearSelectedFile();
-  $('#content').innerHTML=`<div class="grid" style="grid-template-columns:1fr;max-width:640px">
-    <div class="card"><div class="card-h"><h3>Upload APK</h3></div><div class="card-b">
-      <div class="drop" id="drop"><div class="big">Drop your .apk here</div><div class="sm">or click to browse — up to 600 MB</div></div>
-      <input type="file" id="file" accept=".apk" hidden/><div id="fileTag"></div>
-      <button class="btn ghost sm" id="analyzeBtn" disabled style="width:100%;margin-top:12px" onclick="startAnalyzeApk()">${ic('activity',14)} Generate Test Cases</button>
-      <div id="analyzeCard" style="display:none;margin-top:12px"></div>
-    </div></div>
-  </div>`;
-  const drop=$('#drop'),fi=$('#file');
-  drop.onclick=()=>fi.click();
-  fi.onchange=e=>setFile(e.target.files[0]);
-  ['dragover','dragenter'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('drag');}));
-  ['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('drag');}));
-  drop.addEventListener('drop',e=>{if(e.dataTransfer.files[0])setFile(e.dataTransfer.files[0]);});
-}
+/* ---------- AI Test Case Generator ----------
+ * Folded into the Smart Execution workflow (no longer a standalone page/module) — it now
+ * runs against the same uploaded APK as Smart Execution (state._smartExecFile) as an optional
+ * step on that page. startAnalyzeApk / pollAnalysis / tcgen* functions below are unchanged. */
 
 /* ================= SMART EXECUTION (brand-new, independent module) =================
- * Entirely separate state/UI from New Test / Test Cases / Generate Test-Case — its own upload
- * page, its own live running page, its own polling, backed by /api/smartexec/* endpoints. */
+ * Entirely separate state/UI from New Test / Test Cases — its own upload page, its own live
+ * running page, its own polling, backed by /api/smartexec/* endpoints. The AI Test Case
+ * Generator (analyze/generate/merge/execute — startAnalyzeApk & friends, further below) is
+ * folded in as an optional step 3 on this same page, sharing the uploaded APK below. */
 const SMARTEXEC_CATEGORIES=[
   {k:'functional', label:'Functional testing'},
   {k:'uiux',       label:'UI quality and accessibility'},
@@ -1897,17 +1851,28 @@ const SMARTEXEC_CATEGORIES=[
 function smartexecSetFile(f){
   if(!f)return;
   if(!f.name.toLowerCase().endsWith('.apk')){toast('Please choose an .apk file');return;}
+  // A previous file's AI-generated test cases (if any) no longer apply to this new selection.
+  if(state._smartExecFile!==f)resetAnalyzeState();
   state._smartExecFile=f;
   $('#smartexecFileTag').innerHTML=`<div class="file-tag"><div class="fi">APK</div>
     <div style="flex:1"><div style="font-weight:600;word-break:break-all">${esc(f.name)}</div>
     <div class="muted" style="font-size:12px">${(f.size/1048576).toFixed(1)} MB</div></div>
-    <button class="btn ghost sm" onclick="state._smartExecFile=null;$('#smartexecFileTag').innerHTML='';$('#smartexecStartBtn').disabled=true">Remove</button></div>`;
+    <button class="btn ghost sm" onclick="smartexecClearFile()">Remove</button></div>`;
   $('#smartexecStartBtn').disabled=false;
+  const ab=$('#analyzeBtn'); if(ab)ab.disabled=false;
+}
+function smartexecClearFile(){
+  state._smartExecFile=null;
+  resetAnalyzeState();
+  const ft=$('#smartexecFileTag'); if(ft)ft.innerHTML='';
+  const sb=$('#smartexecStartBtn'); if(sb)sb.disabled=true;
+  const ab=$('#analyzeBtn'); if(ab)ab.disabled=true;
+  const ac=$('#analyzeCard'); if(ac){ac.style.display='none';ac.innerHTML='';}
 }
 
 async function renderSmartExec(){
   state._smartExecCategories=state._smartExecCategories||new Set(SMARTEXEC_CATEGORIES.map(c=>c.k));
-  $('#content').innerHTML=`<div class="grid" style="grid-template-columns:1.3fr 1fr;align-items:start;max-width:980px">
+  $(RENDER_ROOT).innerHTML=`<div class="grid" style="grid-template-columns:1.3fr 1fr;align-items:start;max-width:980px">
     <div style="display:flex;flex-direction:column;gap:18px">
       <div class="card"><div class="card-h"><h3>1 · Upload APK</h3></div><div class="card-b">
         <div class="drop" id="smartexecDrop"><div class="big">Drop your .apk here</div><div class="sm">Native, Flutter, Compose, React Native, Xamarin, WebView/Hybrid — up to 600 MB</div></div>
@@ -1919,6 +1884,12 @@ async function renderSmartExec(){
           ${SMARTEXEC_CATEGORIES.map(c=>`<label class="cat">
             <input type="checkbox" ${state._smartExecCategories.has(c.k)?'checked':''} onchange="smartexecToggleCat('${c.k}',this.checked)"/>
             <div><div class="nm">${esc(c.label)}</div></div></label>`).join('')}
+        </div></div>
+      <div class="card"><div class="card-h"><h3>3 · AI Test Case Generator <span class="muted" style="font-weight:400;font-size:11.5px">(optional)</span></h3></div>
+        <div class="card-b">
+          <div class="muted" style="font-size:12px;margin-bottom:10px">Generates a structured test-case sheet from the APK uploaded above — independent of Start Smart Execution.</div>
+          <button class="btn ghost sm" id="analyzeBtn" disabled style="width:100%" onclick="startAnalyzeApk()">${ic('activity',14)} Generate Test Cases</button>
+          <div id="analyzeCard" style="display:none;margin-top:12px"></div>
         </div></div>
     </div>
     <div style="position:sticky;top:84px;display:flex;flex-direction:column;gap:18px">
@@ -1937,6 +1908,7 @@ async function renderSmartExec(){
   ['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('drag');}));
   drop.addEventListener('drop',e=>{if(e.dataTransfer.files[0])smartexecSetFile(e.dataTransfer.files[0]);});
   if(state._smartExecFile)smartexecSetFile(state._smartExecFile);
+  restoreAnalyzeCard();
 }
 function smartexecToggleCat(key,on){ if(on)state._smartExecCategories.add(key); else state._smartExecCategories.delete(key); }
 function smartexecToggleAll(){
@@ -2129,16 +2101,16 @@ function smartexecReportHtml(s,id){
     + section('Bug Reports',bugReports);
 }
 
-/* ---------- Analyze APK (New Test module, pre-execution) ---------- */
+/* ---------- Analyze APK (AI Test Case Generator, part of the Smart Execution workflow) ---------- */
 let _analyzeTimer=null;
 async function startAnalyzeApk(){
-  if(!state.file)return;
+  if(!state._smartExecFile)return;
   if(_analyzeTimer){clearInterval(_analyzeTimer);_analyzeTimer=null;}
   const btn=$('#analyzeBtn');btn.disabled=true;
   const card=$('#analyzeCard');card.style.display='block';
   card.innerHTML=analyzeProgressHtml(0,'Reading APK',false,false);
   try{
-    const fd=new FormData();fd.append('file',state.file);
+    const fd=new FormData();fd.append('file',state._smartExecFile);
     const r=await api('/api/analyze',{method:'POST',body:fd});
     if(!r.ok)throw new Error((await r.json().catch(()=>({}))).message||'Analysis failed to start');
     const {id}=await r.json();
@@ -2246,7 +2218,7 @@ async function tcgenLaunch(serial){
   const fd=new FormData();
   fd.append('sheet',new File([blob],(state._tcgenMerge?'merged':'generated')+'-testcases.xlsx',
     {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
-  if(state.file)fd.append('apk',state.file);
+  if(state._smartExecFile)fd.append('apk',state._smartExecFile);
   if(serial)fd.append('serial',serial);
   const r=await fetch('/api/tc/execute',{method:'POST',body:fd});
   const d=await r.json().catch(()=>({}));
@@ -2278,620 +2250,6 @@ function restoreAnalyzeCard(){
   card.innerHTML=analyzeProgressHtml(s.percent,s.stage,s.done,!s.error,s.error,s.testCaseCount,s.appDomain,s.id,s.issueCount);
   const btn=$('#analyzeBtn'); if(btn)btn.disabled=!s.done;
 }
-/* ---------- REMOTE CONFIG MODULE ---------- */
-let rcPendingChanges={},rcFile=null,rcSessionData=null,rcSelectedKey='';
-const RC_ACTIVE_STATES=['SETUP','FETCHING','PUBLISHING','TESTING'];
-
-async function renderRemoteConfig(){
-  if(rcPollTimer){clearInterval(rcPollTimer);rcPollTimer=null;}
-  if(!state.rcSessionId){renderRcSetup();return;}
-  $('#content').innerHTML=`<div id="rcMain"></div><div id="logcatMount" style="margin-top:18px">${logcatPanel()}</div>`;
-  mountLogcat();
-  await paintRcSession();
-  const sess=await jget('/api/rc/sessions/'+state.rcSessionId).catch(()=>null);
-  if(sess&&RC_ACTIVE_STATES.includes(sess.state)){
-    rcPollTimer=setInterval(async()=>{
-      if(state.view!=='rc'){clearInterval(rcPollTimer);rcPollTimer=null;return;}
-      await paintRcSession();
-    },1500);
-  }
-}
-
-async function stopRc(){
-  if(!state.rcSessionId)return;
-  if(!confirm('Stop Remote Config validation? Partial results will be saved.'))return;
-  try{
-    await api('/api/rc/sessions/'+state.rcSessionId+'/stop',{method:'POST'});
-    notify({type:'test',status:'info',title:'Remote Config validation stopped',message:'Execution stopped. Redirecting to Test Runs…'});
-    setTimeout(()=>navigate('runs'),1800);
-  }catch(e){if(e.message!=='unauth')toast('Could not stop: '+e.message);}
-}
-
-async function paintRcSession(){
-  let s;try{s=await jget('/api/rc/sessions/'+state.rcSessionId);}catch(e){return;}
-  if(!RC_ACTIVE_STATES.includes(s.state)&&rcPollTimer){clearInterval(rcPollTimer);rcPollTimer=null;}
-  if(s.state==='STOPPED'&&notifOnce('rc:'+state.rcSessionId+':stopped')){
-    const disconnected=s.error&&s.error.toLowerCase().includes('disconnected');
-    notify({type:'test',status:disconnected?'error':'info',title:disconnected?'Device disconnected':'Remote Config validation stopped',
-      message:disconnected?'Execution stopped because the selected device was disconnected. Partial results saved.':'Validation stopped by user. Partial results saved.'});
-    setTimeout(()=>navigate('runs'),2500);
-  }
-  const STEPS=['Configure','Fetch','Edit Flags','Publish','Test','Report'];
-  const S2I={SETUP:0,FETCHING:1,FETCHED:2,PUBLISHING:3,PUBLISHED:4,TESTING:5,COMPLETED:5,FAILED:5};
-  const cur=S2I[s.state]??0;
-  const stepper='<div class="stepper">'+STEPS.map((lbl,i)=>{
-    const done=(s.state==='COMPLETED'||i<cur);
-    const fail=(s.state==='FAILED'&&i===cur);
-    const cls=fail?'fail':done?'done':(i===cur?'active':'');
-    return`<div class="step ${cls}"><div class="num">${done?'✓':i+1}</div><div class="nm">${lbl}</div>${i<STEPS.length-1?'<div class="bar"></div>':''}</div>`;
-  }).join('')+'</div>';
-
-  let body='';
-  if(s.state==='FETCHING') body=rcConsoleBlock(s,'Fetching Remote Config from Firebase…',true);
-  else if(s.state==='FETCHED') body=rcEditPanel(s);
-  else if(s.state==='PUBLISHING') body=rcConsoleBlock(s,'Publishing changes to Firebase…',true);
-  else if(s.state==='PUBLISHED') body=rcUploadPanel(s);
-  else if(s.state==='TESTING') body=rcConsoleBlock(s,'Running Remote Config validation…',true);
-  else if(s.state==='COMPLETED') body=rcReportPanel(s);
-  else if(s.state==='STOPPED') body=`<div class="card"><div class="card-b">
-    <div class="finding HIGH"><div class="fh"><span class="sev-chip s-HIGH">STOPPED</span>${esc(s.error||'Validation stopped by user.')}</div></div>
-    <div style="margin-top:14px"><button class="btn ghost sm" onclick="resetRcSession()">← Start Over</button></div>
-  </div></div>`;
-  else if(s.state==='FAILED') body=`<div class="card"><div class="card-b">
-    <div class="finding CRITICAL"><div class="fh"><span class="sev-chip s-CRITICAL">FAILED</span>${esc(s.error||'Unknown error')}</div></div>
-    <div style="margin-top:14px"><button class="btn ghost sm" onclick="resetRcSession()">← Start Over</button></div>
-  </div></div>`;
-
-  ($('#rcMain')||$('#content')).innerHTML=`
-    <div class="card" style="margin-bottom:18px"><div class="card-b">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-        <div><h2 style="margin:0;font-size:18px">Remote Config Validation</h2>
-          <div class="muted" style="font-size:13px">${esc(s.projectId||'')}</div></div>
-        <div style="display:flex;gap:8px">
-          ${s.state==='TESTING'?`<button class="btn stop sm" onclick="stopRc()">${ic('stop',14)} Stop</button>`:''}
-          <button class="btn ghost sm" onclick="resetRcSession()">New Config</button>
-        </div>
-      </div>${stepper}
-    </div></div>${body}`;
-  logcatBind('rc:'+(s.id||state.rcSessionId), RC_ACTIVE_STATES.includes(s.state), '');
-
-  if(s.state==='FETCHED') wireRcEdit(s);
-  if(s.state==='PUBLISHED') wireRcUpload(s);
-}
-
-let rcInputMode='fields'; // 'fields' | 'json'
-
-function renderRcSetup(){
-  $('#content').innerHTML=`${execLockBanner()}
-    <div class="card"><div class="card-b">
-      <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
-        <div style="width:48px;height:48px;border-radius:13px;background:var(--brand-50);color:var(--brand);display:grid;place-items:center;flex:none">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 17l10 5 10-5" stroke-linecap="round"/><path d="M2 12l10 5 10-5" stroke-linecap="round"/></svg></div>
-        <div><h2 style="margin:0;font-size:20px">Remote Config</h2>
-          <div class="muted" style="font-size:13.5px">Fetch, update and validate Firebase Remote Config flags end-to-end.</div></div>
-      </div>
-
-      <!-- mode toggle -->
-      <div style="display:flex;gap:0;margin-bottom:22px;border-bottom:1px solid var(--line)">
-        <button class="tab-btn active" id="rcModeFields" onclick="switchRcInputMode('fields')">Enter Credentials</button>
-        <button class="tab-btn" id="rcModeJson" onclick="switchRcInputMode('json')">Paste JSON File</button>
-      </div>
-
-      <!-- FIELDS MODE -->
-      <div id="rcFieldsPane" style="max-width:580px">
-        <div style="background:color-mix(in srgb,var(--brand) 7%,transparent);border:1px solid color-mix(in srgb,var(--brand) 20%,transparent);border-radius:8px;padding:12px 14px;font-size:12.5px;color:var(--txt-2);margin-bottom:20px">
-          <b style="color:var(--txt)">Where to find these values:</b> Firebase Console → Project Settings → Service Accounts → Generate new private key. Open the downloaded <code>.json</code> file and copy each value below.
-        </div>
-
-        <div style="margin-bottom:14px">
-          <label style="display:block;font-weight:600;font-size:13.5px;margin-bottom:4px">Firebase Project ID</label>
-          <div class="muted" style="font-size:12px;margin-bottom:6px">Found in the JSON as <code>"project_id"</code>. Example: <code>my-app-12345</code></div>
-          <input id="rcProjectId" type="text" placeholder="my-firebase-project-id" style="width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:8px;font-size:14px;background:var(--surface);color:var(--txt)"/>
-          <div id="errProjectId" style="display:none;color:var(--fail);font-size:12px;margin-top:4px"></div>
-        </div>
-
-        <div style="margin-bottom:14px">
-          <label style="display:block;font-weight:600;font-size:13.5px;margin-bottom:4px">Service Account Email</label>
-          <div class="muted" style="font-size:12px;margin-bottom:6px">Found in the JSON as <code>"client_email"</code>. Example: <code>firebase-adminsdk-xxxxx@my-app.iam.gserviceaccount.com</code></div>
-          <input id="rcSaEmail" type="text" placeholder="firebase-adminsdk-xxxxx@my-app.iam.gserviceaccount.com" style="width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:8px;font-size:13.5px;background:var(--surface);color:var(--txt)"/>
-          <div id="errSaEmail" style="display:none;color:var(--fail);font-size:12px;margin-top:4px"></div>
-        </div>
-
-        <div style="margin-bottom:20px">
-          <label style="display:block;font-weight:600;font-size:13.5px;margin-bottom:4px">Private Key</label>
-          <div class="muted" style="font-size:12px;margin-bottom:6px">Found in the JSON as <code>"private_key"</code>. Copy the entire value including the <code>-----BEGIN PRIVATE KEY-----</code> and <code>-----END PRIVATE KEY-----</code> lines.</div>
-          <textarea id="rcPrivKey" rows="7" placeholder="-----BEGIN PRIVATE KEY-----
-MIIEvQIBADANBgkq...
------END PRIVATE KEY-----" style="width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:8px;font-size:12px;font-family:'JetBrains Mono',monospace;background:var(--surface);color:var(--txt);resize:vertical;box-sizing:border-box"></textarea>
-          <div id="errPrivKey" style="display:none;color:var(--fail);font-size:12px;margin-top:4px"></div>
-        </div>
-
-        <div id="rcFieldsError" style="display:none;background:color-mix(in srgb,var(--fail) 10%,transparent);border:1px solid color-mix(in srgb,var(--fail) 25%,transparent);border-radius:8px;padding:12px 14px;font-size:12.5px;color:var(--fail);margin-bottom:14px"></div>
-        <button class="btn" id="rcFetchBtn" style="padding:12px 28px">Fetch Remote Config</button>
-      </div>
-
-      <!-- JSON MODE -->
-      <div id="rcJsonPane" style="max-width:580px;display:none">
-        <div style="background:color-mix(in srgb,var(--brand) 7%,transparent);border:1px solid color-mix(in srgb,var(--brand) 20%,transparent);border-radius:8px;padding:12px 14px;font-size:12.5px;color:var(--txt-2);margin-bottom:16px">
-          <b style="color:var(--txt)">Paste the entire contents</b> of your Firebase service account JSON key file (downloaded from Firebase Console → Project Settings → Service Accounts → Generate new private key).
-        </div>
-        <div style="margin-bottom:14px">
-          <label style="display:block;font-weight:600;font-size:13.5px;margin-bottom:4px">Firebase Project ID</label>
-          <input id="rcProjectIdJson" type="text" placeholder="my-firebase-project-id" style="width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:8px;font-size:14px;background:var(--surface);color:var(--txt)"/>
-          <div id="errProjectIdJson" style="display:none;color:var(--fail);font-size:12px;margin-top:4px"></div>
-        </div>
-        <div style="margin-bottom:14px">
-          <label style="display:block;font-weight:600;font-size:13.5px;margin-bottom:4px">Service Account JSON Key File</label>
-          <textarea id="rcSaJson" rows="10" placeholder='{"type":"service_account","project_id":"my-app","private_key_id":"abc123","private_key":"-----BEGIN PRIVATE KEY-----\\n...\\n-----END PRIVATE KEY-----\\n","client_email":"firebase-adminsdk@my-app.iam.gserviceaccount.com",...}' style="width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:8px;font-size:12px;font-family:'JetBrains Mono',monospace;background:var(--surface);color:var(--txt);resize:vertical;box-sizing:border-box"></textarea>
-          <div id="errSaJson" style="display:none;color:var(--fail);font-size:12px;margin-top:4px"></div>
-        </div>
-        <div id="rcJsonError" style="display:none;background:color-mix(in srgb,var(--fail) 10%,transparent);border:1px solid color-mix(in srgb,var(--fail) 25%,transparent);border-radius:8px;padding:12px 14px;font-size:12.5px;color:var(--fail);margin-bottom:14px;white-space:pre-wrap"></div>
-        <button class="btn" id="rcFetchBtnJson" style="padding:12px 28px">Fetch Remote Config</button>
-      </div>
-    </div></div>`;
-
-  $('#rcFetchBtn').onclick=startRcFetch;
-  $('#rcFetchBtnJson').onclick=startRcFetch;
-}
-
-function switchRcInputMode(mode){
-  rcInputMode=mode;
-  $('#rcFieldsPane').style.display=mode==='fields'?'':'none';
-  $('#rcJsonPane').style.display=mode==='json'?'':'none';
-  $('#rcModeFields').classList.toggle('active',mode==='fields');
-  $('#rcModeJson').classList.toggle('active',mode==='json');
-}
-
-function setFieldError(id,msg){const el=$(id);if(el){el.textContent=msg;el.style.display=msg?'block':'none';}}
-function clearRcErrors(){['#errProjectId','#errSaEmail','#errPrivKey','#rcFieldsError','#errProjectIdJson','#errSaJson','#rcJsonError'].forEach(id=>{const el=$(id);if(el)el.style.display='none';});}
-
-function validateProjectId(id){
-  if(!id)return'Project ID is required.';
-  if(!/^[a-z0-9][a-z0-9-]{3,28}[a-z0-9]$/.test(id))return'Invalid format. Must be 5–30 characters: lowercase letters, digits and hyphens only (e.g. my-app-12345).';
-  return'';
-}
-
-function buildAndValidateFromFields(){
-  clearRcErrors();
-  const projectId=$('#rcProjectId').value.trim();
-  const email=$('#rcSaEmail').value.trim();
-  const rawKey=$('#rcPrivKey').value.trim();
-  let ok=true;
-
-  const pidErr=validateProjectId(projectId);
-  if(pidErr){setFieldError('#errProjectId',pidErr);ok=false;}
-
-  if(!email){setFieldError('#errSaEmail','Service Account Email is required.');ok=false;}
-  else if(!/@.+\.iam\.gserviceaccount\.com$/.test(email)){
-    setFieldError('#errSaEmail','Email must end with .iam.gserviceaccount.com — copy the "client_email" value from your JSON key file.');ok=false;}
-
-  if(!rawKey){setFieldError('#errPrivKey','Private Key is required.');ok=false;}
-  else if(!rawKey.startsWith('-----BEGIN')){
-    setFieldError('#errPrivKey','Private Key must start with "-----BEGIN PRIVATE KEY-----". Copy the entire "private_key" value from your JSON file, including the header and footer lines.');ok=false;}
-  else if(!rawKey.includes('-----END')){
-    setFieldError('#errPrivKey','Private Key appears incomplete — the "-----END PRIVATE KEY-----" line is missing. Make sure you copied the entire key.');ok=false;}
-
-  if(!ok)return null;
-
-  // Normalise escaped newlines that users sometimes copy from JSON editors
-  const key=rawKey.replace(/\\n/g,'\n');
-  const saJson=JSON.stringify({
-    type:'service_account',
-    project_id:projectId,
-    private_key:key,
-    client_email:email,
-    token_uri:'https://oauth2.googleapis.com/token'
-  });
-  return{projectId,serviceAccountJson:saJson};
-}
-
-function buildAndValidateFromJson(){
-  clearRcErrors();
-  const projectId=$('#rcProjectIdJson').value.trim();
-  const raw=$('#rcSaJson').value.trim();
-  let ok=true;
-
-  const pidErr=validateProjectId(projectId);
-  if(pidErr){setFieldError('#errProjectIdJson',pidErr);ok=false;}
-
-  if(!raw){setFieldError('#errSaJson','Please paste the contents of your service account JSON key file.');return null;}
-
-  let parsed;
-  try{parsed=JSON.parse(raw);}
-  catch(e){
-    setFieldError('#errSaJson','Not valid JSON — paste the entire file content, not just a value from it.');
-    return null;
-  }
-
-  const issues=[];
-  if(parsed.type!=='service_account')issues.push('• "type" must be "service_account" (found: '+(parsed.type||'missing')+')');
-  if(!parsed.project_id)issues.push('• "project_id" field is missing');
-  if(!parsed.client_email)issues.push('• "client_email" field is missing (the service account email)');
-  if(!parsed.private_key)issues.push('• "private_key" field is missing');
-  else if(!parsed.private_key.startsWith('-----BEGIN'))issues.push('• "private_key" does not look like a PEM key — it must start with -----BEGIN PRIVATE KEY-----');
-  if(!parsed.token_uri&&!parsed.auth_uri)issues.push('• Neither "token_uri" nor "auth_uri" found — this may not be a valid service account JSON');
-
-  if(issues.length){
-    const errEl=$('#rcJsonError');
-    if(errEl){errEl.textContent='The JSON is missing required fields:\n'+issues.join('\n');errEl.style.display='block';}
-    ok=false;
-  }
-
-  if(!ok)return null;
-  return{projectId:projectId||parsed.project_id,serviceAccountJson:raw};
-}
-
-async function startRcFetch(){
-  const payload=rcInputMode==='fields'?buildAndValidateFromFields():buildAndValidateFromJson();
-  if(!payload)return;
-  const btn=rcInputMode==='fields'?$('#rcFetchBtn'):$('#rcFetchBtnJson');
-  btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Connecting…';
-  try{
-    const r=await api('/api/rc/fetch',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify(payload)});
-    if(!r.ok){
-      const msg=await r.text();
-      const errEl=$(rcInputMode==='fields'?'#rcFieldsError':'#rcJsonError');
-      if(errEl){errEl.textContent=msg;errEl.style.display='block';}
-      throw new Error(msg);
-    }
-    const {id}=await r.json();
-    state.rcSessionId=id;
-    await paintRcSession();
-    rcPollTimer=setInterval(async()=>{
-      if(state.view!=='rc'){clearInterval(rcPollTimer);rcPollTimer=null;return;}
-      await paintRcSession();
-    },1500);
-  }catch(e){
-    if(e.message!=='unauth'){/* error already shown inline */}
-  }finally{
-    btn.disabled=false;btn.innerHTML='Fetch Remote Config';
-  }
-}
-
-function rcConsoleHtml(s){
-  const logs=s.logs||[];
-  return`<div id="rcConsole" style="background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:14px;max-height:260px;overflow-y:auto;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.7;margin-top:14px">${
-    logs.length?logs.map(l=>`<div style="color:var(--txt-2)">${esc(l)}</div>`).join(''):'<div class="muted">Waiting…</div>'
-  }</div>`;
-}
-function rcConsoleBlock(s,heading,spin){
-  return`<div class="card"><div class="card-b">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
-      ${spin?'<span class="spinner"></span>':''}
-      <strong>${esc(heading)}</strong></div>
-  </div></div>`;
-}
-
-/* --- EDIT PANEL --- */
-/* ---- JSON syntax highlighter ---- */
-function highlightJson(json){
-  return json.replace(
-    /"((?:[^"\\]|\\.)*)"(\s*:)?|(true|false|null)|(-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)/g,
-    (m,sc,isKey,bn,num)=>{
-      const he=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-      if(sc!==undefined&&isKey)return`<span style="color:var(--brand);font-weight:500">&quot;${he(sc)}&quot;</span>${isKey}`;
-      if(sc!==undefined)return`<span style="color:var(--pass)">&quot;${he(sc)}&quot;</span>`;
-      if(bn==='true'||bn==='false')return`<span style="color:#9c5de0">${bn}</span>`;
-      if(bn==='null')return`<span style="color:var(--mut)">${bn}</span>`;
-      if(num)return`<span style="color:var(--warn)">${num}</span>`;
-      return m;
-    }
-  );
-}
-
-// If a string is a serialised JSON object or array, parse and return it so it
-// expands into a proper tree when passed to JSON.stringify; otherwise return as-is.
-function parseDisplayValue(s){
-  if(!s||typeof s!=='string')return s;
-  const t=s.trim();
-  if((t.startsWith('{')&&t.endsWith('}'))||(t.startsWith('[')&&t.endsWith(']'))){
-    try{return JSON.parse(t);}catch(e){}
-  }
-  return s;
-}
-
-function rcEditPanel(s){
-  rcSessionData=s;
-  const flags=s.flags||[];
-  const pending=s.pendingChanges||{};
-  const nPending=Object.keys(pending).length;
-  return`<div class="card">
-    <div class="card-h" style="display:flex;justify-content:space-between;align-items:center">
-      <h3 style="margin:0">${flags.length} Applications</h3>
-      <div style="display:flex;align-items:center;gap:8px">
-        <span id="rcBadge" class="badge b-RUNNING" style="display:${nPending?'inline-flex':'none'}">${nPending} pending</span>
-        <button class="btn sm" id="rcPublishBtn">Publish Changes</button>
-      </div>
-    </div>
-    <div class="card-b">
-      <!-- Step 1: flag selector (always visible) -->
-      <div id="rcStep1" style="margin-bottom:16px">
-        <input id="rcFlagSearch" type="text" placeholder="Search flags…"
-          style="width:100%;padding:8px 12px;border:1.5px solid var(--line);border-radius:8px;font-size:13px;background:var(--surface);color:var(--txt);margin-bottom:8px"/>
-        <div id="rcFlagList" style="border:1px solid var(--line);border-radius:8px;overflow-y:auto;max-height:210px">
-          ${flags.length===0
-            ?`<div style="padding:14px 16px;color:var(--txt-2);font-size:13px">No flags available.</div>`
-            :flags.map(f=>`<div class="rc-flag-item" data-key="${esc(f.key)}"
-                style="padding:9px 14px;cursor:pointer;border-bottom:1px solid var(--line);font-size:13px;display:flex;align-items:center;justify-content:space-between;gap:8px;transition:background .1s">
-                <span style="font-family:'JetBrains Mono',monospace;font-weight:500">${esc(f.key)}</span>
-                <span style="font-size:11px;color:var(--txt-2);flex:none">${esc(f.valueType||'STRING')}</span>
-              </div>`).join('')}
-        </div>
-      </div>
-      <!-- Step 2: JSON + change tabs (hidden until a flag is selected) -->
-      <div id="rcDetailStep" style="display:none">
-        <div id="rcFlagJsonSection" style="margin-bottom:16px">
-          <label style="display:block;font-weight:600;font-size:12.5px;margin-bottom:6px;color:var(--txt-2)">Remote Config Data</label>
-          <pre id="rcFlagJson" style="margin:0;padding:12px 14px;font-size:11.5px;line-height:1.6;font-family:'JetBrains Mono','Courier New',monospace;overflow:auto;max-height:220px;background:var(--surface);border:1px solid var(--line);border-radius:8px;color:var(--txt);white-space:pre"></pre>
-        </div>
-        <div style="display:flex;gap:0;border-bottom:1px solid var(--line);margin-bottom:16px">
-          <button class="tab-btn active" id="rcTabSingle" onclick="switchRcChangeTab('single')">Single Flag Value Change</button>
-          <button class="tab-btn" id="rcTabMulti" onclick="switchRcChangeTab('multi')">Multiple Flag Value Change</button>
-        </div>
-        <!-- Single tab -->
-        <div id="rcSinglePanel" style="max-width:500px">
-          <div style="margin-bottom:14px">
-            <label style="display:block;font-weight:600;font-size:12.5px;margin-bottom:4px">New Value</label>
-            <input id="rcSingleVal" type="text" placeholder="Enter new value…"
-              style="width:100%;padding:9px 12px;border:1.5px solid var(--line);border-radius:8px;font-size:13.5px;background:var(--surface);color:var(--txt)"/>
-            <div id="rcSingleValErr" style="display:none;color:var(--fail);font-size:12px;margin-top:4px"></div>
-          </div>
-          <button class="btn sm" id="rcAddBtn" disabled>+ Add to Pending</button>
-        </div>
-        <!-- Multi tab -->
-        <div id="rcMultiPanel" style="display:none">
-          <div style="margin-bottom:10px">
-            <input id="rcMultiSearch" type="text" placeholder="Search flags…"
-              style="width:100%;max-width:340px;padding:7px 12px;border:1.5px solid var(--line);border-radius:8px;font-size:13px;background:var(--surface);color:var(--txt)"/>
-          </div>
-          <div style="border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-bottom:12px">
-            <div style="max-height:320px;overflow-y:auto">
-              <table style="width:100%;border-collapse:collapse;font-size:13px">
-                <thead><tr style="background:var(--surface);position:sticky;top:0;z-index:1">
-                  <th style="padding:9px 12px;text-align:left;font-weight:600;border-bottom:1px solid var(--line)">Flag Key</th>
-                  <th style="padding:9px 12px;text-align:left;font-weight:600;border-bottom:1px solid var(--line)">Type</th>
-                  <th style="padding:9px 12px;text-align:left;font-weight:600;border-bottom:1px solid var(--line)">Current Value</th>
-                  <th style="padding:9px 12px;text-align:left;font-weight:600;border-bottom:1px solid var(--line);min-width:160px">New Value</th>
-                </tr></thead>
-                <tbody id="rcMultiTbl">
-                  ${flags.map(f=>{
-                    const pv=pending[f.key]??f.defaultValue??'';
-                    const chg=pending[f.key]!==undefined;
-                    return`<tr data-key="${esc(f.key)}" style="${chg?'background:color-mix(in srgb,var(--brand) 7%,transparent)':''}">
-                      <td style="padding:7px 12px;font-family:'JetBrains Mono',monospace;font-weight:500;white-space:nowrap">${esc(f.key)}</td>
-                      <td style="padding:7px 12px;color:var(--txt-2)">${esc(f.valueType||'STRING')}</td>
-                      <td style="padding:7px 12px;font-family:'JetBrains Mono',monospace;color:var(--txt-2);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(f.defaultValue||'')}">${esc(f.defaultValue||'—')}</td>
-                      <td style="padding:5px 12px"><input type="text" class="rc-mi" data-key="${esc(f.key)}" data-orig="${esc(f.defaultValue||'')}" data-type="${esc(f.valueType||'STRING')}" value="${esc(pv)}"
-                        style="width:100%;padding:5px 8px;border:1.5px solid var(--line);border-radius:6px;font-size:12px;font-family:'JetBrains Mono',monospace;background:var(--surface);color:var(--txt)"/></td>
-                    </tr>`;
-                  }).join('')}
-                </tbody>
-              </table>
-            </div>
-          </div>
-          <div id="rcMultiErr" style="display:none;color:var(--fail);font-size:12px;margin-bottom:10px;white-space:pre-wrap"></div>
-          <button class="btn sm" id="rcAddMultiBtn">Save Changes</button>
-        </div>
-      </div>
-    </div>
-  </div>`;
-}
-
-function switchRcChangeTab(tab){
-  $('#rcSinglePanel').style.display=tab==='single'?'':'none';
-  $('#rcMultiPanel').style.display=tab==='multi'?'':'none';
-  $('#rcTabSingle').classList.toggle('active',tab==='single');
-  $('#rcTabMulti').classList.toggle('active',tab==='multi');
-  const step1=$('#rcStep1'),jsonSec=$('#rcFlagJsonSection');
-  if(step1)step1.style.display=tab==='multi'?'none':'';
-  if(jsonSec)jsonSec.style.display=tab==='multi'?'none':'';
-  if(tab==='multi'&&rcSelectedKey){
-    const row=document.querySelector('#rcMultiTbl tr[data-key="'+CSS.escape(rcSelectedKey)+'"]');
-    if(row){
-      row.scrollIntoView({block:'nearest',behavior:'smooth'});
-      const inp=row.querySelector('.rc-mi');
-      if(inp)inp.focus();
-    }
-  }
-}
-
-function wireRcEdit(s){
-  rcPendingChanges=Object.assign({},s.pendingChanges||{});
-  const flags=s.flags||[];
-  const fm={};flags.forEach(f=>fm[f.key]=f);
-  let selectedKey='';
-
-  const pb=$('#rcPublishBtn');
-  if(pb)pb.onclick=()=>publishRcChanges(s.id);
-
-  // Flag list search
-  const search=$('#rcFlagSearch');
-  if(search)search.oninput=()=>{
-    const q=search.value.toLowerCase();
-    document.querySelectorAll('.rc-flag-item').forEach(el=>el.style.display=el.dataset.key.toLowerCase().includes(q)?'':'none');
-  };
-
-  // Flag selection → show JSON + reveal tabs
-  const flagJson=$('#rcFlagJson'),detailStep=$('#rcDetailStep');
-  const sv=$('#rcSingleVal'),svErr=$('#rcSingleValErr'),ab=$('#rcAddBtn');
-
-  document.querySelectorAll('.rc-flag-item').forEach(el=>{
-    el.addEventListener('mouseenter',()=>{if(!el.dataset.active)el.style.background='var(--brand-50)';});
-    el.addEventListener('mouseleave',()=>{if(!el.dataset.active)el.style.background='';});
-    el.addEventListener('click',()=>{
-      document.querySelectorAll('.rc-flag-item').forEach(x=>{x.style.background='';delete x.dataset.active;});
-      el.style.background='var(--brand-50)';el.dataset.active='1';
-      const f=fm[el.dataset.key];if(!f)return;
-      selectedKey=f.key;rcSelectedKey=f.key;
-      const entry={defaultValue:{value:parseDisplayValue(f.defaultValue||'')}};
-      if(f.valueType)entry.valueType=f.valueType;
-      if(f.description)entry.description=f.description;
-      if(flagJson)flagJson.innerHTML=highlightJson(JSON.stringify({[f.key]:entry},null,2));
-      if(detailStep)detailStep.style.display='';
-      switchRcChangeTab('single');
-      if(sv){sv.value=rcPendingChanges[f.key]??f.defaultValue??'';sv.focus();}
-      if(svErr)svErr.style.display='none';
-      if(ab)ab.disabled=false;
-    });
-  });
-
-  // Single tab — Add to Pending
-  if(sv)sv.oninput=()=>{if(svErr)svErr.style.display='none';};
-  if(ab)ab.onclick=()=>{
-    const key=selectedKey,val=sv?sv.value:'';
-    if(!key)return;
-    const f=fm[key];
-    if(f&&f.valueType==='BOOLEAN'&&val!=='true'&&val!=='false'){
-      if(svErr){svErr.textContent='Boolean flags only accept "true" or "false".';svErr.style.display='block';}return;
-    }
-    if(f&&f.valueType==='NUMBER'&&isNaN(Number(val))){
-      if(svErr){svErr.textContent='Number flags must be a valid numeric value.';svErr.style.display='block';}return;
-    }
-    rcPendingChanges[key]=val;
-    const entry={defaultValue:{value:parseDisplayValue(val)}};
-    if(f.valueType)entry.valueType=f.valueType;
-    if(f.description)entry.description=f.description;
-    if(flagJson)flagJson.innerHTML=highlightJson(JSON.stringify({[key]:entry},null,2));
-    const activeEl=document.querySelector('.rc-flag-item[data-active]');
-    if(activeEl)activeEl.style.background='color-mix(in srgb,var(--pass) 18%,transparent)';
-    toast('"'+key+'" queued.');updateRcBadge();
-  };
-
-  // Multi tab — search filter
-  const ms=$('#rcMultiSearch');
-  if(ms)ms.oninput=()=>{
-    const q=ms.value.toLowerCase();
-    document.querySelectorAll('#rcMultiTbl tr[data-key]').forEach(r=>r.style.display=r.dataset.key.toLowerCase().includes(q)?'':'none');
-  };
-  // Multi tab — highlight row on change, clear highlight when reverted
-  document.querySelectorAll('.rc-mi').forEach(inp=>{
-    inp.oninput=()=>{
-      inp.closest('tr').style.background=inp.value!==inp.dataset.orig?'color-mix(in srgb,var(--brand) 7%,transparent)':'';
-    };
-  });
-  // Multi tab — Save Changes: only process inputs whose value differs from original
-  const addMultiBtn=$('#rcAddMultiBtn'),errDiv=$('#rcMultiErr');
-  if(addMultiBtn)addMultiBtn.onclick=()=>{
-    if(errDiv)errDiv.style.display='none';
-    const errors=[];let count=0;
-    document.querySelectorAll('.rc-mi').forEach(inp=>{
-      if(inp.value===inp.dataset.orig)return;
-      const key=inp.dataset.key,val=inp.value,f=fm[key];
-      if(f&&f.valueType==='BOOLEAN'&&val!=='true'&&val!=='false'){errors.push('"'+key+'": Boolean must be "true" or "false"');return;}
-      if(f&&f.valueType==='NUMBER'&&isNaN(Number(val))){errors.push('"'+key+'": must be a valid number');return;}
-      rcPendingChanges[key]=val;
-      inp.closest('tr').style.background='color-mix(in srgb,var(--brand) 7%,transparent)';
-      count++;
-    });
-    if(errors.length){if(errDiv){errDiv.textContent='Validation errors:\n• '+errors.join('\n• ');errDiv.style.display='block';}return;}
-    if(count){toast(count+' flag(s) added to pending.');updateRcBadge();}
-    else toast('No changes detected.');
-  };
-}
-function updateRcBadge(){const b=$('#rcBadge');if(!b)return;const n=Object.keys(rcPendingChanges).length;b.textContent=n+' pending';b.style.display=n?'inline-flex':'none';}
-async function publishRcChanges(sessionId){
-  const n=Object.keys(rcPendingChanges).length;
-  if(!n){toast('No changes to publish.');return;}
-  if(!confirm('Publish '+n+' flag change(s) to Firebase Remote Config?'))return;
-  try{
-    const r=await api('/api/rc/sessions/'+sessionId+'/publish',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({changes:rcPendingChanges})});
-    if(!r.ok)throw new Error(await r.text());
-    toast('Publishing…');
-    if(!rcPollTimer)rcPollTimer=setInterval(async()=>{if(state.view!=='rc'){clearInterval(rcPollTimer);rcPollTimer=null;return;}await paintRcSession();},1500);
-    await paintRcSession();
-  }catch(e){if(e.message!=='unauth')toast('Publish failed: '+e.message);}
-}
-
-/* --- UPLOAD + TEST PANEL --- */
-function rcUploadPanel(s){
-  const n=Object.keys(s.pendingChanges||{}).length;
-  return`<div class="card"><div class="card-b">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--pass)" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-      <strong style="color:var(--pass)">Published successfully — ${n} flag(s) updated</strong>
-    </div>
-    <div class="muted" style="font-size:13px;margin-bottom:18px">Upload the APK to validate the config changes are applied at runtime.</div>
-    <div class="drop" id="rcDrop"><div class="big">Drop your .apk here</div><div class="sm">or click to browse — up to 600 MB</div></div>
-    <input type="file" id="rcFileInput" accept=".apk" hidden/><div id="rcFileTag"></div>
-    <button class="btn" id="rcRunBtn" disabled style="width:100%;margin-top:14px;padding:13px">${ic('play',16)} Run Remote Config Validation</button>
-  </div></div>`;
-}
-function wireRcUpload(s){
-  const drop=$('#rcDrop'),fi=$('#rcFileInput');
-  if(!drop)return;
-  drop.onclick=()=>fi.click();
-  fi.onchange=e=>setRcFile(e.target.files[0]);
-  ['dragover','dragenter'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('drag');}));
-  ['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('drag');}));
-  drop.addEventListener('drop',e=>{if(e.dataTransfer.files[0])setRcFile(e.dataTransfer.files[0]);});
-  state.rcSessionId=s.id;
-  $('#rcRunBtn').onclick=()=>openDeviceSelect('rc');
-}
-function setRcFile(f){
-  if(!f)return;
-  if(!f.name.toLowerCase().endsWith('.apk')){toast('Please choose an .apk file');return;}
-  rcFile=f;
-  $('#rcFileTag').innerHTML=`<div class="file-tag"><div class="fi">APK</div>
-    <div style="flex:1"><div style="font-weight:600;word-break:break-all">${esc(f.name)}</div>
-    <div class="muted" style="font-size:12px">${(f.size/1048576).toFixed(1)} MB</div></div>
-    <button class="btn ghost sm" onclick="rcFile=null;$('#rcFileTag').innerHTML='';$('#rcRunBtn').disabled=true">Remove</button></div>`;
-  $('#rcRunBtn').disabled=false;
-}
-async function startRcTest(sessionId,serial){
-  if(!rcFile)return;
-  const fd=new FormData();fd.append('file',rcFile);if(serial)fd.append('serial',serial);
-  const btn=$('#rcRunBtn');btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Uploading…';
-  try{
-    const r=await api('/api/rc/sessions/'+sessionId+'/test',{method:'POST',body:fd});
-    if(!r.ok)throw new Error(await r.text());
-    notify({type:'test',status:'success',title:'Test execution started',message:'Test execution started successfully.'});rcFile=null;
-    if(!rcPollTimer)rcPollTimer=setInterval(async()=>{if(state.view!=='rc'){clearInterval(rcPollTimer);rcPollTimer=null;return;}await paintRcSession();},1500);
-    await paintRcSession();
-  }catch(e){if(e.message!=='unauth')notify({type:'errors',status:'error',title:'Upload failed',message:e.message});btn.disabled=false;btn.innerHTML=ic('play',16)+' Run Remote Config Validation';}
-}
-
-/* --- REPORT PANEL --- */
-function rcReportPanel(s){
-  const res=s.testResults||[];
-  const pass=res.filter(r=>r.status==='PASS').length,unk=res.filter(r=>r.status==='UNKNOWN').length,fail=res.filter(r=>r.status==='FAIL').length;
-  return`<div class="card"><div class="card-b">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
-      <div style="display:flex;align-items:center;gap:10px">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--pass)" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-        <strong>Validation Complete</strong>
-        <span class="badge b-COMPLETED">${pass} Pass</span>
-        ${unk?`<span class="badge b-SKIPPED">${unk} Unknown</span>`:''}
-        ${fail?`<span class="badge b-FAILED">${fail} Fail</span>`:''}
-      </div>
-      <a class="btn sm" href="/api/rc/sessions/${s.id}/report.html" target="_blank">Full Report ${ic('external',13)}</a>
-    </div>
-    <table style="width:100%;border-collapse:collapse;font-size:13.5px;margin-bottom:18px">
-      <thead><tr style="background:var(--surface-2)">
-        <th style="padding:9px 12px;text-align:left;border-bottom:1px solid var(--line)">Flag</th>
-        <th style="padding:9px 12px;text-align:left;border-bottom:1px solid var(--line)">Expected Value</th>
-        <th style="padding:9px 12px;text-align:left;border-bottom:1px solid var(--line)">Evidence</th>
-        <th style="padding:9px 12px;text-align:left;border-bottom:1px solid var(--line)">Status</th>
-        <th style="padding:9px 12px;text-align:left;border-bottom:1px solid var(--line)">Detail</th>
-      </tr></thead>
-      <tbody>${res.map(r=>`<tr>
-        <td style="padding:8px 12px;font-family:'JetBrains Mono',monospace;font-weight:600">${esc(r.flagKey)}</td>
-        <td style="padding:8px 12px;font-family:'JetBrains Mono',monospace">${esc(r.expectedValue)}</td>
-        <td style="padding:8px 12px;color:var(--txt-2)">${esc(r.foundEvidence)}</td>
-        <td style="padding:8px 12px"><span class="badge ${r.status==='PASS'?'b-COMPLETED':r.status==='FAIL'?'b-FAILED':'b-SKIPPED'}">${esc(r.status)}</span></td>
-        <td style="padding:8px 12px;color:var(--txt-2);font-size:12.5px">${esc(r.detail)}</td>
-      </tr>`).join('')||'<tr><td colspan="5" class="muted" style="padding:12px">No flags validated.</td></tr>'}</tbody>
-    </table>
-    <button class="btn ghost sm" onclick="resetRcSession()">New Configuration</button>
-  </div></div>`;
-}
-
-function resetRcSession(){
-  state.rcSessionId=null;rcPendingChanges={};rcFile=null;rcInputMode='fields';
-  if(rcPollTimer){clearInterval(rcPollTimer);rcPollTimer=null;}
-  renderRemoteConfig();
-}
-
 /* ---------- RUN DETAIL ---------- */
 async function renderDetail(){
   if(compatScreenTimer){clearInterval(compatScreenTimer);compatScreenTimer=null;compatScreenRunId=null;compatLastScreenSrc=null;}
@@ -3780,51 +3138,6 @@ function zoom(src){$('#lightboxImg').src=src;$('#lightbox').classList.add('show'
 $('#lightbox').onclick=()=>$('#lightbox').classList.remove('show');
 
 /* ====================================================================== */
-/* ===============  PRIORITY & LOGS — AD ANALYSIS MODULE  ================ */
-/* ====================================================================== */
-let adsFile=null;
-let adMode='TEST'; // default: TEST ADS
-const AD_MODE_HINT={
-  TEST:`<div style="display:flex;gap:12px;background:color-mix(in srgb,var(--info,#2196f3) 8%,var(--surface));border:1.5px solid color-mix(in srgb,var(--info,#2196f3) 35%,transparent);border-radius:10px;padding:14px 16px;margin-top:2px">
-    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--info,#2196f3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-    <div style="flex:1">
-      <div style="font-weight:700;font-size:13px;color:var(--info,#2196f3);margin-bottom:8px">TEST ADS Mode — Requirements</div>
-      <ol style="margin:0;padding-left:18px;font-size:12.5px;line-height:1.8;color:var(--txt-2)">
-        <li>Ask your developer to provide a test-ready APK with your device's Test ID added via <code style="font-size:11.5px;background:color-mix(in srgb,var(--info,#2196f3) 10%,transparent);padding:1px 5px;border-radius:4px">setTestDeviceIds()</code>.</li>
-        <li>If you don't have your Test Device ID yet — run this test once first. The framework will auto-capture your ID from logcat at the end.</li>
-        <li>Share the captured ID with your developer and get a new APK with that ID added.</li>
-        <li>Make sure the device has an active internet connection.</li>
-      </ol>
-    </div>
-  </div>`,
-  LIVE:`<div style="display:flex;gap:12px;background:color-mix(in srgb,#f59e0b 8%,var(--surface));border:1.5px solid color-mix(in srgb,#f59e0b 40%,transparent);border-radius:10px;padding:14px 16px;margin-top:2px">
-    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-    <div style="flex:1">
-      <div style="font-weight:700;font-size:13px;color:#d97706;margin-bottom:8px">LIVE ADS Mode — Requirements</div>
-      <ol style="margin:0;padding-left:18px;font-size:12.5px;line-height:1.8;color:var(--txt-2)">
-        <li>Use a <strong>release-signed APK</strong> only. Debug APKs will not serve real ads.</li>
-        <li>APK must use <strong>real Ad Unit IDs</strong>, not Google test IDs (<code style="font-size:11.5px;background:color-mix(in srgb,#f59e0b 12%,transparent);padding:1px 5px;border-radius:4px">ca-app-pub-3940256099942544</code>).</li>
-        <li>Device must have an <strong>active internet connection</strong>. Mobile data or WiFi both work.</li>
-        <li>AdMob account must be <strong>active and ad units approved</strong>. New accounts may have limited ad serving.</li>
-        <li>App should be <strong>published or registered</strong> in the AdMob console for best results.</li>
-      </ol>
-      <div style="display:flex;gap:9px;align-items:flex-start;margin-top:12px;padding:10px 12px;background:color-mix(in srgb,#f59e0b 14%,transparent);border-radius:7px;border:1px solid color-mix(in srgb,#f59e0b 35%,transparent)">
-        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-        <span style="font-size:12px;line-height:1.6;color:#92400e"><strong>Framework will NOT click ads in LIVE ADS mode</strong> to protect your AdMob account from policy violations. Ad load and impression detection only.</span>
-      </div>
-    </div>
-  </div>`};
-function setAdMode(m){
-  adMode=m;
-  document.querySelectorAll('.admode-opt').forEach(b=>{
-    const on=b.dataset.mode===m;
-    b.style.background=on?'var(--brand)':'none';
-    b.style.color=on?'#fff':'var(--txt-2)';
-    b.style.boxShadow=on?'0 1px 3px rgba(0,0,0,.15)':'none';
-  });
-  const h=$('#adModeHint'); if(h)h.innerHTML=AD_MODE_HINT[m]||'';
-}
-/* ====================================================================== */
 /* ====  SHARED "TEST RUNNING" VIEW for l10n / tc / compat modules  ====== */
 /* Same shared page (URL /test-running) New Test already uses — reuses the */
 /* existing DSEL_MODULES descriptors (poll/map/title) as its data source,  */
@@ -4125,302 +3438,6 @@ function moduleBodyCompat(s){
     </div>`;
 }
 
-const ADS_ACTIVE_STATES=['SETUP','ANALYZING'];
-let adsStopPending=false;
-const AD_TYPES=['Banner','Interstitial','Rewarded','RewardedInterstitial','Native','AppOpen','Unknown'];
-const AD_TYPE_LABEL={Banner:'Banner',Interstitial:'Interstitial',Rewarded:'Rewarded',RewardedInterstitial:'Rewarded Interstitial',Native:'Native',AppOpen:'App Open',Unknown:'Unknown'};
-const AD_TYPE_COLOR={Banner:'var(--brand)',Interstitial:'var(--high)',Rewarded:'var(--info)',RewardedInterstitial:'#9c5de0',Native:'var(--med)',AppOpen:'#0ea5e9',Unknown:'var(--mut)'};
-const ADS_STATUS_BADGE={PASS:'b-PASSED',WARNING:'b-WARNING',FAIL:'b-FAILED',INFO:'b-SKIPPED'};
-
-async function renderAds(){
-  if(adsPollTimer){clearInterval(adsPollTimer);adsPollTimer=null;}
-  if(!state.adsSessionId){renderAdsSetup();return;}
-  // Stable shell so the live console survives the session auto-refresh (same pattern as New Test/Detail).
-  $('#content').innerHTML=`<div id="adsMain"></div><div id="logcatMount" style="margin-top:18px">${logcatPanel()}</div>`;
-  mountLogcat();
-  await paintAdsSession();
-  const sess=await jget('/api/ads/sessions/'+state.adsSessionId).catch(()=>null);
-  if(sess&&ADS_ACTIVE_STATES.includes(sess.state)){
-    adsPollTimer=setInterval(async()=>{
-      if(state.view!=='ads'){clearInterval(adsPollTimer);adsPollTimer=null;return;}
-      await paintAdsSession();
-    },2000);
-  }
-}
-
-function renderAdsSetup(){
-  adsFile=null;adMode='TEST';
-  $('#content').innerHTML=`${execLockBanner()}<div class="grid" style="grid-template-columns:1.5fr 1fr;align-items:start">
-    <div class="card"><div class="card-h"><h3>Upload APK for Ad Analysis</h3></div><div class="card-b">
-      <p class="muted" style="margin:0 0 16px;font-size:13px;line-height:1.6">
-        Upload an Android APK to automatically discover every AdMob / Firebase ad placement,
-        categorise ads by type, and validate the full ad lifecycle (requests, loads, impressions,
-        clicks, revenue events and failures). A connected device enables live Logcat capture;
-        without one, a complete static report is produced.</p>
-      <div class="drop" id="adsDrop"><div class="big">Drop your .apk here</div><div class="sm">or click to browse — up to 600 MB</div></div>
-      <input type="file" id="adsFileInput" accept=".apk" hidden/><div id="adsFileTag"></div>
-
-      <label style="display:block;font-weight:600;font-size:12.5px;margin:18px 0 7px;color:var(--txt-2)">Ad Mode</label>
-      <div id="adModeToggle" style="display:inline-flex;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:4px;gap:4px">
-        <button type="button" class="admode-opt" data-mode="TEST" onclick="setAdMode('TEST')"
-          style="border:none;background:none;padding:8px 16px;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer">TEST ADS</button>
-        <button type="button" class="admode-opt" data-mode="LIVE" onclick="setAdMode('LIVE')"
-          style="border:none;background:none;padding:8px 16px;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer">LIVE ADS</button>
-      </div>
-      <div id="adModeHint" style="margin-top:10px"></div>
-
-      <button class="btn" id="adsAnalyzeBtn" disabled style="width:100%;margin-top:16px;padding:13px">${ic('bolt',16)} Analyze Ads &amp; Monetisation</button>
-    </div></div>
-    <div class="card"><div class="card-h"><h3>What gets checked</h3></div><div class="card-b">
-      <div class="legend">
-        ${[['Ad Discovery','All placements across the app, counted & typed'],
-           ['Ad Types','Banner · Interstitial · Rewarded · Rewarded Interstitial · Native · App Open'],
-           ['Lifecycle','Requests → Loads → Impressions → Clicks → Revenue'],
-           ['Failures','Failed loads, missing impressions, error codes & reasons'],
-           ['Integration','SDK setup, App ID, test vs production unit IDs, mediation'],
-           ['Reporting','Category-wise Pass / Fail with overall ad health']]
-          .map(([t,d])=>`<div class="li" style="align-items:flex-start"><span class="sw" style="background:var(--brand);margin-top:4px"></span>
-            <span><b style="color:var(--txt)">${t}</b><br><span class="muted" style="font-size:12px">${d}</span></span></div>`).join('')}
-      </div>
-    </div></div>
-  </div>`;
-  wireAdsUpload();
-}
-
-function wireAdsUpload(){
-  const drop=$('#adsDrop'),fi=$('#adsFileInput');
-  if(!drop)return;
-  drop.onclick=()=>fi.click();
-  fi.onchange=e=>setAdsFile(e.target.files[0]);
-  ['dragover','dragenter'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('drag');}));
-  ['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('drag');}));
-  drop.addEventListener('drop',e=>{if(e.dataTransfer.files[0])setAdsFile(e.dataTransfer.files[0]);});
-  $('#adsAnalyzeBtn').onclick=startAdsAnalysis;
-  setAdMode(adMode); // apply default (TEST ADS) selection + hint
-}
-function setAdsFile(f){
-  if(!f)return;
-  if(!f.name.toLowerCase().endsWith('.apk')){toast('Please choose an .apk file');return;}
-  adsFile=f;
-  $('#adsFileTag').innerHTML=`<div class="file-tag"><div class="fi">APK</div>
-    <div style="flex:1"><div style="font-weight:600;word-break:break-all">${esc(f.name)}</div>
-    <div class="muted" style="font-size:12px">${(f.size/1048576).toFixed(1)} MB</div></div>
-    <button class="btn ghost sm" onclick="adsFile=null;$('#adsFileTag').innerHTML='';$('#adsAnalyzeBtn').disabled=true">Remove</button></div>`;
-  $('#adsAnalyzeBtn').disabled=false;
-}
-async function startAdsAnalysis(){
-  if(!adsFile)return;
-  const fd=new FormData();fd.append('file',adsFile);fd.append('mode',adMode);
-  const btn=$('#adsAnalyzeBtn');btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Uploading…';
-  try{
-    const r=await api('/api/ads/analyze',{method:'POST',body:fd});
-    if(!r.ok)throw new Error((await r.json().catch(()=>({}))).message||'upload failed');
-    const {id}=await r.json();
-    state.adsSessionId=id;adsFile=null;
-    notify({type:'test',status:'success',title:'Test execution started',message:'Test execution started successfully.'});
-    renderAds();
-  }catch(e){if(e.message!=='unauth'){notify({type:'errors',status:'error',title:'Upload failed',message:e.message});btn.disabled=false;btn.innerHTML=ic('bolt',16)+' Analyze Ads & Monetisation';}}
-}
-
-async function stopAdsTest(){
-  if(!state.adsSessionId||adsStopPending)return;
-  adsStopPending=true;
-  const btn=$('#adsStopBtn');if(btn){btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Stopping…';}
-  try{
-    await api('/api/ads/sessions/'+state.adsSessionId+'/stop',{method:'POST'});
-    notify({type:'test',status:'info',title:'Ad analysis stopped',message:'Execution stopped. Redirecting to Test Runs…'});
-    setTimeout(()=>navigate('runs'),1800);
-  }catch(e){
-    if(e.message!=='unauth')notify({type:'errors',status:'error',title:'Stop failed',message:e.message||'Could not stop analysis.'});
-    adsStopPending=false;
-  }
-}
-
-async function paintAdsSession(){
-  let s;try{s=await jget('/api/ads/sessions/'+state.adsSessionId);}catch(e){return;}
-  if(!ADS_ACTIVE_STATES.includes(s.state)&&adsPollTimer){clearInterval(adsPollTimer);adsPollTimer=null;}
-  if(s.state==='COMPLETED'&&notifOnce('ads:'+state.adsSessionId+':done'))notify({type:'reports',status:'success',title:'Ad analysis completed',message:'Test execution completed. The report is ready to view.'});
-  else if(s.state==='STOPPED'&&notifOnce('ads:'+state.adsSessionId+':stopped')){
-    const disconnected=s.error&&s.error.toLowerCase().includes('disconnected');
-    notify({type:'test',status:disconnected?'error':'info',title:disconnected?'Device disconnected':'Ad analysis stopped',message:disconnected?'Execution stopped because the selected device was disconnected. Partial results saved.':'Analysis stopped by user. Partial results have been saved.'});
-    setTimeout(()=>navigate('runs'),2500);
-  }else if(s.state==='FAILED'&&notifOnce('ads:'+state.adsSessionId+':failed'))notify({type:'errors',status:'error',title:'Ad analysis failed',message:s.error||'The analysis failed unexpectedly.'});
-  const active=ADS_ACTIVE_STATES.includes(s.state);
-  const stateBadge=s.state==='COMPLETED'?'COMPLETED':s.state==='FAILED'?'FAILED':s.state==='STOPPED'?'CANCELLED':'RUNNING';
-  const head=`<div class="card"><div class="card-b">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap">
-      <div><div style="display:flex;align-items:center;gap:11px;flex-wrap:wrap">
-        <h2 style="margin:0;font-size:20px">${esc(s.packageName||s.apkFileName)}</h2>
-        <span class="badge b-${stateBadge}">${s.state}</span>
-        <span class="badge ${s.adMode==='LIVE'?'b-FAILED':'b-RUNNING'}" style="font-size:11px">${(s.adMode||'TEST')} ADS</span></div>
-        <div class="muted" style="margin-top:5px;font-size:13px">${esc(s.apkFileName)} · ${fmtTime(s.createdAt)}</div></div>
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        ${active?`<button id="adsStopBtn" class="btn sm" style="background:var(--fail);color:#fff;border-color:var(--fail)" onclick="stopAdsTest()">${ic('stop',14)} Stop Testing</button>`:''}
-        <button class="btn ghost sm" onclick="state.adsSessionId=null;renderAds()">← New Analysis</button>
-      </div>
-    </div>
-    ${active?`<div style="margin-top:16px;display:flex;align-items:center;gap:10px;color:var(--brand)">
-        <span class="spinner" style="border-color:color-mix(in srgb,var(--brand) 30%,transparent);border-top-color:var(--brand)"></span>
-        Analyzing ad placements and lifecycle…</div>`:''}
-    ${s.state==='STOPPED'?`<div class="finding HIGH" style="margin-top:14px"><div class="fh"><span class="sev-chip s-HIGH">STOPPED</span>Ad analysis stopped by user. Partial results saved.</div></div>`:''}
-    ${s.error?`<div class="finding CRITICAL" style="margin-top:14px"><div class="fh"><span class="sev-chip s-CRITICAL">ERROR</span>Analysis failed</div><div class="fd">${esc(s.error)}</div></div>`:''}
-  </div></div>`;
-
-  const body=(s.result&&!active)?adsResultView(s.result):'';
-  ($('#adsMain')||$('#content')).innerHTML=head+body;
-  logcatBind('ads:'+(s.id||state.adsSessionId), ADS_ACTIVE_STATES.includes(s.state), '');
-}
-
-function adsConsole(s){
-  const logs=(s.logs||[]);
-  return`<div class="card" style="margin-top:18px"><div class="card-h"><h3>Console Log</h3>
-    <span class="muted" style="font-size:12px">${logs.length} lines</span></div>
-    <div class="card-b" style="padding:0"><div class="steps-log" style="margin:0;border:none;border-radius:0;max-height:240px">${logs.map(esc).join('\n')||'No output yet.'}</div></div></div>`;
-}
-
-function adsResultView(r){
-  const dist=r.typeDistribution||{};
-  const health=r.overallHealth||'UNKNOWN';
-  const healthBadge=ADS_STATUS_BADGE[health]||'b-SKIPPED';
-
-  // KPI strip
-  const kpi=(lbl,val,sub,col)=>`<div class="kpi"><div class="lbl">${lbl}</div>
-    <div class="val"${col?` style="color:${col}"`:''}>${val}</div><div class="sub">${sub}</div></div>`;
-  const nPlace=(r.placements&&r.placements.length)||r.totalAdsFound||0;
-  const kpis=`<div class="grid kpis" style="margin-top:18px">
-    ${kpi('Ad Placements',nPlace,(Object.keys(dist).length)+' ad type(s)')}
-    ${kpi('Ads Loaded',r.deviceTestRun?r.placementsLoaded:'—',r.deviceTestRun?('of '+nPlace+' placement(s)'):'static analysis','var(--pass)')}
-    ${kpi('Ads Failed',r.deviceTestRun?r.placementsFailed:'—',r.deviceTestRun?'failed to load':'no device run',r.deviceTestRun&&r.placementsFailed?'var(--fail)':'')}
-    ${kpi('Impressions',r.deviceTestRun?r.placementsImpression:'—',r.deviceTestRun?(r.placementsClicked+' click(s)'):'no device run')}
-  </div>`;
-
-  // Overall health banner
-  const banner=`<div class="card" style="margin-top:18px"><div class="card-b" style="display:flex;align-items:center;gap:14px">
-    <span class="badge ${healthBadge}" style="font-size:13px;padding:7px 14px">${health}</span>
-    <div><b>Overall Ad Health</b><div class="muted" style="font-size:13px;margin-top:2px">${esc(r.healthSummary||'')}</div></div>
-  </div></div>`;
-
-  // Policy notice (LIVE ADS mode only)
-  const policyNotice=r.adClicksSkipped?`<div style="display:flex;gap:10px;align-items:flex-start;background:color-mix(in srgb,#f59e0b 8%,var(--surface));border:1.5px solid color-mix(in srgb,#f59e0b 35%,transparent);border-radius:10px;padding:12px 16px;margin-top:18px">
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-    <div style="font-size:13px;line-height:1.6;color:var(--txt-2)"><strong style="color:#d97706">Ad clicks skipped in LIVE ADS mode</strong> to prevent AdMob policy violation.
-    Use TEST ADS mode for click testing.</div>
-  </div>`:'';
-
-  // Ad type distribution
-  const totalDist=Object.values(dist).reduce((a,b)=>a+b,0)||1;
-  const distRows=AD_TYPES.filter(t=>dist[t]!==undefined).map(t=>{
-    const v=dist[t]||0;
-    return`<div class="bar-row"><span class="nm">${AD_TYPE_LABEL[t]}</span>
-      <div class="bar-track"><div class="bar-fill" style="width:${(v/totalDist)*100}%;background:${AD_TYPE_COLOR[t]}"></div></div>
-      <b>${v}</b></div>`;
-  }).join('')||'<div class="muted">No ad types detected.</div>';
-
-  // SDK / integration metrics
-  const integ=`<div class="metrics" style="margin:0">
-    ${m('AdMob SDK',r.admobSdkDetected?'Detected':'Not found')}
-    ${m('Firebase SDK',r.firebaseSdkDetected?'Detected':'Not found')}
-    ${m('AdMob App ID',r.admobAppId||'—')}
-    ${m('Mediation',(r.mediationSdks&&r.mediationSdks.length)?r.mediationSdks.join(', '):'AdMob only')}
-  </div>`;
-
-  const distCard=`<div class="grid" style="grid-template-columns:1.2fr 1fr;margin-top:18px">
-    <div class="card"><div class="card-h"><h3>Ad Type Distribution</h3></div><div class="card-b">${distRows}</div></div>
-    <div class="card"><div class="card-h"><h3>SDK Integration</h3></div><div class="card-b">${integ}</div></div>
-  </div>`;
-
-  // Category-wise Pass/Fail report
-  const cats=(r.categoryReport||[]);
-  const catRows=cats.map(c=>`<tr style="cursor:default">
-    <td style="font-weight:600">${esc(c.name)}</td>
-    <td><span class="badge ${ADS_STATUS_BADGE[c.status]||'b-SKIPPED'}">${esc(c.status)}</span></td>
-    <td class="mono">${c.found}${c.checked&&c.checked!==c.found?(' / '+c.checked):''}</td>
-    <td class="muted" style="font-size:12.5px">${esc(c.details||'')}</td></tr>`).join('');
-  const catCard=`<div class="card" style="margin-top:18px"><div class="card-h"><h3>Category-Wise Report (Pass / Fail)</h3></div>
-    <div class="card-b" style="padding:0"><table>
-      <thead><tr><th>Category</th><th>Status</th><th>Count</th><th>Details</th></tr></thead>
-      <tbody>${catRows||'<tr><td colspan="4" class="muted">No categories.</td></tr>'}</tbody></table></div></div>`;
-
-  // Lifecycle event counts (runtime only)
-  let lifecycle='';
-  if(r.deviceTestRun){
-    const ev=(k,v,col)=>`<div class="metric"><div class="k">${k}</div><div class="v" style="color:${col}">${v}</div></div>`;
-    lifecycle=`<div class="card" style="margin-top:18px"><div class="card-h"><h3>Ad Lifecycle (Runtime / Logcat)</h3></div><div class="card-b">
-      <div class="metrics" style="margin:0">
-        ${ev('Requests',r.requestCount,'var(--txt)')}
-        ${ev('Load Success',r.loadSuccessCount,'var(--pass)')}
-        ${ev('Load Failures',r.loadFailureCount,r.loadFailureCount?'var(--fail)':'var(--txt)')}
-        ${ev('Impressions',r.impressionCount,'var(--pass)')}
-        ${ev('Clicks',r.clickCount,'var(--txt)')}
-        ${ev('Revenue Events',r.revenueEventCount,'var(--info)')}
-        ${ev('Errors',r.errorCount,r.errorCount?'var(--fail)':'var(--txt)')}
-      </div></div></div>`;
-  }
-
-  // Discovered placements
-  const placements=(r.placements||[]);
-  const placeCard=placements.length?`<div class="card" style="margin-top:18px"><div class="card-h"><h3>Discovered Ad Placements</h3>
-    <span class="muted" style="font-size:12px">${placements.length} unit(s)</span></div>
-    <div class="card-b" style="padding:0"><table>
-      <thead><tr><th>Ad Unit ID</th><th>Type</th><th>Source</th><th>Mode</th></tr></thead>
-      <tbody>${placements.map(p=>`<tr style="cursor:default">
-        <td class="mono" style="font-size:12px">${esc(p.adUnitId)}</td>
-        <td>${esc(AD_TYPE_LABEL[p.adType]||p.adType)}</td>
-        <td class="muted">${esc(p.source)}</td>
-        <td>${p.testId?'<span class="sev-chip s-MEDIUM">TEST</span>':'<span class="sev-chip s-INFO">PROD</span>'}</td></tr>`).join('')}</tbody>
-    </table></div></div>`:'';
-
-  // Issues / failure reasons
-  const issues=(r.issues||[]);
-  const issueCard=issues.length?`<div class="card" style="margin-top:18px"><div class="card-h"><h3>Issues &amp; Failure Reasons</h3>
-    <span class="muted" style="font-size:12px">${issues.length} issue(s)</span></div>
-    <div class="card-b">${issues.map(i=>`<div class="finding ${i.severity}"><div class="fh">
-      <span class="sev-chip s-${i.severity}">${i.severity}</span>${esc(i.title)}
-      <span class="muted" style="font-weight:400;font-size:12px">· ${esc(i.category)}</span></div>
-      <div class="fd">${esc(i.description)}</div></div>`).join('')}</div></div>`
-    :`<div class="card" style="margin-top:18px"><div class="card-b" style="display:flex;align-items:center;gap:10px;color:var(--pass)">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--pass)" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
-        <b>No ad integration issues detected.</b></div></div>`;
-
-  // Lifecycle event log (sample)
-  const events=(r.lifecycleEvents||[]);
-  const evLog=events.length?`<div class="card" style="margin-top:18px"><div class="card-h"><h3>Logcat Ad Events</h3>
-    <span class="muted" style="font-size:12px">showing ${events.length}</span></div>
-    <div class="card-b" style="padding:0"><table>
-      <thead><tr><th>Time</th><th>Event</th><th>Type</th><th>Detail</th></tr></thead>
-      <tbody>${events.map(e=>`<tr style="cursor:default">
-        <td class="mono muted" style="font-size:11px;white-space:nowrap">${esc(e.timestamp||'—')}</td>
-        <td><span class="sev-chip ${e.error?'s-HIGH':'s-INFO'}">${esc(e.eventType)}</span></td>
-        <td>${esc(e.adType||'—')}</td>
-        <td class="mono" style="font-size:11px">${esc(e.detail||'')}</td></tr>`).join('')}</tbody>
-    </table></div></div>`:'';
-
-  // Per-placement end-to-end results (the actual behaviour of each ad placement)
-  const pr=r.placementResults||[];
-  let placementResultsCard='';
-  if(r.deviceTestRun&&pr.length){
-    const yes='<span style="color:var(--pass);font-weight:800">✓</span>';
-    const no='<span style="color:var(--mut)">—</span>';
-    const fail='<span style="color:var(--fail);font-weight:800">✗</span>';
-    const rows=pr.map(p=>`<tr style="cursor:default">
-      <td class="mono" style="font-size:11px;white-space:nowrap">${esc(p.adUnitId)}</td>
-      <td style="white-space:nowrap">${esc(AD_TYPE_LABEL[p.adType]||p.adType)}</td>
-      <td style="white-space:nowrap">${esc(p.screen)}</td>
-      <td style="text-align:center">${p.loaded?yes:(p.failed?fail:no)}</td>
-      <td style="text-align:center">${p.displayed?yes:no}</td>
-      <td style="text-align:center">${p.impression?yes:no}</td>
-      <td style="text-align:center">${p.clicked?yes:no}</td>
-      <td style="font-size:12px">${esc(p.status)}${p.notes?`<div class="muted" style="font-size:11px;margin-top:2px">${esc(p.notes)}</div>`:''}</td>
-    </tr>`).join('');
-    placementResultsCard=`<div class="card" style="margin-top:18px"><div class="card-h"><h3>Per-Placement Results</h3>
-      <span class="muted" style="font-size:12px">${pr.length} placement(s) · ${r.placementsLoaded} loaded · ${r.placementsFailed} failed · ${r.placementsImpression} impression(s) · ${r.placementsClicked} click(s)</span></div>
-      <div class="card-b" style="padding:0"><table>
-        <thead><tr><th>Ad Unit ID</th><th>Type</th><th>Screen</th><th>Loaded</th><th>Displayed</th><th>Impression</th><th>Clicked</th><th>Status / Errors</th></tr></thead>
-        <tbody>${rows}</tbody></table></div></div>`;
-  }
-  return kpis+banner+policyNotice+placementResultsCard+distCard+catCard+lifecycle+placeCard+issueCard+evLog;
-}
-
 /* ====================================================================== */
 /* =========  COMPATIBILITY — AUTO ANDROID 9–16 EMULATOR MATRIX  ========= */
 /* ====================================================================== */
@@ -4443,7 +3460,7 @@ async function renderCompat(){
   if(compatPollTimer){clearInterval(compatPollTimer);compatPollTimer=null;}
   if(compatSessScreenTimer){clearInterval(compatSessScreenTimer);compatSessScreenTimer=null;}
   if(!state.compatSessionId){renderCompatSetup();return;}
-  $('#content').innerHTML=`<div id="compatMain"></div><div id="logcatMount" style="margin-top:18px">${logcatPanel()}</div>`;
+  $(RENDER_ROOT).innerHTML=`<div id="compatMain"></div><div id="logcatMount" style="margin-top:18px">${logcatPanel()}</div>`;
   mountLogcat();
   await paintCompat();
   const s=await jget('/api/compat/sessions/'+state.compatSessionId).catch(()=>null);
@@ -4457,7 +3474,7 @@ async function renderCompat(){
 
 function renderCompatSetup(){
   compatFile=null;
-  $('#content').innerHTML=`${execLockBanner()}<div class="grid" style="grid-template-columns:1.5fr 1fr;align-items:start">
+  $(RENDER_ROOT).innerHTML=`${RENDER_ROOT==='#content'?execLockBanner():''}<div class="grid" style="grid-template-columns:1.5fr 1fr;align-items:start">
     <div class="card"><div class="card-h"><h3>Compatibility Testing</h3></div><div class="card-b">
       <p class="muted" style="margin:0 0 16px;font-size:13px;line-height:1.6">
         Upload an APK, then choose a connected device or a running emulator. The framework installs and
@@ -4983,7 +4000,7 @@ async function renderL10n(){
   if(l10nPollTimer){clearInterval(l10nPollTimer);l10nPollTimer=null;}
   if(!state.l10nSessionId){renderL10nSetup();return;}
   // Stable shell so the live console survives the session auto-refresh (same pattern as New Test/Detail).
-  $('#content').innerHTML=`<div id="l10nMain"></div><div id="logcatMount" style="margin-top:18px">${logcatPanel()}</div>`;
+  $(RENDER_ROOT).innerHTML=`<div id="l10nMain"></div><div id="logcatMount" style="margin-top:18px">${logcatPanel()}</div>`;
   mountLogcat();
   await paintL10n();
   const s=await jget('/api/l10n/sessions/'+state.l10nSessionId).catch(()=>null);
@@ -5008,7 +4025,7 @@ async function stopL10n(){
 }
 function renderL10nSetup(){
   l10nFile=null;
-  $('#content').innerHTML=`${execLockBanner()}<div class="grid" style="grid-template-columns:1.5fr 1fr;align-items:start">
+  $(RENDER_ROOT).innerHTML=`${RENDER_ROOT==='#content'?execLockBanner():''}<div class="grid" style="grid-template-columns:1.5fr 1fr;align-items:start">
     <div class="card"><div class="card-h"><h3>Automatic Localization Testing</h3></div><div class="card-b">
       <p class="muted" style="margin:0 0 16px;font-size:13px;line-height:1.6">
         Upload an APK and the framework will <b>auto-detect every language the app ships</b>, then test each
@@ -5541,7 +4558,7 @@ const logcat={timer:null,since:0,lines:[],levels:{V:true,D:true,I:true,W:true,E:
 const LC_MAX=5000;
 // hideStepsTab: the Test Running (New Test execution) page moves the Steps list into its own
 // Screen Navigation section instead (see paintDetail()), so its Console only needs Live Log —
-// every other caller (Priority & Logs, Localization, Compatibility, Test Cases, Remote Config)
+// every other caller (Localization, Compatibility, Test Cases)
 // is unaffected and keeps both tabs exactly as before.
 function logcatPanel(hideStepsTab){
   logcat.simple=!!hideStepsTab;
@@ -5716,9 +4733,6 @@ async function stepsRefresh(){
     if(key.startsWith('run:')){
       const run=await jget('/api/runs/'+key.slice(4));
       steps=run.executionSteps||[];
-    }else if(key.startsWith('ads:')){
-      const s=await jget('/api/ads/sessions/'+key.slice(4));
-      steps=s.logs||[];
     }else if(key.startsWith('l10n:')){
       const s=await jget('/api/l10n/sessions/'+key.slice(5));
       steps=s.logs||[];
@@ -5727,9 +4741,6 @@ async function stepsRefresh(){
       steps=s.logs||[];
     }else if(key.startsWith('tc:')){
       const s=await jget('/api/tc/sessions/'+key.slice(3));
-      steps=s.logs||[];
-    }else if(key.startsWith('rc:')){
-      const s=await jget('/api/rc/sessions/'+key.slice(3));
       steps=s.logs||[];
     }
   }catch(e){}
@@ -5842,6 +4853,7 @@ html[data-theme="dark"] .tc-zone .tc-zi{background:#152033}
   display:flex;align-items:flex-start;justify-content:flex-end;padding:16px;
   opacity:0;pointer-events:none;transition:opacity .2s}
 .tc-modal-overlay.open{opacity:1;pointer-events:all}
+.content>.tc-modal-overlay{animation:none}
 .tc-modal{width:680px;max-width:100%;max-height:calc(100vh - 32px);overflow-y:auto;
   background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow-lg);
   transform:translateX(40px);transition:transform .2s;display:flex;flex-direction:column}
@@ -5889,7 +4901,7 @@ async function renderTc() {
     document.head.appendChild(s);
   }
 
-  $('#content').innerHTML = `${execLockBanner()}
+  $(RENDER_ROOT).innerHTML = `${RENDER_ROOT==='#content'?execLockBanner():''}
 <div style="max-width:1160px;margin:0 auto">
 
   <!-- ── Setup panel ─────────────────────────────────────────── -->
@@ -6697,13 +5709,11 @@ const REPORT_MODULES=[
   {k:'Smart Execution',       label:'Smart Execution',     icon:'shield'},
   {k:'Test Case',             label:'Test Case Execution', icon:'list'},
   {k:'Localization',          label:'Localization',        icon:'globe'},
-  {k:'Compatibility Testing', label:'Compatibility',       icon:'layers'},
-  {k:'Remote Config',         label:'Remote Config',       icon:'sliders'},
-  {k:'Priority & Logs',       label:'Priority & Logs',     icon:'megaphone'}
+  {k:'Compatibility Testing', label:'Compatibility',       icon:'layers'}
 ];
 /** view key + route each module's "Start a test" shortcut jumps to, keyed by REPORT_MODULES.k. */
 const REPORT_MODULE_VIEW={'Smart Execution':'smartexec','Test Case':'tc','Localization':'l10n',
-  'Compatibility Testing':'compat','Remote Config':'rc','Priority & Logs':'ads'};
+  'Compatibility Testing':'compat'};
 function downloadBlob(text,filename,type){
   const blob=new Blob([text],{type:type||'text/plain'});
   const url=URL.createObjectURL(blob);
@@ -6886,7 +5896,7 @@ function repaintSelectedReport(){
   renderModuleReportPanel(state.reportsModule);
 }
 
-/** Renders the module-specific report (Test Case / Localization / Compatibility / Remote Config)
+/** Renders the module-specific report (Test Case / Localization / Compatibility)
  *  for the currently selected run, each with its own Download PDF. */
 async function renderModuleReportPanel(mod){
   const sel=$('#reportsSelected');if(!sel)return;
@@ -6911,15 +5921,6 @@ async function renderModuleReportPanel(mod){
     sel.innerHTML=card('Test Case Execution Report',
       `<a class="btn ghost sm" href="${url}" target="_blank">${ic('external',14)} Open HTML</a>
        <a class="btn ghost sm" href="${bug}" target="_blank" style="color:var(--fail)">${ic('alert',14)} Bug Report</a>
-       <button class="btn sm" onclick="printReportUrl('${url}')">${ic('download',14)} Download PDF</button>`,
-      frame(url));
-    return;
-  }
-
-  if(mod==='Remote Config'){
-    const url='/api/rc/sessions/'+id+'/report.html';
-    sel.innerHTML=card('Remote Config Validation Report',
-      `<a class="btn ghost sm" href="${url}" target="_blank">${ic('external',14)} Open HTML</a>
        <button class="btn sm" onclick="printReportUrl('${url}')">${ic('download',14)} Download PDF</button>`,
       frame(url));
     return;
@@ -6958,18 +5959,6 @@ async function renderModuleReportPanel(mod){
     return;
   }
 
-  if(mod==='Priority & Logs'){
-    sel.innerHTML=card('Priority & Logs Report','',`<div class="card-b muted" style="padding:20px"><span class="spinner"></span> Loading…</div>`);
-    let s;try{s=await jget('/api/ads/sessions/'+id);}catch(e){
-      sel.innerHTML=card('Priority & Logs Report','',`<div class="card-b muted" style="padding:20px">Could not load this run.</div>`);return;}
-    if(state.reportsRunId!==id)return;
-    const inner=s.result?adsResultView(s.result):'<div class="muted">No results recorded for this run.</div>';
-    sel.innerHTML=card('Priority & Logs Report',
-      `<button class="btn sm" onclick="printReportsElement('adsReportContent','Priority & Logs Report')">${ic('download',14)} Download PDF</button>`,
-      `<div class="card-b"><div id="adsReportContent">${inner}</div></div>`);
-    return;
-  }
-
   sel.innerHTML=card(mod+' Report','',`<div class="card-b muted" style="padding:20px">No dedicated report view for this module.</div>`);
 }
 
@@ -6992,6 +5981,50 @@ const dm={devices:[],avds:[],pollTimer:null};
 function dmCleanup(){
   if(dm.pollTimer){clearInterval(dm.pollTimer);dm.pollTimer=null;}
   const dmm=document.getElementById('dmModal');if(dmm)dmm.remove();
+}
+
+function renderAiQa(){
+  $('#content').innerHTML=`<div class="grid" style="grid-template-columns:repeat(3,1fr)">${PLATFORMS.map(m=>`
+    <div class="mod-card${m.k==='android'?' active':''}" onclick="${m.k==='android'?"go('androidqa')":"toast('"+esc(m.n)+" is on our roadmap.')"}">
+      <span class="mod-badge ${m.s==='active'?'ok':''}">${m.s==='active'?'Available':'Soon'}</span>
+      <div class="mod-ic">${m.ic}</div>
+      <div class="mod-t">${esc(m.n)}</div>
+      <div class="mod-d">${esc(m.d)}</div>
+    </div>`).join('')}</div>`;
+}
+
+const ANDROID_QA_MODULES=[
+  {view:'smartexec',n:'Smart Execution',d:'AI-powered, generic end-to-end APK testing — no locators, no hardcoding — with built-in AI test case generation',
+   ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2.4"/><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5v2.2M12 18.3v2.2M3.5 12h2.2M18.3 12h2.2" stroke-linecap="round"/></svg>'},
+  {view:'tc',n:'Test Case Runner',d:'Upload APK + test sheet — AI-driven sequential execution on device',
+   ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M10 8.5v7l6-3.5z" stroke-linejoin="round"/></svg>'},
+  {view:'compat',n:'Compatibility',d:'Automatic UI & functionality testing across Android 9–16 emulators',
+   ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M9 7h6M9 11h6M9 15h4" stroke-linecap="round"/><path d="M14 15l1.5 1.5L18 13" stroke-linecap="round" stroke-linejoin="round"/></svg>'},
+  {view:'l10n',n:'Localization',d:'Automatic per-language translation & functionality testing',
+   ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.8 2.5 15.2 0 18M12 3c-2.5 2.8-2.5 15.2 0 18" stroke-linecap="round"/></svg>'}
+];
+// Renders each module's existing, unmodified setup UI into its own section container on this
+// one page (RENDER_ROOT redirects their $('#content').innerHTML calls into that container) —
+// no separate pages to navigate to; starting an actual test still navigates to its live/execution
+// page exactly as before (Smart Execution → smartexecRunning, the others → the shared 'detail' page).
+const ANDROID_QA_RENDER={smartexec:renderSmartExec,tc:renderTc,compat:renderCompat,l10n:renderL10n};
+async function renderAndroidQa(){
+  $('#content').innerHTML=`${execLockBanner()}<div class="androidqa-stack">${ANDROID_QA_MODULES.map(m=>`
+    <section class="androidqa-section">
+      <div class="androidqa-sec-h">
+        <span class="mod-ic mod-ic-sm">${m.ic}</span>
+        <div><div class="androidqa-sec-t">${esc(m.n)}</div><div class="androidqa-sec-d">${esc(m.d)}</div></div>
+      </div>
+      <div id="aqa-${m.view}"></div>
+    </section>`).join('')}</div>`;
+  try{
+    for(const m of ANDROID_QA_MODULES){
+      RENDER_ROOT='#aqa-'+m.view;
+      await ANDROID_QA_RENDER[m.view]();
+    }
+  } finally {
+    RENDER_ROOT='#content';
+  }
 }
 
 async function renderDeviceManager(){
@@ -7214,14 +6247,6 @@ let dsel={key:null,sel:new Set(),devices:[],mod:null};
 let mexec=null; // {key,mod,items:[{serial,id,name,version,type,isEmulator,session,launchError}],timer,shots:{}}
 
 /* ---- per-module status adapters: session JSON → normalised card model ---- */
-function dselMapRc(s){
-  const st=s.state;const done=['COMPLETED','FAILED'].includes(st);
-  let outcome=null;
-  if(st==='COMPLETED'){const bad=(s.testResults||[]).some(t=>/FAIL|MISSING|NOT/i.test(t.status||''));outcome=bad?'FAILED':'COMPLETED';}
-  else if(st==='FAILED')outcome='FAILED';
-  const label=st==='COMPLETED'?(outcome==='FAILED'?'Failed':'Passed'):st==='FAILED'?'Failed':st==='TESTING'?'Validating':st;
-  return {done,outcome,label,pct:done?100:45,indet:!done,logs:(s.logs||[]).slice(-6),score:null};
-}
 function dselMapL10n(s){
   const st=s.state;const done=['COMPLETED','FAILED','STOPPED'].includes(st);
   const outcome=st==='COMPLETED'?'COMPLETED':st==='FAILED'?'FAILED':st==='STOPPED'?'STOPPED':null;
@@ -7251,11 +6276,6 @@ function dselMapCompat(s){
 
 /* ---- module descriptors: how each module starts/polls/reports ---- */
 const DSEL_MODULES={
-  rc:{title:'Remote Config Validation',singleAllowed:true,
-    precheck(){if(!rcFile)return 'Upload an APK first.';if(!state.rcSessionId)return 'Fetch a Remote Config first.';return null;},
-    startSingle(serial){startRcTest(state.rcSessionId,serial);},
-    async launchMulti(serials){const fd=new FormData();fd.append('file',rcFile);fd.append('serials',serials.join(','));const r=await api('/api/rc/sessions/'+state.rcSessionId+'/test-multi',{method:'POST',body:fd});if(!r.ok)throw new Error((await r.text().catch(()=>'launch failed')));const d=await r.json();return (d.devices||[]).map(x=>dselItem(x.serial,x.id,dsel.devices.find(z=>z.serial===x.serial)));},
-    poll:id=>'/api/rc/sessions/'+id,report:id=>'/api/rc/sessions/'+id+'/report.html',open:id=>{state.rcSessionId=id;go('rc');},map:dselMapRc},
   l10n:{title:'Localization Testing',singleAllowed:true,
     precheck(){if(!l10nFile)return 'Upload an APK first.';return null;},
     startSingle(serial){startL10n(serial);},
@@ -7264,7 +6284,7 @@ const DSEL_MODULES={
   tcgen:{title:'Test Case Wise Execution',singleAllowed:true,
     precheck(){
       if(!state._analyzeId||!state._analyzeSnapshot||!state._analyzeSnapshot.done)return 'Run Analyze APK first — execution follows the generated/merged test case sheet.';
-      if(!state.file)return 'The uploaded APK is no longer available — re-select the .apk file.';
+      if(!state._smartExecFile)return 'The uploaded APK is no longer available — re-select the .apk file.';
       return null;},
     startSingle(serial){tcgenStart(serial);},
     async launchOne(serial){const id=await tcgenLaunch(serial);if(typeof tcState!=='undefined')tcState.sessionId=id;return id;},
