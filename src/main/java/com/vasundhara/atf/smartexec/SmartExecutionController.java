@@ -32,6 +32,9 @@ import java.util.UUID;
  * GET  /api/smartexec/runs/{id}/ui-issues.html
  * GET  /api/smartexec/runs/{id}/crash-issues.html
  * GET  /api/smartexec/runs/{id}/admob-report.html
+ * GET  /api/smartexec/runs/{id}/figma-report.html
+ * GET  /api/smartexec/runs/{id}/security-report.html
+ * GET  /api/smartexec/runs/{id}/performance-report.html
  * GET  /api/smartexec/runs/{id}/artifacts/{file} — screenshots/video evidence
  * </pre>
  */
@@ -77,7 +80,8 @@ public class SmartExecutionController {
     public ResponseEntity<Map<String, String>> start(
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "categories", required = false) List<String> categories,
-            @RequestParam(value = "deviceSerial", required = false) String deviceSerial) throws Exception {
+            @RequestParam(value = "deviceSerial", required = false) String deviceSerial,
+            @RequestParam(value = "figmaUrl", required = false) String figmaUrl) throws Exception {
         if (file.isEmpty()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No APK uploaded.");
         String original = file.getOriginalFilename() == null ? "app.apk" : file.getOriginalFilename();
         if (!original.toLowerCase().endsWith(".apk")) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "File must be an .apk");
@@ -91,6 +95,7 @@ public class SmartExecutionController {
         session.setApkFileName(original);
         session.setSelectedCategories(selected);
         if (deviceSerial != null && !deviceSerial.isBlank()) session.setDeviceSerial(deviceSerial.trim());
+        if (figmaUrl != null && !figmaUrl.isBlank()) session.setFigmaUrl(figmaUrl.trim());
         session.addStep("Session created for: " + original);
 
         Path uploadDir = Path.of(props.getUploadDir()).toAbsolutePath();
@@ -140,6 +145,15 @@ public class SmartExecutionController {
 
     @GetMapping(value = "/runs/{id}/admob-report.html", produces = MediaType.TEXT_HTML_VALUE)
     public String admobReport(@PathVariable String id) { return SmartIssueReportBuilder.generate(need(id), SmartIssueReportBuilder.ReportType.ADS); }
+
+    @GetMapping(value = "/runs/{id}/figma-report.html", produces = MediaType.TEXT_HTML_VALUE)
+    public String figmaReport(@PathVariable String id) { return com.vasundhara.atf.smartexec.figma.FigmaReportBuilder.generate(need(id)); }
+
+    @GetMapping(value = "/runs/{id}/security-report.html", produces = MediaType.TEXT_HTML_VALUE)
+    public String securityReport(@PathVariable String id) { return com.vasundhara.atf.smartexec.security.SecurityReportBuilder.generate(need(id)); }
+
+    @GetMapping(value = "/runs/{id}/performance-report.html", produces = MediaType.TEXT_HTML_VALUE)
+    public String performanceReport(@PathVariable String id) { return com.vasundhara.atf.smartexec.performance.PerformanceReportBuilder.generate(need(id)); }
 
     @GetMapping("/runs/{id}/artifacts/{file}")
     public ResponseEntity<byte[]> artifact(@PathVariable String id, @PathVariable String file) throws Exception {

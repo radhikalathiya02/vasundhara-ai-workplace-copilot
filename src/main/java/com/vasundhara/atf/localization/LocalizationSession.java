@@ -25,6 +25,7 @@ public class LocalizationSession {
     private volatile boolean stopRequested;
     private String apkFileName;
     private String packageName;
+    private volatile String deviceSerial;
     private String baselineLocale = "default";
     /** Where the language list came from: in-app Language Settings screen, or APK resources. */
     private String languageSource = "—";
@@ -51,6 +52,7 @@ public class LocalizationSession {
             @JsonProperty("stopRequested") boolean stopRequested,
             @JsonProperty("apkFileName") String apkFileName,
             @JsonProperty("packageName") String packageName,
+            @JsonProperty("deviceSerial") String deviceSerial,
             @JsonProperty("baselineLocale") String baselineLocale,
             @JsonProperty("languageSource") String languageSource,
             @JsonProperty("languageScreen") String languageScreen,
@@ -64,6 +66,7 @@ public class LocalizationSession {
         this.stopRequested = stopRequested;
         this.apkFileName = apkFileName;
         this.packageName = packageName;
+        this.deviceSerial = deviceSerial;
         if (baselineLocale != null) this.baselineLocale = baselineLocale;
         if (languageSource != null) this.languageSource = languageSource;
         this.languageScreen = languageScreen;
@@ -88,6 +91,8 @@ public class LocalizationSession {
     public void setApkFileName(String n) { this.apkFileName = n; }
     public String getPackageName() { return packageName; }
     public void setPackageName(String p) { this.packageName = p; }
+    public String getDeviceSerial() { return deviceSerial; }
+    public void setDeviceSerial(String s) { this.deviceSerial = s; }
     public String getBaselineLocale() { return baselineLocale; }
     public void setBaselineLocale(String b) { this.baselineLocale = b; }
     public String getLanguageSource() { return languageSource; }

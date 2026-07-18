@@ -72,7 +72,13 @@ public record SmartWidget(
     }
 
     public String signature() {
-        return simpleClass() + "#" + (resourceId == null ? "" : resourceId) + "@" + x + "," + y;
+        // Class + resourceId + position alone collide across widgets that share a reused shell
+        // (e.g. a "Next" button at the same spot on every step of a wizard, or list rows that all
+        // use the same generic resourceId) — including the widget's own label distinguishes them,
+        // so a different control at the same position/class/id isn't mistaken for one already tried.
+        String label = notBlank(text) ? text.trim() : (notBlank(contentDesc) ? contentDesc.trim() : "");
+        String key = simpleClass() + "#" + (resourceId == null ? "" : resourceId) + "@" + x + "," + y;
+        return label.isEmpty() ? key : key + ":" + (label.length() > 40 ? label.substring(0, 40) : label);
     }
 
     private static boolean notBlank(String s) { return s != null && !s.trim().isEmpty(); }

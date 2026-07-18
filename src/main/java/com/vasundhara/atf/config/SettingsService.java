@@ -124,6 +124,9 @@ public class SettingsService {
         reg("aiModel", "ai", "string", props::getAiModel, v -> keepIfBlank(str(v), props::getAiModel, props::setAiModel));
         reg("aiMaxScreensPerRun", "ai", "int", props::getAiMaxScreensPerRun,
                 v -> props.setAiMaxScreensPerRun(intv(v, props.getAiMaxScreensPerRun(), 1, 50)));
+
+        // Figma design comparison (Smart Execution) — figmaApiToken is write-only, same reason as aiApiKey.
+        reg("figmaHasApiToken", "figma", "bool", () -> props.getFigmaApiToken() != null && !props.getFigmaApiToken().isBlank(), v -> {});
     }
 
     @PostConstruct
@@ -166,6 +169,10 @@ public class SettingsService {
             // AI API key is write-only for the same reason — never echoed back to the dashboard.
             Object aiKey = patch.get("aiApiKey");
             if (aiKey != null && !str(aiKey).isEmpty()) props.setAiApiKey(str(aiKey));
+
+            // Figma API token — write-only, same reason.
+            Object figmaKey = patch.get("figmaApiToken");
+            if (figmaKey != null && !str(figmaKey).isEmpty()) props.setFigmaApiToken(str(figmaKey));
         }
         persist();
         return snapshot();

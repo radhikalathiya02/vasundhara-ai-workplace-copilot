@@ -311,13 +311,44 @@
   .mod-d{color:var(--mut);font-size:12.5px;margin-top:3px}
   .mod-badge{position:absolute;top:14px;right:14px;font-size:10.5px;font-weight:700;padding:3px 10px;border-radius:20px;background:var(--track);color:var(--mut)}
   .mod-badge.ok{background:color-mix(in srgb,var(--pass) 14%,transparent);color:var(--pass)}
-  .androidqa-stack{display:flex;flex-direction:column;gap:8px}
-  .androidqa-section{padding-top:22px}
-  .androidqa-section:first-child{padding-top:0}
-  .androidqa-section+.androidqa-section{border-top:1px solid var(--line);margin-top:14px}
-  .androidqa-sec-h{display:flex;align-items:center;gap:12px;margin-bottom:16px}
-  .androidqa-sec-t{font-weight:800;font-size:17px}
-  .androidqa-sec-d{color:var(--mut);font-size:12.5px;margin-top:2px}
+  /* ================= AI QA Automation — page shell (scoped, own classes; no shared-class
+     impact on the Dashboard's platform list or any other page) ================= */
+  .aqa-page{max-width:1180px}
+  .aqa-eyebrow{font-size:11px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;color:var(--mut);margin-bottom:10px}
+  .aqa-platforms{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:28px}
+  .aqa-platform-card{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    padding:20px 18px;cursor:pointer;transition:border-color .16s,box-shadow .16s,transform .16s;box-shadow:var(--shadow)}
+  .aqa-platform-card:hover{border-color:var(--brand);transform:translateY(-1px)}
+  .aqa-platform-card.active{border-color:transparent;box-shadow:0 0 0 1.5px var(--brand),var(--shadow);
+    background:linear-gradient(color-mix(in srgb,var(--brand) 5%,var(--surface)),color-mix(in srgb,var(--brand) 5%,var(--surface)))}
+  .aqa-platform-check{position:absolute;top:14px;right:14px;width:20px;height:20px;border-radius:50%;background:var(--grad);
+    color:#fff;display:grid;place-items:center;box-shadow:0 3px 8px color-mix(in srgb,var(--brand) 40%,transparent)}
+  .aqa-platform-ic{width:44px;height:44px;border-radius:13px;background:var(--grad);color:#fff;display:grid;place-items:center;margin-bottom:14px;
+    box-shadow:0 4px 12px color-mix(in srgb,var(--brand) 28%,transparent)}
+  .aqa-platform-ic svg{width:22px;height:22px}
+  .aqa-platform-name{font-weight:700;font-size:14.5px}
+  .aqa-platform-desc{color:var(--mut);font-size:12px;margin-top:3px;line-height:1.5;padding-right:20px}
+  .aqa-platform-badge{position:absolute;top:14px;right:14px;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;
+    background:var(--track);color:var(--mut)}
+  .aqa-platform-card.active .aqa-platform-badge{display:none}
+  .aqa-platform-badge.ok{background:color-mix(in srgb,var(--pass) 14%,transparent);color:var(--pass)}
+  .aqa-tabbar{position:sticky;top:0;z-index:2;background:var(--bg,var(--surface-2));padding:2px 0 18px}
+  .aqa-tabs.seg{display:flex;flex-wrap:wrap;width:max-content;max-width:100%}
+  .aqa-tab{display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+  .aqa-tab-ic{width:20px;height:20px;display:grid;place-items:center;flex:none;opacity:.85}
+  .aqa-tab-ic svg{width:15px;height:15px}
+  .aqa-tab.active .aqa-tab-ic{opacity:1}
+  .aqa-banner{display:flex;align-items:center;gap:16px;margin-bottom:20px;padding:18px 20px;border-radius:var(--radius);
+    background:color-mix(in srgb,var(--brand) 5%,var(--surface));border:1px solid color-mix(in srgb,var(--brand) 14%,var(--line))}
+  .aqa-banner-ic{width:48px;height:48px;border-radius:14px;background:var(--grad);color:#fff;display:grid;place-items:center;flex:none;
+    box-shadow:0 4px 12px color-mix(in srgb,var(--brand) 30%,transparent)}
+  .aqa-banner-ic svg{width:24px;height:24px}
+  .aqa-banner-t{font-weight:800;font-size:18px;letter-spacing:-.2px}
+  .aqa-banner-d{color:var(--mut);font-size:12.5px;margin-top:3px}
+  .androidqa-stack{display:flex;flex-direction:column}
+  .androidqa-section{display:none;padding-top:4px}
+  .androidqa-section.active{display:block;animation:fadeUp .28s cubic-bezier(.2,.7,.2,1) both}
+  @media(max-width:880px){ .aqa-platforms{grid-template-columns:1fr} }
   .suite.closed .suite-body{display:none}
   .cs-wrap{text-align:center;padding:52px 24px}
   .cs-ic{width:66px;height:66px;border-radius:18px;background:var(--brand-50);color:var(--brand);display:grid;place-items:center;margin:0 auto 18px}
@@ -1234,10 +1265,10 @@ function closeConnectModal(){
 
 /* ---------- nav / router ---------- */
 // Maps view keys to their canonical browser URL paths.
-const VIEW_TO_PATH={overview:'/overview',runs:'/runs',smartexec:'/smart-execution',l10n:'/localization',tc:'/test-cases',settings:'/settings',compat:'/compat',devices:'/devices',reports:'/reports',aiqa:'/ai-qa-automation',androidqa:'/ai-qa-automation/android'};
-// Views relocated under the Android Application Testing page (no longer in the sidebar) —
+const VIEW_TO_PATH={overview:'/overview',runs:'/runs',smartexec:'/smart-execution',l10n:'/localization',tc:'/test-cases',settings:'/settings',compat:'/compat',devices:'/devices',reports:'/reports',aiqa:'/ai-qa-automation'};
+// Views folded into the AI QA Automation page (no longer in the sidebar, no separate page) —
 // their breadcrumb "back" link returns here instead of the default group behavior.
-const PARENT_VIEW={androidqa:'aiqa',smartexec:'androidqa',smartexecRunning:'androidqa',l10n:'androidqa',compat:'androidqa',tc:'androidqa'};
+const PARENT_VIEW={smartexec:'aiqa',smartexecRunning:'aiqa',l10n:'aiqa',compat:'aiqa',tc:'aiqa'};
 // Reverse map — URL path → view key (detail is handled separately via /runs/{id} regex).
 const PATH_TO_VIEW=Object.fromEntries(Object.entries(VIEW_TO_PATH).map(([k,v])=>[v,k]));
 
@@ -1293,8 +1324,7 @@ function go(view,runId,replace,urlOverride,mod){
     settings:['Settings','Configure the framework — changes apply to future test runs'],
     devices:['Device Manager','Manage emulators and physical devices — multi-device parallel testing'],
     reports:['Reports','Consolidated per-run reports — view, download and export'],
-    aiqa:['AI QA Automation',''],
-    androidqa:['Android Application Testing','Automation modules available for Android apps']};
+    aiqa:['AI QA Automation','Automation modules available for Android apps']};
   const VIEW_GROUP={overview:'Workspace',runs:'Workspace',detail:'Workspace',
     reports:'Analysis',
     devices:'Infrastructure',aiqa:'Workspace',settings:'System'};
@@ -1304,7 +1334,7 @@ function go(view,runId,replace,urlOverride,mod){
   $('#crumbGroup').onclick=PARENT_VIEW[view]?(()=>go(PARENT_VIEW[view])):null;
   $('#crumbTitle').textContent=C[view][0];
   startExecLockPolling();
-  ({overview:renderOverview,runs:renderRuns,detail:renderDetail,smartexec:renderSmartExec,smartexecRunning:renderSmartExecRunning,compat:renderCompat,l10n:renderL10n,tc:renderTc,settings:renderSettings,devices:renderDeviceManager,reports:renderReports,aiqa:renderAiQa,androidqa:renderAndroidQa})[view]();
+  ({overview:renderOverview,runs:renderRuns,detail:renderDetail,smartexec:renderSmartExec,smartexecRunning:renderSmartExecRunning,compat:renderCompat,l10n:renderL10n,tc:renderTc,settings:renderSettings,devices:renderDeviceManager,reports:renderReports,aiqa:renderAiQa})[view]();
 }
 
 /**
@@ -1928,7 +1958,9 @@ const SMARTEXEC_CATEGORIES=[
   {k:'monkey',     label:'Monkey testing'},
   {k:'ads',        label:'AdMob / Firebase ad testing'},
   {k:'regression', label:'Regression testing'},
-  {k:'network',    label:'Online/offline views testing'}
+  {k:'network',    label:'Online/offline views testing'},
+  {k:'security',   label:'Security testing'},
+  {k:'performance',label:'Performance testing'}
 ];
 
 function smartexecSetFile(f){
@@ -1960,6 +1992,10 @@ async function renderSmartExec(){
       <div class="card"><div class="card-h"><h3>1 · Upload APK</h3></div><div class="card-b">
         <div class="drop" id="smartexecDrop"><div class="big">Drop your .apk here</div><div class="sm">Native, Flutter, Compose, React Native, Xamarin, WebView/Hybrid — up to 600 MB</div></div>
         <input type="file" id="smartexecFile" accept=".apk" hidden/><div id="smartexecFileTag"></div>
+        <label style="display:block;font-size:12px;font-weight:600;margin:16px 0 6px">Figma File/Frame URL <span class="muted" style="font-weight:400">(optional)</span></label>
+        <input type="text" class="input" id="smartexecFigmaUrl" placeholder="https://www.figma.com/design/..." style="width:100%"
+          value="${esc(state._smartExecFigmaUrl||'')}" oninput="state._smartExecFigmaUrl=this.value"/>
+        <div class="muted" style="font-size:11.5px;margin-top:5px">When set, Smart Execution compares the app's discovered screens against this design after the run finishes — see Settings → Figma to configure API access.</div>
       </div></div>
       <div class="card"><div class="card-h"><h3>2 · Categories</h3>
         <button class="btn ghost sm" onclick="smartexecToggleAll()">Toggle all</button></div>
@@ -2006,6 +2042,7 @@ async function smartexecStart(){
     const fd=new FormData();
     fd.append('file',state._smartExecFile);
     [...state._smartExecCategories].forEach(c=>fd.append('categories',c));
+    if(state._smartExecFigmaUrl&&state._smartExecFigmaUrl.trim())fd.append('figmaUrl',state._smartExecFigmaUrl.trim());
     const r=await api('/api/smartexec/runs',{method:'POST',body:fd});
     const d=await r.json().catch(()=>({}));
     if(!r.ok)throw new Error(d.message||'Failed to start Smart Execution');
@@ -2021,26 +2058,21 @@ async function smartexecStart(){
 let _smartExecTimer=null, _smartExecStartMs=0;
 async function renderSmartExecRunning(){
   const id=state.runId;
+  // Same layout/component language as the completed run's Report page (smartexecReportHtml):
+  // a compact app-info summary card up top, then a single column of full-width sections — each
+  // an emoji-titled .card/.card-h/.card-b, exactly like 🤖 AI Review, 📊 Test Coverage, etc. below
+  // it once the run finishes. Only the section CONTENTS differ (live progress instead of a static
+  // report) — Smart Execution's own data/polling/actions are unchanged.
+  const section=(title,innerId,innerStyle)=>`<div class="card" style="margin-top:16px"><div class="card-h"><h3>${title}</h3></div><div class="card-b"${innerStyle?` style="${innerStyle}"`:''} id="${innerId}"></div></div>`;
   $('#content').innerHTML=`
-    <div class="card"><div class="card-b" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
-      <button class="btn ghost sm" onclick="go('smartexec')">${ic('chevron',14)} Back</button>
-      <div id="smartexecAppHead" style="display:flex;align-items:center;gap:10px;flex:1;min-width:200px"></div>
-      <button class="btn sm" style="background:var(--fail);border-color:var(--fail)" onclick="smartexecStop('${id}')">${ic('stop',14)} Stop Execution</button>
-    </div></div>
-    <div class="grid" style="grid-template-columns:repeat(4,1fr);gap:14px;margin-top:16px" id="smartexecStats"></div>
-    <div class="grid" style="grid-template-columns:1.2fr 1fr;gap:16px;margin-top:16px;align-items:start">
-      <div style="display:flex;flex-direction:column;gap:16px">
-        <div class="card"><div class="card-h"><h3>Category Progress</h3></div><div class="card-b" id="smartexecCats"></div></div>
-        <div class="card"><div class="card-h"><h3>Execution Steps</h3></div><div class="card-b" id="smartexecSteps" style="max-height:340px;overflow:auto"></div></div>
-        <div class="card"><div class="card-h"><h3>Live Console Log</h3></div><div class="card-b" id="smartexecConsole" style="max-height:220px;overflow:auto;font-family:'JetBrains Mono',monospace;font-size:11.5px;background:var(--surface-2);border-radius:8px"></div></div>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:16px">
-        <div class="card"><div class="card-h"><h3>Live Device</h3></div><div class="card-b" style="text-align:center">
-          <img id="smartexecLiveImg" style="max-width:100%;border-radius:8px;border:1px solid var(--line)"/>
-          <div id="smartexecScreenName" class="muted" style="margin-top:8px;font-size:12.5px"></div>
-        </div></div>
-      </div>
-    </div>`;
+    <div class="card"><div class="card-b" style="padding:14px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap" id="smartexecAppHead"></div></div>
+    ${section('🚦 Live Progress','smartexecProgress')}
+    ${section('📂 Category Progress','smartexecCats')}
+    ${section('📝 Execution Steps','smartexecSteps','max-height:340px;overflow:auto')}
+    ${section('🖥️ Live Device','smartexecDevice','text-align:center')}
+    ${section('💻 Live Console Log','smartexecConsole',"max-height:220px;overflow:auto;font-family:'JetBrains Mono',monospace;font-size:11.5px;background:var(--surface-2);border-radius:8px")}`;
+  $('#smartexecDevice').innerHTML=`<img id="smartexecLiveImg" style="max-width:360px;width:100%;border-radius:8px;border:1px solid var(--line)"/>
+    <div id="smartexecScreenName" class="muted" style="margin-top:8px;font-size:12.5px"></div>`;
   _smartExecStartMs=Date.now();
   if(_smartExecTimer)clearInterval(_smartExecTimer);
   smartexecPoll(id);
@@ -2055,29 +2087,45 @@ function smartexecStop(id){
 const SMARTEXEC_TERMINAL=['COMPLETED','FAILED','CANCELLED'];
 async function smartexecPoll(id){
   let s;try{s=await jget('/api/smartexec/runs/'+id);}catch(e){return;}
+  // App-info summary card — same compact shape as the top of the completed run's Report page
+  // (smartexecReportHtml's app-info card): name + package + status badge, plus the Back/Stop
+  // actions this live page still needs.
+  const sel=s.selectedCategories||[];
+  const catStatus=s.categoryStatus||{};
+  const doneCount=sel.filter(c=>catStatus[c]==='COMPLETED').length;
+  const pct=sel.length?Math.round(doneCount/sel.length*100):0;
+  const active=!SMARTEXEC_TERMINAL.includes(s.state);
+  const accent=s.state==='FAILED'?'var(--fail)':s.state==='COMPLETED'?'var(--pass)':s.state==='CANCELLED'?'var(--txt-3)':'var(--run)';
   const head=$('#smartexecAppHead');
-  if(head)head.innerHTML=`<span style="width:36px;height:36px;border-radius:9px;background:var(--brand);color:#fff;display:grid;place-items:center;font-weight:800;flex-shrink:0">${esc((s.appLabel||'?')[0]||'?')}</span>
-    <div><div style="font-weight:700">${esc(s.appLabel||s.apkFileName||'Application')}</div><div class="muted" style="font-size:11.5px">${esc(s.packageName||'')}</div></div>
-    <span class="badge b-${s.state}" style="margin-left:auto">${esc(s.state)}</span>`;
+  if(head)head.innerHTML=`
+    <div style="flex:1;min-width:200px">
+      <div style="font-weight:700">${esc(s.appLabel||s.apkFileName||'Application')}</div>
+      <div class="muted" style="font-size:12px">${esc(s.packageName||'')}${s.packageName?' · ':''}<span class="badge b-${esc(s.state||'')}" style="display:inline-flex;align-items:center;gap:5px">
+        ${active?`<span style="width:6px;height:6px;border-radius:50%;background:var(--run);flex-shrink:0;animation:livePulse 1.4s ease-in-out infinite"></span>`:''}${esc(s.state||'')}</span></div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      ${active?`<button class="btn sm" style="background:var(--fail);border-color:var(--fail)" onclick="smartexecStop('${id}')">${ic('stop',14)} Stop Execution</button>`:''}
+      <button class="btn ghost sm" onclick="go('smartexec')">${ic('chevron',14)} Back</button>
+    </div>`;
 
   const findings=s.findings||[];
   const cnt=cat=>findings.filter(f=>f.category===cat).length;
   const elapsedMs=(s.startedAt?Date.now()-s.startedAt:0);
   const durs=Object.values(s.categoryDurationMs||{});
   const avgMs=durs.length?durs.reduce((a,b)=>a+b,0)/durs.length:0;
-  const stats=$('#smartexecStats');
-  if(stats)stats.innerHTML=[
-    ['Elapsed',fmtElapsed(elapsedMs)],['Avg / Category',avgMs?fmtElapsed(avgMs):'—'],
-    ['Functional Issues',cnt('functional')],['UI Issues',cnt('uiux')],
-  ].map(([l,v])=>`<div class="card"><div class="card-b" style="padding:12px 14px">
-      <div style="font-size:11px;font-weight:700;color:var(--txt-3);text-transform:uppercase">${l}</div>
-      <div style="font-size:20px;font-weight:800;margin-top:2px">${v}</div></div></div>`).join('');
+  const progress=$('#smartexecProgress');
+  if(progress)progress.innerHTML=`
+    <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${accent};transition:width .4s"></div></div>
+    <div class="grid" style="grid-template-columns:repeat(4,1fr);gap:12px;margin-top:14px">
+      ${[['Elapsed',fmtElapsed(elapsedMs)],['Avg / Category',avgMs?fmtElapsed(avgMs):'—'],
+         ['Functional Issues',cnt('functional')],['UI Issues',cnt('uiux')]]
+        .map(([l,v])=>`<div class="card"><div class="card-b" style="padding:10px 14px"><div class="muted" style="font-size:11px;text-transform:uppercase">${l}</div><div style="font-size:18px;font-weight:800">${v}</div></div></div>`).join('')}
+    </div>
+    ${s.error?`<div class="finding CRITICAL" style="margin-top:14px"><div class="fh"><span class="sev-chip s-CRITICAL">ERROR</span>Smart Execution error</div><div class="fd">${esc(s.error)}</div></div>`:''}`;
 
   const cats=$('#smartexecCats');
   if(cats){
-    const sel=s.selectedCategories||[];
-    const done=sel.filter(c=>(s.categoryStatus||{})[c]==='COMPLETED').length;
-    cats.innerHTML=`<div class="muted" style="font-size:12px;margin-bottom:8px">${done} / ${sel.length} completed</div>`+
+    cats.innerHTML=`<div class="muted" style="font-size:12px;margin-bottom:8px">${doneCount} / ${sel.length} completed</div>`+
       sel.map(c=>{
         const st=(s.categoryStatus||{})[c]||'PENDING';
         const label=(SMARTEXEC_CATEGORIES.find(x=>x.k===c)||{}).label||c;
@@ -2108,80 +2156,36 @@ async function smartexecPoll(id){
  *  module's report rendering. */
 function smartexecReportHtml(s,id){
   const findings=s.findings||[];
-  const sevCount=sev=>findings.filter(f=>f.severity===sev).length;
   const catCount=cat=>findings.filter(f=>f.category===cat).length;
-  const apk=s.apkReport||{},manifest=apk.manifest||{};
   const section=(title,inner)=>`<div class="card" style="margin-top:16px"><div class="card-h"><h3>${esc(title)}</h3></div><div class="card-b">${inner}</div></div>`;
 
-  // 🤖 AI Review — real LLM prose when configured (Settings → AI Review with Ollama/a key);
-  // otherwise composed from the findings/coverage so the section always has real content.
-  const critical=sevCount('CRITICAL'),high=sevCount('HIGH');
-  const aiReview=`<div style="line-height:1.7;font-size:13.5px">
-    <b>Execution Summary</b><div class="muted" style="margin:4px 0 10px">Ran ${(s.selectedCategories||[]).length} categor${(s.selectedCategories||[]).length===1?'y':'ies'} against
-      ${esc(s.appLabel||s.packageName||'the app')} and found ${findings.length} finding(s) — ${critical} critical, ${high} high.
-      Screen coverage reached ${s.screenCoveragePct||0}%.</div>
-    <b>Root Cause Analysis</b><div class="muted" style="margin:4px 0 10px">${critical+high>0
-      ?'Highest-impact findings cluster around: '+[...new Set(findings.filter(f=>['CRITICAL','HIGH'].includes(f.severity)).map(f=>f.category))].join(', ')+'.'
-      :'No critical or high-severity findings — no dominant root cause identified this run.'}</div>
-    <b>Risk Analysis</b><div class="muted" style="margin:4px 0 10px">${critical>0?critical+' critical issue(s) pose release risk and should block sign-off until fixed.':
-      high>0?'No critical issues, but '+high+' high-severity issue(s) warrant review before release.':'No elevated release risk identified from this run.'}</div>
-    <b>Improvement Suggestions</b><div class="muted" style="margin:4px 0">${(s.untestedFlows||[]).length
-      ?'Re-run with the '+(s.untestedFlows||[]).length+' untested screen(s)/flow(s) reachable (see Test Coverage) to raise coverage.'
-      :'Coverage looks complete for the screens this crawl could reach — consider adding manual test cases for flows behind login/paywalls.'}</div>
-  </div>`;
-
-  // 📊 Test coverage
-  const coverage=`<div class="grid" style="grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px">
+  // 📊 Test coverage — top-line KPIs only (Category Coverage / Untested Screens / Ads Status
+  // detail removed from the UI per product request; the underlying data/APIs are unaffected).
+  const coverage=`<div class="grid" style="grid-template-columns:repeat(3,1fr);gap:12px">
     ${[['Screen Coverage',(s.screenCoveragePct||0)+'%'],['Feature Coverage',(s.featureCoveragePct||0)+'%'],['Screens Tested',s.testedScreens+' / '+s.totalScreens]]
       .map(([l,v])=>`<div class="card"><div class="card-b" style="padding:10px 14px"><div class="muted" style="font-size:11px;text-transform:uppercase">${l}</div><div style="font-size:18px;font-weight:800">${v}</div></div></div>`).join('')}
-  </div>
-  <div style="font-size:12.5px"><b>Category Coverage</b><br>
-    ${(s.selectedCategories||[]).map(c=>esc(c)+': '+esc((s.categoryStatus||{})[c]||'PENDING')).join(' · ')}</div>
-  <div style="font-size:12.5px;margin-top:10px"><b>Untested screens / flows</b><br>
-    ${(s.untestedFlows||[]).length?(s.untestedFlows||[]).map(esc).join(', '):'<span class="muted">None — every discovered screen had at least one action exercised.</span>'}</div>`;
-
-  // 🔍 APK Analyzer
-  const list=(arr)=>(arr&&arr.length)?('<div class="muted" style="font-size:12px;max-height:140px;overflow:auto">'+arr.map(esc).join('<br>')+'</div>'):'<span class="muted">None detected.</span>';
-  const apkAnalyzer=`<table style="width:100%;font-size:13px;margin-bottom:10px">
-      <tr><td class="muted" style="width:160px">Package</td><td>${esc(manifest.packageName)}</td></tr>
-      <tr><td class="muted">Version</td><td>${esc(manifest.versionName)} (${esc(String(manifest.versionCode||''))})</td></tr>
-      <tr><td class="muted">Min / Target SDK</td><td>${esc(String(manifest.minSdkVersion||'—'))} / ${esc(String(manifest.targetSdkVersion||'—'))}</td></tr>
-      <tr><td class="muted">Main Activity</td><td>${esc(manifest.mainActivity)}</td></tr>
-    </table>
-    <div class="grid" style="grid-template-columns:1fr 1fr;gap:14px">
-      <div><b style="font-size:12.5px">Permissions (${(apk.permissions||[]).length})</b>${list(apk.permissions)}</div>
-      <div><b style="font-size:12.5px">Activities (${(apk.activities||[]).length})</b>${list(apk.activities)}</div>
-      <div><b style="font-size:12.5px">Detected SDKs / Libraries</b>${list(apk.detectedSdks)}</div>
-      <div><b style="font-size:12.5px">Exported Components</b>${list(apk.exportedComponents)}</div>
-      <div><b style="font-size:12.5px">Deep Links</b><div class="muted" style="font-size:12px">${esc(apk.deepLinksNote||'—')}</div></div>
-    </div>`;
-
-  // 📸 Evidence gallery — only findings that captured a screenshot/video (Critical/High only, by design)
-  const evidence=findings.filter(f=>f.screenshotPath||f.videoPath);
-  const gallery=evidence.length?`<div style="display:flex;flex-wrap:wrap;gap:10px">
-      ${evidence.map(f=>`<div style="width:160px">
-        ${f.screenshotPath?`<img src="/api/smartexec/runs/${id}/artifacts/${esc(f.screenshotPath)}" style="width:100%;border-radius:6px;border:1px solid var(--line)" onclick="zoom(this.src)"/>`:''}
-        ${f.videoPath?`<a href="/api/smartexec/runs/${id}/artifacts/${esc(f.videoPath)}" target="_blank" class="btn ghost sm" style="width:100%;margin-top:4px">${ic('external',12)} Video</a>`:''}
-        <div class="muted" style="font-size:11px;margin-top:3px">${esc(f.title)}</div></div>`).join('')}
-    </div>`:'<div class="muted">No screenshots/recordings — evidence is only captured for Critical/High findings.</div>';
+  </div>`;
 
   // Bug reports — sub-tabs over the 4 server-rendered category reports.
   const tab=state.smartexecReportTab||'functional';
-  const tabs=[['functional','Functional Issues'],['ui','UI Issues'],['crash','Crash Issues'],['admob','AdMob']];
-  const endpointFor={functional:'functional-issues.html',ui:'ui-issues.html',crash:'crash-issues.html',admob:'admob-report.html'}[tab];
+  const tabs=[['functional','Functional Issues'],['ui','UI Issues'],['crash','Crash Issues'],['admob','AdMob'],['security','Security'],['performance','Performance']];
+  const endpointFor={functional:'functional-issues.html',ui:'ui-issues.html',crash:'crash-issues.html',admob:'admob-report.html',security:'security-report.html',performance:'performance-report.html'}[tab];
   const bugReports=`<div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
       ${tabs.map(([k,l])=>`<button class="btn ${tab===k?'':'ghost'} sm" onclick="state.smartexecReportTab='${k}';renderModuleReportPanel('Smart Execution')">${esc(l)} (${catCount(k==='ui'?'uiux':k==='admob'?'ads':k)})</button>`).join('')}
     </div>
     <iframe src="/api/smartexec/runs/${id}/${endpointFor}" style="width:100%;height:60vh;border:none;border:1px solid var(--line);border-radius:8px"></iframe>`;
 
+  // Figma design comparison — only shown when a Figma URL was pasted for this run.
+  const figmaSection=s.figmaUrl?section('🎨 Figma Design Comparison',
+    `<div class="muted" style="font-size:12.5px;margin-bottom:10px">${esc(s.figmaNote||'')}</div>
+     <iframe src="/api/smartexec/runs/${id}/figma-report.html" style="width:100%;height:60vh;border:none;border:1px solid var(--line);border-radius:8px"></iframe>`):'';
+
   return `<div class="card" style="margin-top:18px"><div class="card-b" style="padding:14px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
       <div><div style="font-weight:700">${esc(s.appLabel||s.apkFileName)}</div><div class="muted" style="font-size:12px">${esc(s.packageName||'')} · <span class="badge b-${s.state}">${esc(s.state)}</span></div></div>
     </div></div>`
-    + section('🤖 AI Review',aiReview)
     + section('📊 Test Coverage',coverage)
-    + section('🔍 APK Analyzer',apkAnalyzer)
-    + section('📸 Evidence Gallery',gallery)
-    + section('Bug Reports',bugReports);
+    + section('Bug Reports',bugReports)
+    + figmaSection;
 }
 
 /* ---------- Analyze APK (AI Test Case Generator, part of the Smart Execution workflow) ---------- */
@@ -2433,7 +2437,7 @@ async function paintDetail(){
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;flex-wrap:wrap">
           <button class="btn ghost sm" onclick="go('runs')">${ic('back',13)} Back</button>
-          <button class="btn stop sm" id="stopBtn" style="display:${isActive?'inline-flex':'none'}" onclick="stopRun('${run.id}')">${ic('stop',14)} Stop</button>
+          <button class="btn stop sm" id="stopBtn" style="display:${isActive?'inline-flex':'none'}" onclick="stopRun('${run.id}')">${ic('stop',14)} Stop Execution</button>
           ${reportsMenu}
         </div>
       </div>
@@ -3267,7 +3271,7 @@ async function paintModuleRunning(){
         <div>
           <div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap">
             <h2 style="margin:0;font-size:19px;font-weight:800;letter-spacing:-.4px">${esc(m.title)}</h2>
-            <span class="badge b-${esc(s.state||'')}" style="display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:3px 10px">
+            <span class="badge b-${esc(s.state||'')}${active?' dotless':''}" style="display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:3px 10px">
               ${active?`<span style="width:7px;height:7px;border-radius:50%;background:var(--run);flex-shrink:0;animation:livePulse 1.4s ease-in-out infinite"></span>`:''}
               ${esc(map.label)}
             </span>
@@ -3288,16 +3292,37 @@ async function paintModuleRunning(){
   </div>`;
 
   const body=mod==='l10n'?moduleBodyL10n(s):mod==='tc'?moduleBodyTc(s):mod==='compat'?moduleBodyCompat(s):'';
-  const logs=(map.logs||[]).map(l=>`<div style="padding:3px 0;border-bottom:1px solid var(--line-2)">${esc(String(l))}</div>`).join('')
-    ||'<div class="muted">No log output yet.</div>';
-  const logPanel=`<div class="card" style="margin-top:16px"><div class="card-h"><h3>Live Log</h3></div>
-    <div class="card-b" style="max-height:260px;overflow-y:auto;font-family:ui-monospace,monospace;font-size:12px">${logs}</div></div>`;
+  const logPanel=liveLogPanel(map.logs||[],active);
 
+  const prevLog=$('#modLiveLog');
+  const wasAtBottom=!prevLog||(prevLog.scrollHeight-prevLog.scrollTop-prevLog.clientHeight<24);
   const main=$('#modRunMain'); if(main)main.innerHTML=head+body+logPanel;
+  const newLog=$('#modLiveLog'); if(newLog&&wasAtBottom)newLog.scrollTop=newLog.scrollHeight;
+}
+/** Shared "Live Log" console for the unified Test Running page (Localization/TC/Compat) — dark
+ *  terminal look with per-line severity coloring and sticks to the bottom as new lines arrive. */
+function liveLogPanel(rawLogs,active){
+  const LEVEL_RE=[[/\b(ERROR|FAILED?|DISCONNECTED|CRASH)\b/i,'#f87171'],[/\b(WARN(ING)?|RETRY)\b/i,'#fbbf24'],[/\b(DONE|SUCCESS|PASS(ED)?|COMPLETED)\b/i,'#4ade80']];
+  const lines=rawLogs.map(l=>{
+    const t=String(l);let color='#cbd5e1';
+    for(const [re,c] of LEVEL_RE)if(re.test(t)){color='#'+c.slice(1);break;}
+    return `<div style="padding:2.5px 0;color:${color}">${esc(t)}</div>`;
+  }).join('');
+  return `<div class="card" style="margin-top:16px">
+    <div class="card-h" style="display:flex;justify-content:space-between;align-items:center">
+      <h3 style="display:flex;align-items:center;gap:7px;margin:0">Live Log ${active?'<span style="font-size:10px;color:var(--run);font-weight:700">● LIVE</span>':''}</h3>
+      <span class="muted" style="font-size:11px">${rawLogs.length} line${rawLogs.length===1?'':'s'}</span>
+    </div>
+    <div id="modLiveLog" class="mono" style="max-height:320px;overflow-y:auto;background:#0f172a;color:#e2e8f0;padding:12px 16px;font-size:12px;line-height:1.5;border-radius:0 0 12px 12px">
+      ${lines||'<div class="muted" style="color:#64748b">No log output yet.</div>'}
+    </div></div>`;
 }
 function moduleBodyL10n(s){
   const kpi=(l,v,sub)=>`<div class="kpi"><div class="lbl">${l}</div><div class="val">${v}</div><div class="sub">${sub||''}</div></div>`;
   const langs=s.languages||[];
+  const active=['SETUP','RUNNING'].includes(s.state);
+  const langsDone=langs.filter(l=>l.state==='DONE'||l.state==='ERROR').length;
+  const detectPct=langs.length?Math.round(langsDone/langs.length*100):0;
   const rows=langs.map(l=>`<tr>
     <td>${esc(l.name)} (${esc(l.code)})</td>
     <td><span class="badge ${TR_BADGE[l.state]||'b-PENDING'}">${esc(LSTATE_LABEL[l.state]||l.state||'—')}</span></td>
@@ -3307,14 +3332,40 @@ function moduleBodyL10n(s){
     <td>${(l.localizationIssues||[]).length}</td>
     <td>${l.state==='DONE'?`<a href="/api/runs/${esc(s.id)}-${esc(l.code)}/artifacts/report.html" target="_blank">View report</a>`:'—'}</td>
   </tr>`).join('');
-  return `<div class="kpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-top:16px">
-      ${kpi('Languages',langs.length)}
-      ${kpi('Done',langs.filter(l=>l.state==='DONE').length)}
-    </div>
-    <div class="card" style="margin-top:16px"><div class="card-h"><h3>Per-language results</h3></div><div class="card-b" style="padding:0">
+
+  // Detected-languages progress bar — separate from the header's overall run progress, this one
+  // tracks specifically how many of the detected languages have finished testing.
+  const langProgress=`<div class="card" style="margin-top:16px"><div class="card-b" style="padding:13px 16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;font-size:12.5px;font-weight:700">
+        <span>${langs.length?'Language testing progress':'Detecting supported languages…'}</span>
+        <span style="color:var(--txt-3);font-weight:600">${langs.length?langsDone+' / '+langs.length+' languages':''}</span>
+      </div>
+      <div class="bar-track" style="margin-top:8px"><div class="bar-fill" style="width:${langs.length?detectPct:8}%;background:var(--run);transition:width .4s${langs.length?'':';animation:livePulse 1.4s ease-in-out infinite'}"></div></div>
+    </div></div>`;
+
+  // Live device preview — mirrors the Test Case Execution running page's device screen (moduleBodyTc),
+  // driven by the serial the runner picked for this session (LocalizationSession.deviceSerial).
+  const preview=s.deviceSerial?`<div class="card" style="margin-top:16px"><div class="card-h" style="padding:10px 16px"><h3 style="margin:0;font-size:13.5px">${ic('smartphone',14)} Live Device ${active?'<span style="margin-left:6px;font-size:10px;color:var(--run)">● LIVE</span>':''}</h3><span class="mono muted" style="font-size:11px">${esc(s.deviceSerial)}</span></div>
+      <div class="card-b" style="display:flex;justify-content:center;padding:12px">
+        <div style="width:200px;aspect-ratio:9/19.5;border-radius:14px;border:1px solid var(--line);overflow:hidden;background:#000">
+          <img src="/api/dm/devices/${encodeURIComponent(s.deviceSerial)}/screenshot?t=${Date.now()}" style="width:100%;height:100%;object-fit:contain" onerror="this.style.opacity=.25"/>
+        </div>
+      </div></div>`:'';
+
+  const table=`<div class="card" style="margin-top:16px"><div class="card-h"><h3>Per-language results</h3></div><div class="card-b" style="padding:0">
     <table><thead><tr><th>Language</th><th>State</th><th>Translation</th><th>Functionality</th><th>Screens</th><th>Issues</th><th>Report</th></tr></thead>
     <tbody>${rows||'<tr><td colspan="7" class="muted">Detecting the in-app Language Selection screen…</td></tr>'}</tbody></table>
   </div></div>`;
+
+  return `<div class="kpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-top:16px">
+      ${kpi('Languages',langs.length)}
+      ${kpi('Done',langsDone)}
+    </div>
+    ${langProgress}
+    <div style="display:grid;grid-template-columns:2fr 1fr;gap:16px;align-items:start">
+      <div>${table}</div>
+      <div>${preview}</div>
+    </div>`;
 }
 function moduleBodyTc(s){
   const kpi=(l,v,sub,col)=>`<div class="kpi"><div class="lbl">${l}</div><div class="val"${col?` style="color:${col}"`:''}>${v}</div><div class="sub">${sub||''}</div></div>`;
@@ -4418,6 +4469,7 @@ const SET_SECTIONS=[
   {k:'localization',label:'Localization',icon:'globe'},
   {k:'notifications',label:'Notifications',icon:'bell'},
   {k:'ai',label:'AI Review',icon:'sparkles'},
+  {k:'figma',label:'Figma',icon:'layers'},
   {k:'logs',label:'Logs',icon:'terminal'},
   {k:'about',label:'About & Reset',icon:'info'}
 ];
@@ -4560,6 +4612,11 @@ function paintSetSection(k){
         ${fText('aiModel','Model','Vision-capable model identifier to call for screen review.')}</div>
       <div class="field-grid">${fNum('aiMaxScreensPerRun','Max screenshots per run','Caps how many screens get sent to the LLM per Analyze APK run or per test category, to bound cost and latency.')}<div></div></div>
       <div class="hint" style="margin-top:4px">${hasKey?'✓ API key configured.':'No API key configured yet — AI review stays inactive even if enabled above.'}</div>`);
+  } else if(k==='figma'){
+    const hasFigmaKey=!!sval('figmaHasApiToken');
+    p.innerHTML=setCard(setSecHead('layers','Figma Design Comparison','Lets Smart Execution compare the app\'s actual screens against a pasted Figma design link — requires a Personal Access Token from your Figma account.')
+      +`<div class="field-grid">${fPass('figmaApiToken','Personal Access Token',hasFigmaKey?'A token is already configured — leave blank to keep it.':'From figma.com → Settings → Personal access tokens. Never shown once saved.')}<div></div></div>
+      <div class="hint" style="margin-top:4px">${hasFigmaKey?'✓ Figma API token configured — the Figma URL field on Smart Execution is active.':'No token configured yet — pasting a Figma URL on Smart Execution will be skipped with an explanatory note until one is added here.'}</div>`);
   } else if(k==='logs'){
     p.innerHTML=`<div class="card"><div class="card-b">
       ${setSecHead('terminal','Logs','Live tail of the framework log file.')}
@@ -6066,16 +6123,6 @@ function dmCleanup(){
   const dmm=document.getElementById('dmModal');if(dmm)dmm.remove();
 }
 
-function renderAiQa(){
-  $('#content').innerHTML=`<div class="grid" style="grid-template-columns:repeat(3,1fr)">${PLATFORMS.map(m=>`
-    <div class="mod-card${m.k==='android'?' active':''}" onclick="${m.k==='android'?"go('androidqa')":"toast('"+esc(m.n)+" is on our roadmap.')"}">
-      <span class="mod-badge ${m.s==='active'?'ok':''}">${m.s==='active'?'Available':'Soon'}</span>
-      <div class="mod-ic">${m.ic}</div>
-      <div class="mod-t">${esc(m.n)}</div>
-      <div class="mod-d">${esc(m.d)}</div>
-    </div>`).join('')}</div>`;
-}
-
 const ANDROID_QA_MODULES=[
   {view:'smartexec',n:'Smart Execution',d:'AI-powered, generic end-to-end APK testing — no locators, no hardcoding — with built-in AI test case generation',
    ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2.4"/><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5v2.2M12 18.3v2.2M3.5 12h2.2M18.3 12h2.2" stroke-linecap="round"/></svg>'},
@@ -6088,18 +6135,46 @@ const ANDROID_QA_MODULES=[
 ];
 // Renders each module's existing, unmodified setup UI into its own section container on this
 // one page (RENDER_ROOT redirects their $('#content').innerHTML calls into that container) —
-// no separate pages to navigate to; starting an actual test still navigates to its live/execution
+// no separate page to navigate to; starting an actual test still navigates to its live/execution
 // page exactly as before (Smart Execution → smartexecRunning, the others → the shared 'detail' page).
 const ANDROID_QA_RENDER={smartexec:renderSmartExec,tc:renderTc,compat:renderCompat,l10n:renderL10n};
-async function renderAndroidQa(){
-  $('#content').innerHTML=`${execLockBanner()}<div class="androidqa-stack">${ANDROID_QA_MODULES.map(m=>`
-    <section class="androidqa-section">
-      <div class="androidqa-sec-h">
-        <span class="mod-ic mod-ic-sm">${m.ic}</span>
-        <div><div class="androidqa-sec-t">${esc(m.n)}</div><div class="androidqa-sec-d">${esc(m.d)}</div></div>
+// Which module's section is visible on the AI QA Automation page — Smart Execution by default
+// (reset in renderAiQa on every visit). All four are rendered once (so upload state / in-progress
+// work isn't lost switching tabs); switching tabs only toggles which section is shown — it never
+// re-renders or navigates away.
+function aqaSwitchTab(view){
+  state.aqaTab=view;
+  document.querySelectorAll('.aqa-tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===view));
+  document.querySelectorAll('.androidqa-section').forEach(s=>s.classList.toggle('active',s.dataset.section===view));
+}
+async function renderAiQa(){
+  state.aqaTab='smartexec';
+  $('#content').innerHTML=`<div class="aqa-page">
+    <div class="aqa-eyebrow">Platform</div>
+    <div class="aqa-platforms">${PLATFORMS.map(m=>`
+      <div class="aqa-platform-card${m.k==='android'?' active':''}" onclick="${m.k==='android'?'':"toast('"+esc(m.n)+" is on our roadmap.')"}">
+        ${m.k==='android'?`<span class="aqa-platform-check">${ic('check',12)}</span>`:''}
+        <div class="aqa-platform-ic">${m.ic}</div>
+        <div class="aqa-platform-name">${esc(m.n)}</div>
+        <div class="aqa-platform-desc">${esc(m.d)}</div>
+        <span class="aqa-platform-badge${m.s==='active'?' ok':''}">${m.s==='active'?'Available':'Soon'}</span>
+      </div>`).join('')}</div>
+    ${execLockBanner()}
+    <div class="aqa-tabbar">
+      <div class="seg aqa-tabs">${ANDROID_QA_MODULES.map(m=>`
+        <button type="button" class="aqa-tab${m.view===state.aqaTab?' active':''}" data-tab="${m.view}" onclick="aqaSwitchTab('${m.view}')">
+          <span class="aqa-tab-ic">${m.ic}</span>${esc(m.n)}
+        </button>`).join('')}</div>
+    </div>
+    <div class="androidqa-stack">${ANDROID_QA_MODULES.map(m=>`
+    <section class="androidqa-section${m.view===state.aqaTab?' active':''}" data-section="${m.view}">
+      <div class="aqa-banner">
+        <div class="aqa-banner-ic">${m.ic}</div>
+        <div><div class="aqa-banner-t">${esc(m.n)}</div><div class="aqa-banner-d">${esc(m.d)}</div></div>
       </div>
       <div id="aqa-${m.view}"></div>
-    </section>`).join('')}</div>`;
+    </section>`).join('')}</div>
+  </div>`;
   try{
     for(const m of ANDROID_QA_MODULES){
       RENDER_ROOT='#aqa-'+m.view;
@@ -6333,9 +6408,14 @@ let mexec=null; // {key,mod,items:[{serial,id,name,version,type,isEmulator,sessi
 function dselMapL10n(s){
   const st=s.state;const done=['COMPLETED','FAILED','STOPPED'].includes(st);
   const outcome=st==='COMPLETED'?'COMPLETED':st==='FAILED'?'FAILED':st==='STOPPED'?'STOPPED':null;
-  const n=(s.languages||[]).length;
-  const label=st==='COMPLETED'?'Completed':st==='FAILED'?'Failed':st==='STOPPED'?'Stopped':st==='RUNNING'?('Testing'+(n?' · '+n+' lang':'')):'Starting';
-  return {done,outcome,label,pct:done?100:55,indet:!done,logs:(s.logs||[]).slice(-6),score:null};
+  const langs=s.languages||[];const n=langs.length;
+  const langsDone=langs.filter(l=>l.state==='DONE'||l.state==='ERROR').length;
+  const label=st==='COMPLETED'?'Completed':st==='FAILED'?'Failed':st==='STOPPED'?'Stopped':
+    st==='RUNNING'?(n?('Testing · '+langsDone+'/'+n+' lang'):'Detecting languages…'):'Starting';
+  // Before the language list is known, treat detection itself as the visible progress (indeterminate);
+  // once detected, drive the bar off actual per-language completion instead of a fixed guess.
+  const pct=done?100:(n?Math.max(5,Math.round(langsDone/n*100)):8);
+  return {done,outcome,label,pct,indet:!done&&!n,logs:(s.logs||[]).slice(-60),score:null};
 }
 function dselMapTc(s){
   const st=s.state;const done=['COMPLETED','STOPPED'].includes(st);

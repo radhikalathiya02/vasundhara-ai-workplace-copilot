@@ -78,6 +78,13 @@ public class AtfProperties {
     /** Ceiling on how many screenshots get sent to the LLM per run, to bound cost/latency. */
     private int aiMaxScreensPerRun = 8;
 
+    // ---- Figma design comparison (Smart Execution) -------------------------
+    // Blank disables the feature entirely — a pasted Figma URL on a run is simply skipped with an
+    // explanatory step rather than attempting (and failing) an unauthenticated API call.
+
+    /** Figma Personal Access Token — https://www.figma.com/developers/api#access-tokens */
+    private String figmaApiToken = "";
+
     // ---- Compatibility module / emulator matrix ----------------------------
 
     /** Android SDK root; blank → auto-detect ANDROID_HOME/ANDROID_SDK_ROOT/~/Library/Android/sdk. */
@@ -262,4 +269,7 @@ public class AtfProperties {
 
     public int getAiMaxScreensPerRun() { return aiMaxScreensPerRun; }
     public void setAiMaxScreensPerRun(int v) { this.aiMaxScreensPerRun = v; }
+
+    public String getFigmaApiToken() { return figmaApiToken; }
+    public void setFigmaApiToken(String v) { this.figmaApiToken = v; }
 }

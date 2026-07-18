@@ -28,8 +28,7 @@ public class SpaController {
         "/compat",
         "/devices",
         "/reports",
-        "/ai-qa-automation",
-        "/ai-qa-automation/android"
+        "/ai-qa-automation"
     })
     public String spaPage() {
         return "forward:/index.html";
