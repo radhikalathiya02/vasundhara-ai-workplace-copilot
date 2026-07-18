@@ -97,6 +97,13 @@
   .grid{display:grid;gap:18px}
   .kpis{grid-template-columns:repeat(4,1fr)}
   .kpis-5{grid-template-columns:repeat(5,1fr)}
+  /* Smart Execution Running page — 2×2 panel grid (Execution Steps | Category Progress /
+     Live Device | Live Console Log). Equal 50/50 columns on desktop, stacked on tablet/mobile.
+     Cards drop their default top margin so the grid gap governs spacing; align-items:stretch
+     keeps both panels in a row the same height. */
+  .se-run-grid{grid-template-columns:1fr 1fr;align-items:stretch;margin-top:16px}
+  .se-run-grid>.card{margin-top:0}
+  @media(max-width:1024px){.se-run-grid{grid-template-columns:1fr}}
   .kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow)}
   .kpi .lbl{font-size:12.5px;color:var(--txt-2);font-weight:600;display:flex;align-items:center;gap:8px}
   .kpi .val{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:30px;font-weight:600;letter-spacing:-1px;margin-top:8px}
@@ -1995,7 +2002,7 @@ async function renderSmartExec(){
         <label style="display:block;font-size:12px;font-weight:600;margin:16px 0 6px">Figma File/Frame URL <span class="muted" style="font-weight:400">(optional)</span></label>
         <input type="text" class="input" id="smartexecFigmaUrl" placeholder="https://www.figma.com/design/..." style="width:100%"
           value="${esc(state._smartExecFigmaUrl||'')}" oninput="state._smartExecFigmaUrl=this.value"/>
-        <div class="muted" style="font-size:11.5px;margin-top:5px">When set, Smart Execution compares the app's discovered screens against this design after the run finishes — see Settings → Figma to configure API access.</div>
+        <div class="muted" style="font-size:11.5px;margin-top:5px">Used only during the <b>UI quality and accessibility</b> category — select it below. Smart Execution compares each screen it discovers there against this design; other categories run normally. Configure a token in Settings → Figma.</div>
       </div></div>
       <div class="card"><div class="card-h"><h3>2 · Categories</h3>
         <button class="btn ghost sm" onclick="smartexecToggleAll()">Toggle all</button></div>
@@ -2064,13 +2071,18 @@ async function renderSmartExecRunning(){
   // it once the run finishes. Only the section CONTENTS differ (live progress instead of a static
   // report) — Smart Execution's own data/polling/actions are unchanged.
   const section=(title,innerId,innerStyle)=>`<div class="card" style="margin-top:16px"><div class="card-h"><h3>${title}</h3></div><div class="card-b"${innerStyle?` style="${innerStyle}"`:''} id="${innerId}"></div></div>`;
+  // Live Progress stays full-width as the run's summary header; the four live panels sit in a
+  // responsive 2×2 grid (row 1: Execution Steps | Category Progress, row 2: Live Device | Live
+  // Console Log) that collapses to a single column on tablet/mobile — see .se-run-grid.
   $('#content').innerHTML=`
     <div class="card"><div class="card-b" style="padding:14px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap" id="smartexecAppHead"></div></div>
     ${section('🚦 Live Progress','smartexecProgress')}
-    ${section('📂 Category Progress','smartexecCats')}
-    ${section('📝 Execution Steps','smartexecSteps','max-height:340px;overflow:auto')}
-    ${section('🖥️ Live Device','smartexecDevice','text-align:center')}
-    ${section('💻 Live Console Log','smartexecConsole',"max-height:220px;overflow:auto;font-family:'JetBrains Mono',monospace;font-size:11.5px;background:var(--surface-2);border-radius:8px")}`;
+    <div class="grid se-run-grid">
+      ${section('📝 Execution Steps','smartexecSteps','max-height:340px;overflow:auto')}
+      ${section('📂 Category Progress','smartexecCats')}
+      ${section('🖥️ Live Device','smartexecDevice','text-align:center')}
+      ${section('💻 Live Console Log','smartexecConsole',"max-height:220px;overflow:auto;font-family:'JetBrains Mono',monospace;font-size:11.5px;background:var(--surface-2);border-radius:8px")}
+    </div>`;
   $('#smartexecDevice').innerHTML=`<img id="smartexecLiveImg" style="max-width:360px;width:100%;border-radius:8px;border:1px solid var(--line)"/>
     <div id="smartexecScreenName" class="muted" style="margin-top:8px;font-size:12.5px"></div>`;
   _smartExecStartMs=Date.now();
@@ -2154,6 +2166,39 @@ async function smartexecPoll(id){
 /** Builds the full Smart Execution report: AI Review, Test Coverage, APK Analyzer, Evidence
  *  Gallery, Bug Reports (Functional/UI/Crash/AdMob) — entirely independent of the New Test
  *  module's report rendering. */
+/* Reusable report iframe with a loading placeholder and a graceful "report unavailable" fallback.
+   The report endpoints are same-origin, server-rendered HTML; the SecurityConfig X-Frame-Options
+   SAMEORIGIN change is what allows them to render in a frame at all. If an endpoint is genuinely
+   unavailable (e.g. a 5xx / Spring error body), we detect it (same-origin → we can read the frame's
+   own document) and show a friendly message instead of the raw server error or the browser's
+   "refused to connect" page. framed=false gives the borderless-top variant used inside a card. */
+function reportFrame(url, heightVh, framed){
+  const h = heightVh || 60;
+  const wrapBorder = framed===false ? 'border-top:1px solid var(--line)' : 'border:1px solid var(--line);border-radius:8px';
+  return `<div class="rpt-frame" style="position:relative;width:100%;height:${h}vh;overflow:hidden;${wrapBorder}">
+      <div class="rpt-frame-msg muted" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;padding:20px;text-align:center"><span class="spinner" style="margin-right:8px"></span> Loading report…</div>
+      <iframe src="${url}" onload="onReportFrameLoad(this)" onerror="onReportFrameError(this)" style="width:100%;height:100%;border:none;position:relative;background:var(--surface)"></iframe>
+    </div>`;
+}
+function reportFrameUnavailable(iframe, detail){
+  const wrap=iframe.closest('.rpt-frame'); if(!wrap)return;
+  const msg=wrap.querySelector('.rpt-frame-msg');
+  iframe.style.display='none';
+  if(msg){ msg.style.display='flex'; msg.innerHTML=`<div><div style="font-weight:600;margin-bottom:4px">Report unavailable</div><div style="font-size:12px">${esc(detail||"This report couldn't be generated for this run yet.")}</div></div>`; }
+}
+function onReportFrameLoad(iframe){
+  const wrap=iframe.closest('.rpt-frame'); if(!wrap)return;
+  const msg=wrap.querySelector('.rpt-frame-msg');
+  let t='';
+  // Same-origin, so we can read the loaded document; a Spring error resolves to a small JSON/HTML
+  // body we can positively recognise (a real report is a full <html> document, never this shape).
+  try{ const d=iframe.contentDocument; t=d&&d.body?(d.body.innerText||'').trim():''; }catch(e){ t=''; }
+  if(/^\{"status":\s*\d+,"error"/.test(t) || /Whitelabel Error Page/i.test(t)){
+    reportFrameUnavailable(iframe);
+  } else if(msg){ msg.style.display='none'; }
+}
+function onReportFrameError(iframe){ reportFrameUnavailable(iframe, "Couldn't load this report. Please try again."); }
+
 function smartexecReportHtml(s,id){
   const findings=s.findings||[];
   const catCount=cat=>findings.filter(f=>f.category===cat).length;
@@ -2173,12 +2218,12 @@ function smartexecReportHtml(s,id){
   const bugReports=`<div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
       ${tabs.map(([k,l])=>`<button class="btn ${tab===k?'':'ghost'} sm" onclick="state.smartexecReportTab='${k}';renderModuleReportPanel('Smart Execution')">${esc(l)} (${catCount(k==='ui'?'uiux':k==='admob'?'ads':k)})</button>`).join('')}
     </div>
-    <iframe src="/api/smartexec/runs/${id}/${endpointFor}" style="width:100%;height:60vh;border:none;border:1px solid var(--line);border-radius:8px"></iframe>`;
+    ${reportFrame('/api/smartexec/runs/'+id+'/'+endpointFor, 60, true)}`;
 
   // Figma design comparison — only shown when a Figma URL was pasted for this run.
   const figmaSection=s.figmaUrl?section('🎨 Figma Design Comparison',
     `<div class="muted" style="font-size:12.5px;margin-bottom:10px">${esc(s.figmaNote||'')}</div>
-     <iframe src="/api/smartexec/runs/${id}/figma-report.html" style="width:100%;height:60vh;border:none;border:1px solid var(--line);border-radius:8px"></iframe>`):'';
+     ${reportFrame('/api/smartexec/runs/'+id+'/figma-report.html', 60, true)}`):'';
 
   return `<div class="card" style="margin-top:18px"><div class="card-b" style="padding:14px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
       <div><div style="font-weight:700">${esc(s.appLabel||s.apkFileName)}</div><div class="muted" style="font-size:12px">${esc(s.packageName||'')} · <span class="badge b-${s.state}">${esc(s.state)}</span></div></div>
@@ -6044,7 +6089,7 @@ async function renderModuleReportPanel(mod){
   const card=(title,actions,inner)=>`<div class="card" style="margin-top:18px">
     <div class="card-h"><h3>${esc(title)}</h3><div style="display:flex;gap:8px;flex-wrap:wrap">${actions}</div></div>
     ${inner}</div>`;
-  const frame=url=>`<iframe src="${url}" style="width:100%;height:74vh;border:none;border-top:1px solid var(--line)"></iframe>`;
+  const frame=url=>reportFrame(url, 74, false);
 
   if(mod==='Smart Execution'){
     sel.innerHTML=card('Smart Execution Report','',`<div class="card-b muted" style="padding:20px"><span class="spinner"></span> Loading…</div>`);

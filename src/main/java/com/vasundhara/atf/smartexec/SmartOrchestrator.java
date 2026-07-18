@@ -151,13 +151,16 @@ public class SmartOrchestrator {
             session.addStep(CATEGORY_LABEL.getOrDefault(category, category) + " — completed in " + (dur / 1000) + "s");
         }
 
-        if (!session.isStopRequested() && session.getFigmaUrl() != null && !session.getFigmaUrl().isBlank()) {
-            try {
-                figmaRunner.run(session, runDir, session.getScreenShots(), ocr);
-            } catch (Exception e) {
-                log.warn("Figma comparison errored: {}", e.toString());
-                session.addStep("Figma comparison — error: " + e.getMessage());
-            }
+        // Figma comparison is performed inside the UI Quality & Accessibility category (see
+        // runCategory) — the whole-app end-of-run pass was removed so the design comparison is scoped
+        // to the uiux screens only and never leaves the app idle behind a long end-of-run network
+        // step. If a Figma URL was provided but uiux wasn't selected, there was nothing to compare;
+        // record why so the report doesn't look like it silently ignored the link.
+        if (session.getFigmaUrl() != null && !session.getFigmaUrl().isBlank() && !categories.contains("uiux")) {
+            session.setFigmaNote("A Figma link was provided, but the UI quality & accessibility "
+                    + "category wasn't selected — the design comparison runs only during that category.");
+            session.addStep("Figma comparison — skipped: select the UI quality and accessibility "
+                    + "category to compare the app against the Figma design.");
             store.save(session);
         }
 
@@ -241,6 +244,10 @@ public class SmartOrchestrator {
         // be misattributed as a bug in the app under test.
         Set<String> ownPids = new HashSet<>();
         capturePid(serial, pkg, ownPids);
+        // Screens discovered during THIS category's crawl — captured only for uiux, so the Figma
+        // design comparison below compares exactly the screens the UI Quality & Accessibility pass
+        // saw, and never screens from any other category.
+        java.util.Map<String, String> uiuxScreenshots = null;
         AndroidDriver driver = driverFactory.create(serial, apk);
         try {
             boolean allowAds = "ads".equals(category);
@@ -258,6 +265,7 @@ public class SmartOrchestrator {
                 SmartCrawler.Result result = crawler.explore(params);
                 List<SmartFinding> raw = new ArrayList<>(crawler.findings());
                 mergeScreenshots(session, crawler.screenshotFiles());
+                if (uiChecks) uiuxScreenshots = new java.util.LinkedHashMap<>(crawler.screenshotFiles());
 
                 if ("network".equals(category)) {
                     adb.setWifi(serial, true);
@@ -308,6 +316,25 @@ public class SmartOrchestrator {
             }
         } finally {
             try { driver.quit(); } catch (Exception ignored) {}
+        }
+
+        // ── Figma design comparison — UI Quality & Accessibility category ONLY ──────────────────
+        // Runs as the final step of the uiux category, comparing each screen this category
+        // discovered against the matching Figma design (layout, spacing, alignment, typography,
+        // colours, icons/images, padding/margins, buttons, cards). It's a pure network + on-disk
+        // audit that reads the screenshots already captured above — it never touches the device or
+        // the Appium driver (deliberately run AFTER driver.quit()), so it cannot close/relaunch the
+        // app, stall the crawl, or otherwise destabilise execution. Any failure is caught and turned
+        // into a note, never propagated. This block is unreachable for every other category, so the
+        // Figma URL can never influence Functional/Monkey/Ads/Regression/Network/etc. execution.
+        if ("uiux".equals(category) && session.getFigmaUrl() != null && !session.getFigmaUrl().isBlank()) {
+            try {
+                figmaRunner.run(session, runDir, uiuxScreenshots, ocr);
+            } catch (Exception e) {
+                log.warn("Figma comparison errored: {}", e.toString());
+                session.addStep("Figma comparison — error: " + e.getMessage());
+            }
+            store.save(session);
         }
     }
 

@@ -30,6 +30,13 @@ public class SecurityConfig {
         // this comment block.
         http
             .csrf(AbstractHttpConfigurer::disable)
+            // Spring Security defaults to X-Frame-Options: DENY, which blocks the app's own report
+            // viewer from rendering the same-origin report HTML (/api/smartexec/runs/**.html) inside
+            // an iframe — the browser shows "localhost refused to connect". Switch to SAMEORIGIN so
+            // same-origin framing (the Reports page embedding its own reports) works, while still
+            // blocking cross-origin framing (clickjacking protection is preserved). Same-origin means
+            // this is correct in both dev and prod — the report is always served from the SPA's own host.
+            .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
             .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
         return http.build();
     }
