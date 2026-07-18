@@ -112,6 +112,21 @@
   .kpi.kpi-h .val{margin-top:0;font-size:19px;line-height:1.2}
   .kpi.kpi-h .lbl{display:block;gap:0;margin-top:2px;font-size:11.5px;font-weight:500;color:var(--mut);line-height:1.2}
 
+  /* Overview Metrics 2×2 tile grid — fills its card vertically so tiles stay balanced
+     with the taller sibling panels (Execution Trends / Findings by Severity). */
+  .ov-row{grid-template-columns:1fr 1.4fr 1fr}
+  .ov-metrics{display:flex;flex-direction:column}
+  .ov-metrics .card-b{flex:1;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;
+    gap:12px;padding:14px;align-content:stretch;align-items:stretch}
+  .ov-metrics .kpi.kpi-h{margin:0;min-height:78px;padding:14px 16px}
+  .ov-metrics .kpi.kpi-h .val{font-size:22px}
+  .ov-metrics .kpi.kpi-h .lbl{font-size:12px}
+  @media(max-width:1080px){.ov-row{grid-template-columns:1fr 1fr}
+    .ov-row > .card:nth-child(3){grid-column:1 / -1}}
+  @media(max-width:640px){.ov-row{grid-template-columns:1fr}
+    .ov-row > .card:nth-child(3){grid-column:auto}
+    .ov-metrics .card-b{grid-template-columns:1fr 1fr}}
+
   /* ---------- buttons ---------- */
   .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--brand);color:#fff;
     border:none;border-radius:var(--radius-sm);padding:11px 18px;font-size:14px;font-weight:600;cursor:pointer;transition:.15s}
@@ -694,7 +709,7 @@
   /* dashboard full-logo lockup (theme-aware) */
   .brand{justify-content:center}
   .brand .logo-wrap{background:none;padding:0;border-radius:0}
-  .brand .logo-wrap img{height:50px;display:block;width:auto}
+  .brand .logo-wrap img{width:100%;max-width:200px;display:block;height:auto}
   .brand .logo-wrap img.logo-dk{display:none}
   html[data-theme="dark"] .brand .logo-wrap img.logo-lt{display:none}
   html[data-theme="dark"] .brand .logo-wrap img.logo-dk{display:block}
@@ -1084,6 +1099,83 @@ function donut(sv){
 function legend(sv){return `<div class="legend">`+SEV.map(([k,col])=>
   `<div class="li"><span class="sw" style="background:${col}"></span>${k[0]+k.slice(1).toLowerCase()}<span class="ct">${sv[k]||0}</span></div>`).join('')+`</div>`;}
 
+/* Findings-by-severity line chart — same data source as donut(): a snapshot count per severity.
+   Severity is treated as an ordered x-axis (CRITICAL → INFO), the counts as y-values. Renders a
+   smooth cubic Bezier line with a shaded area, per-point dots (native <title> tooltips), a Y
+   grid, and a compact legend below. Fully SVG so it inherits theme CSS variables and stays
+   crisp at any width. */
+function severityLine(sv){
+  const total = sevTotal(sv);
+  const data = SEV.map(([k,col]) => ({k, col, v: sv[k]||0}));
+  const W = 340, H = 210, padL = 38, padR = 14, padT = 14, padB = 58;
+  const chartW = W - padL - padR, chartH = H - padT - padB;
+  const maxV = Math.max(1, ...data.map(d => d.v));
+
+  // Nice max — round up to a friendly integer so the grid labels aren't fractional.
+  const niceMax = Math.max(1, Math.ceil(maxV));
+  const yTicks = Math.min(4, niceMax);
+  let ticks = '';
+  for (let i = 0; i <= yTicks; i++){
+    const y = padT + chartH - (i/yTicks) * chartH;
+    const v = Math.round((i/yTicks) * niceMax);
+    ticks += `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${W-padR}" y2="${y.toFixed(1)}" stroke="var(--line)" ${i===0?'':`stroke-dasharray="2 3"`}/>`;
+    ticks += `<text x="${padL-6}" y="${(y+3).toFixed(1)}" text-anchor="end" fill="var(--mut)" style="font-size:10px">${v}</text>`;
+  }
+
+  // Data point positions.
+  const pts = data.map((d,i) => ({
+    x: padL + (i + 0.5) * (chartW / data.length),
+    y: padT + chartH - (d.v / niceMax) * chartH,
+    ...d
+  }));
+
+  // Smooth cubic Bezier — Catmull-Rom-style horizontal control points give a clean, curvy line
+  // without overshoot, matching modern chart libraries.
+  let linePath = `M ${pts[0].x.toFixed(1)} ${pts[0].y.toFixed(1)}`;
+  for (let i = 1; i < pts.length; i++){
+    const p = pts[i], prev = pts[i-1];
+    const cx1 = prev.x + (p.x - prev.x) * 0.5;
+    const cx2 = p.x   - (p.x - prev.x) * 0.5;
+    linePath += ` C ${cx1.toFixed(1)} ${prev.y.toFixed(1)}, ${cx2.toFixed(1)} ${p.y.toFixed(1)}, ${p.x.toFixed(1)} ${p.y.toFixed(1)}`;
+  }
+  const areaPath = linePath
+    + ` L ${pts[pts.length-1].x.toFixed(1)} ${(padT+chartH).toFixed(1)}`
+    + ` L ${pts[0].x.toFixed(1)} ${(padT+chartH).toFixed(1)} Z`;
+
+  // Data points with per-severity colour + native <title> tooltip on hover.
+  const dots = pts.map(p => `<g>
+      <circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="4" fill="var(--card,#fff)" stroke="${p.col}" stroke-width="2.5">
+        <title>${p.k[0]+p.k.slice(1).toLowerCase()}: ${p.v}</title>
+      </circle>
+    </g>`).join('');
+
+  // X-axis labels — the severity level for each point.
+  const xLabels = pts.map(p =>
+    `<text x="${p.x.toFixed(1)}" y="${(H-padB+16).toFixed(1)}" text-anchor="middle" fill="var(--mut)" style="font-size:10.5px">${p.k[0]+p.k.slice(1).toLowerCase()}</text>`
+  ).join('');
+
+  // Axis titles.
+  const yTitle = `<text x="12" y="${(padT + chartH/2).toFixed(1)}" text-anchor="middle" transform="rotate(-90 12 ${(padT + chartH/2).toFixed(1)})" fill="var(--mut)" style="font-size:10px;letter-spacing:.3px">Findings</text>`;
+  const xTitle = `<text x="${(padL + chartW/2).toFixed(1)}" y="${(H-padB+32).toFixed(1)}" text-anchor="middle" fill="var(--mut)" style="font-size:10px;letter-spacing:.3px">Severity</text>`;
+
+  // Colour-coded legend swatches below the axis title.
+  const legendChips = data.map(d =>
+    `<span style="display:inline-flex;align-items:center;gap:5px;margin:0 8px 0 0;font-size:11px;color:var(--mut)">
+       <span style="width:9px;height:9px;border-radius:50%;background:${d.col};display:inline-block"></span>
+       ${d.k[0]+d.k.slice(1).toLowerCase()} <b style="color:var(--txt)">${d.v}</b>
+     </span>`).join('');
+
+  return `<div style="width:100%">
+    <svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" preserveAspectRatio="xMidYMid meet" style="overflow:visible">
+      ${ticks}
+      <path d="${areaPath}" fill="var(--brand)" fill-opacity="0.10"/>
+      <path d="${linePath}" fill="none" stroke="var(--brand)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      ${dots}${xLabels}${yTitle}${xTitle}
+    </svg>
+    <div style="display:flex;flex-wrap:wrap;padding:0 4px">${legendChips}</div>
+  </div>`;
+}
+
 /* ---------- execution trends (last 7 days, passed/failed/other stacked bars) ---------- */
 function dayKey(ms){const d=new Date(ms);d.setHours(0,0,0,0);return d.getTime();}
 function execTrends(runs){
@@ -1102,7 +1194,7 @@ function execTrends(runs){
   let bars='';
   arr.forEach((b,i)=>{
     const x=pad+i*gap+(gap-bw)/2;let y=H-pad;
-    const seg=(v,col)=>{if(!v)return;const h=Math.max(v/max*(H-pad*2),v?2:0);y-=h;bars+=`<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${h.toFixed(1)}" fill="${col}" rx="2"/>`;};
+    const seg=(v,col)=>{if(!v)return;const h=Math.max(v/max*(H-pad*2),v?2:0);y-=h;bars+=`<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${h.toFixed(1)}" fill="${col}" rx="6" ry="6"/>`;};
     seg(b.other,'var(--track)');seg(b.failed,'var(--fail)');seg(b.passed,'var(--pass)');
   });
   const labels=arr.map((b,i)=>{
@@ -1260,7 +1352,6 @@ window.addEventListener('popstate',()=>navigateFromUrl());
 async function renderOverview(){
   $('#content').innerHTML=`
     <div class="grid kpis-5" id="kpis"></div>
-    <div class="grid kpis" id="kpis2" style="margin-top:18px"></div>
     <div id="ovTrends" style="margin-top:18px"></div>
     <div id="ovRuns" style="margin-top:18px"></div>`;
 
@@ -1309,25 +1400,20 @@ async function renderOverview(){
       `<div style="height:5px;background:var(--track);border-radius:3px;margin-top:9px;overflow:hidden"><div style="height:100%;width:${successRate}%;background:var(--pass)"></div></div>`)+
     kpi('Running Now',runs.filter(r=>ACTIVE_STATES.includes(r.state)).length,`${onlineCount} device${onlineCount===1?'':'s'} online`,ICONS.clock,'var(--brand)')+
     kpi('Critical + High',crit,trend(critHigh7(last7),critHigh7(prev7),false)||'across all runs',ICONS.alert,crit>0?'var(--crit)':'var(--mut)');
-  const kpi2=(lbl,val,ic,col)=>`<div class="kpi kpi-h">
+  /* ── Overview Metrics (2×2 grid), Execution Trends and Findings by Severity — one 3-column row ── */
+  // Small KPI tile reused in the 2×2 grid — shares the .kpi.kpi-h visual language with the primary row.
+  const kpi2=(lbl,val,ic,col)=>`<div class="kpi kpi-h" style="margin:0">
     <div class="ic" style="background:color-mix(in srgb,${col} 14%,transparent);color:${col}">${ic}</div>
     <div><div class="val">${val}</div><div class="lbl">${lbl}</div></div></div>`;
-  $('#kpis2').innerHTML=
-    kpi2('Apps Tested',appsTested,ICONS.grid,'var(--low)')+
-    kpi2('Bugs Found',bugsFound,ICONS.sun,'var(--high)')+
-    kpi2('Connected Devices',onlineCount,ICONS.smartphone,'var(--med)')+
-    kpi2('Avg Duration',dur(avg),ICONS.clock,'var(--pass)');
-
-  /* ── Quick Access, Execution Trends and Findings by Severity — one 3-column row ── */
   $('#ovTrends').innerHTML=`
-    <div class="grid" style="grid-template-columns:1fr 1.4fr 1fr">
-      <div class="card"><div class="card-h"><h3>Available Platform</h3></div>
-        <div class="card-b" style="padding:8px;display:flex;flex-direction:column;gap:6px">${PLATFORMS.map(m=>`
-          <div onclick="${m.k==='android'?"go('smartexec')":"toast('"+m.n+" is on our roadmap.')"}" style="display:flex;align-items:center;gap:9px;padding:7px 8px;border:1px solid var(--line);border-radius:9px;cursor:pointer;transition:border-color .15s" onmouseenter="this.style.borderColor='var(--brand)'" onmouseleave="this.style.borderColor='var(--line)'">
-            <span class="mod-ic mod-ic-sm" style="margin-bottom:0;flex:none">${m.ic}</span>
-            <div style="flex:1;min-width:0"><div style="font-weight:600;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.n}</div></div>
-            <span class="mod-badge ${m.s==='active'?'ok':''}" style="position:static;flex:none;font-size:9.5px;padding:2px 7px">${m.s==='active'?'Available':'Soon'}</span>
-          </div>`).join('')}</div></div>
+    <div class="grid ov-row">
+      <div class="card ov-metrics"><div class="card-h"><h3>Overview Metrics</h3></div>
+        <div class="card-b">
+          ${kpi2('Apps Tested',appsTested,ICONS.grid,'var(--low)')}
+          ${kpi2('Bugs Found',bugsFound,ICONS.sun,'var(--high)')}
+          ${kpi2('Connected Devices',onlineCount,ICONS.smartphone,'var(--med)')}
+          ${kpi2('Avg. Duration',dur(avg),ICONS.clock,'var(--pass)')}
+        </div></div>
       <div class="card"><div class="card-h"><h3>Execution Trends</h3>
           <span class="muted" style="font-size:11.5px;display:flex;align-items:center;gap:12px">
             <span style="display:flex;align-items:center;gap:5px"><span style="width:9px;height:9px;border-radius:2px;background:var(--pass);display:inline-block"></span>Passed</span>
@@ -1335,10 +1421,9 @@ async function renderOverview(){
             <span style="display:flex;align-items:center;gap:5px"><span style="width:9px;height:9px;border-radius:2px;background:var(--track);display:inline-block"></span>Other</span>
           </span></div>
         <div class="card-b" style="padding:14px 18px">${runs.length?execTrends(runs):emptyState('No runs yet')}</div></div>
-      <div class="card"><div class="card-h"><h3>Findings by Severity</h3></div>
-        <div class="card-b" style="display:flex;gap:12px;align-items:center;padding:14px">
-          <div style="display:grid;place-items:center;flex:none">${donut(agg)}</div>
-          <div style="flex:1;min-width:0">${legend(agg)}</div></div></div>
+      <div class="card"><div class="card-h"><h3>Findings by Severity</h3>
+          <span class="muted" style="font-size:11.5px">Total ${sevTotal(agg)}</span></div>
+        <div class="card-b" style="padding:12px 14px 8px">${severityLine(agg)}</div></div>
     </div>`;
 
   /* ── Recent runs ── */
@@ -1589,8 +1674,6 @@ function showConfirmDialog(title,bodyHtml,onConfirm){
 const PLATFORMS=[
   {k:'android',n:'Android Application Testing',d:'Upload an APK and auto-test the whole app',s:'active',
    ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 9h10v6a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1z"/><path d="M7 9a5 5 0 0 1 10 0"/><path d="M4.5 10v4M19.5 10v4"/><path d="M8 5.5L6.5 4M16 5.5L17.5 4"/><circle cx="9.5" cy="8" r=".5" fill="currentColor" stroke="none"/><circle cx="14.5" cy="8" r=".5" fill="currentColor" stroke="none"/></svg>'},
-  {k:'ios',n:'iOS Application Testing',d:'Automated testing for iOS apps',s:'soon',
-   ic:'<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M17.05 12.5c-.03-2.7 2.2-4 2.3-4.05-1.25-1.83-3.2-2.08-3.9-2.1-1.66-.17-3.24.98-4.08.98-.85 0-2.15-.96-3.53-.93-1.82.03-3.5 1.06-4.43 2.7-1.9 3.3-.5 8.15 1.35 10.82.9 1.3 1.98 2.77 3.4 2.72 1.36-.05 1.88-.88 3.53-.88 1.64 0 2.1.88 3.55.85 1.46-.03 2.4-1.32 3.3-2.63 1.03-1.5 1.46-2.96 1.48-3.03-.03-.02-2.85-1.1-2.87-4.37z"/><path d="M14.6 4.3c.75-.9 1.24-2.16.98-3.3-1.06.04-2.36.7-3.13 1.6-.7.8-1.3 2.1-1.05 3.2 1.2.1 2.44-.6 3.2-1.5z"/></svg>'},
   {k:'web',n:'Web Application Testing',d:'Automated testing for web apps',s:'soon',
    ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.7 2.6 15.3 0 18M12 3c-2.6 2.7-2.6 15.3 0 18" stroke-linecap="round"/></svg>'}
 ];
