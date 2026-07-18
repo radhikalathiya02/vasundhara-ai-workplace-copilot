@@ -46,7 +46,13 @@ public final class SmartLogRuleEngine {
             new Rule(Pattern.compile("(?i)chromium:\\s*\\[ERROR|net::ERR_|Uncaught (TypeError|ReferenceError)"),
                     "LOW", "WebView / embedded-web error", "A WebView console/network error was logged.", 3),
             new Rule(Pattern.compile("(?i)UnknownHostException|SocketTimeoutException|java\\.net\\.ConnectException|Failed to connect to"),
-                    "LOW", "Network request failure", "A network request failed (host/timeout/refused).", 3));
+                    "LOW", "Network request failure", "A network request failed (host/timeout/refused).", 3),
+            // AdMob/Firebase (Google Mobile Ads SDK) — no-fill and SDK-side load errors. These
+            // fire from the SDK's own log lines regardless of which category is running; whichever
+            // category is active when they're seen is the one they get attributed to (same
+            // attribution convention every other rule in this engine already follows).
+            new Rule(Pattern.compile("(?i)onAdFailedToLoad|Ad failed to load|ERROR_CODE_(NO_FILL|NETWORK_ERROR|INTERNAL_ERROR|INVALID_REQUEST|APP_ID_MISSING|MEDIATION_NO_FILL)"),
+                    "MEDIUM", "Ad load failure (no-fill/SDK error)", "The Google Mobile Ads SDK reported a failed ad load.", 5));
 
     private static final Pattern SKIPPED_FRAMES = Pattern.compile("Skipped (\\d+) frames");
 
