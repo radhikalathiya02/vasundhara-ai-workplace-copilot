@@ -406,6 +406,16 @@ public class AdbClient {
         shell(serial, 10, "input", "tap", String.valueOf(x), String.valueOf(y));
     }
 
+    /** Long-press the screen at the given pixel coordinates for {@code durationMs} (a swipe with identical start/end points). */
+    public void longPress(String serial, int x, int y, int durationMs) {
+        shell(serial, 10, "input", "swipe", String.valueOf(x), String.valueOf(y), String.valueOf(x), String.valueOf(y), String.valueOf(durationMs));
+    }
+
+    /** Swipe from one point to another over {@code durationMs}. */
+    public void swipe(String serial, int x1, int y1, int x2, int y2, int durationMs) {
+        shell(serial, 10, "input", "swipe", String.valueOf(x1), String.valueOf(y1), String.valueOf(x2), String.valueOf(y2), String.valueOf(durationMs));
+    }
+
     /** Dump the current UI hierarchy (uiautomator) and return its XML, or "" on failure. */
     private static final String UI_DUMP_PATH = "/sdcard/atf_ui_dump.xml";
 

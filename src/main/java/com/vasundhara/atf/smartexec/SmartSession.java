@@ -3,10 +3,12 @@ package com.vasundhara.atf.smartexec;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.vasundhara.atf.smartexec.figma.FigmaFinding;
 
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
@@ -46,6 +48,16 @@ public class SmartSession {
     private long startedAt;
     private long finishedAt;
 
+    // ── Figma design comparison (optional — set only when a Figma URL was pasted) ──────────────
+    private String figmaUrl = "";
+    // null (not requested) / SKIPPED_NO_TOKEN / FAILED / COMPLETED
+    private String figmaStatus;
+    private String figmaNote = "";
+    private List<FigmaFinding> figmaFindings = new CopyOnWriteArrayList<>();
+    // screenName -> evidence filename; every screen Smart Execution captured a screenshot of
+    // during this run's crawl, accumulated across whichever categories ran (first seen wins).
+    private final Map<String, String> screenShots = new ConcurrentHashMap<>();
+
     public SmartSession(String id) { this.id = id; }
 
     @JsonCreator
@@ -74,7 +86,12 @@ public class SmartSession {
             @JsonProperty("error") String error,
             @JsonProperty("createdAt") long createdAt,
             @JsonProperty("startedAt") long startedAt,
-            @JsonProperty("finishedAt") long finishedAt) {
+            @JsonProperty("finishedAt") long finishedAt,
+            @JsonProperty("figmaUrl") String figmaUrl,
+            @JsonProperty("figmaStatus") String figmaStatus,
+            @JsonProperty("figmaNote") String figmaNote,
+            @JsonProperty("figmaFindings") List<FigmaFinding> figmaFindings,
+            @JsonProperty("screenShots") Map<String, String> screenShots) {
         this.id = id;
         if (state != null) this.state = state;
         this.stopRequested = stopRequested;
@@ -100,6 +117,11 @@ public class SmartSession {
         this.createdAt = createdAt;
         this.startedAt = startedAt;
         this.finishedAt = finishedAt;
+        this.figmaUrl = figmaUrl == null ? "" : figmaUrl;
+        this.figmaStatus = figmaStatus;
+        this.figmaNote = figmaNote == null ? "" : figmaNote;
+        if (figmaFindings != null) this.figmaFindings.addAll(figmaFindings);
+        if (screenShots != null) this.screenShots.putAll(screenShots);
     }
 
     // ── mutation helpers ────────────────────────────────────────────────────
@@ -158,4 +180,14 @@ public class SmartSession {
     public void setStartedAt(long v) { this.startedAt = v; }
     public long getFinishedAt() { return finishedAt; }
     public void setFinishedAt(long v) { this.finishedAt = v; }
+
+    public String getFigmaUrl() { return figmaUrl; }
+    public void setFigmaUrl(String v) { this.figmaUrl = v == null ? "" : v; }
+    public String getFigmaStatus() { return figmaStatus; }
+    public void setFigmaStatus(String v) { this.figmaStatus = v; }
+    public String getFigmaNote() { return figmaNote; }
+    public void setFigmaNote(String v) { this.figmaNote = v == null ? "" : v; }
+    public List<FigmaFinding> getFigmaFindings() { return figmaFindings; }
+    public void setFigmaFindings(List<FigmaFinding> v) { this.figmaFindings = new CopyOnWriteArrayList<>(v == null ? List.of() : v); }
+    public Map<String, String> getScreenShots() { return screenShots; }
 }

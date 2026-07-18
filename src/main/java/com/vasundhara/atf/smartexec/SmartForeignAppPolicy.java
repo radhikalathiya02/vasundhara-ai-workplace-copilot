@@ -89,6 +89,50 @@ public final class SmartForeignAppPolicy {
         return AD_CTA.matcher(label).matches();
     }
 
+    // ── ad format classification (AdMob/Firebase ads category) ──────────────────────────────
+    // Generic, UI-only classification — no ad-network SDK hook, no app-specific logic. Distinguishes
+    // the ad formats the product spec calls out well enough to report against, within the real
+    // limits of what's observable from the accessibility tree + screen geometry alone: a
+    // full-screen ad with reward/skip-countdown language reads as REWARDED (this also covers
+    // Rewarded Interstitial — the two are not reliably distinguishable without an SDK-side hook);
+    // a full-screen ad with no reward language reads as INTERSTITIAL, unless it's the very first
+    // screen this crawl ever saw (before any real app content), which reads as APP_OPEN; a thin
+    // strip anchored to the top/bottom edge reads as BANNER; anything else ad-flagged but not
+    // dominating the screen reads as NATIVE (ad content mixed into real app layout).
+    public enum AdFormat {
+        BANNER("Banner"), INTERSTITIAL("Interstitial"), REWARDED("Rewarded / Rewarded Interstitial"),
+        APP_OPEN("App Open"), NATIVE("Native"), UNKNOWN("Ad");
+        private final String label;
+        AdFormat(String label) { this.label = label; }
+        @Override public String toString() { return label; }
+    }
+
+    private static final java.util.regex.Pattern REWARD_MARKERS = java.util.regex.Pattern.compile(
+            "(?i)\\breward(ed)?\\b|watch (this )?ad|earn \\d|skip ad in \\s*\\d|\\d+\\s*(s|sec)\\s*(to skip|left)");
+
+    public static AdFormat classifyAdFormat(java.util.List<SmartWidget> widgets, int sw, int sh,
+                                            boolean fullScreenDominated, boolean isFirstScreenEverSeen) {
+        if (widgets == null || widgets.isEmpty()) return AdFormat.UNKNOWN;
+        if (fullScreenDominated) {
+            boolean hasReward = widgets.stream().anyMatch(w -> {
+                String t = (w.text() == null ? "" : w.text()) + " " + (w.contentDesc() == null ? "" : w.contentDesc());
+                return REWARD_MARKERS.matcher(t).find();
+            });
+            if (hasReward) return AdFormat.REWARDED;
+            return isFirstScreenEverSeen ? AdFormat.APP_OPEN : AdFormat.INTERSTITIAL;
+        }
+        if (sw > 0 && sh > 0) {
+            for (SmartWidget w : widgets) {
+                if (!isAdWidget(w)) continue;
+                boolean thin = w.height() > 0 && w.height() < sh * 0.22 && w.width() > sw * 0.5;
+                boolean edgeAnchored = w.y() <= sh * 0.08 || (w.y() + w.height()) >= sh * 0.92;
+                if (thin && edgeAnchored) return AdFormat.BANNER;
+            }
+        }
+        for (SmartWidget w : widgets) if (isAdWidget(w)) return AdFormat.NATIVE;
+        return AdFormat.UNKNOWN;
+    }
+
     private static final java.util.regex.Pattern SUBSCRIPTION_MARKERS = java.util.regex.Pattern.compile(
             "(?i)\\b(subscribe|subscription|upgrade to premium|go premium|buy now|purchase|" +
             "start free trial|unlock premium|\\$\\d|₹\\d|€\\d|£\\d)\\b");
@@ -97,6 +141,22 @@ public final class SmartForeignAppPolicy {
         if (w == null) return false;
         String label = (w.text() == null ? "" : w.text()) + " " + (w.contentDesc() == null ? "" : w.contentDesc());
         return SUBSCRIPTION_MARKERS.matcher(label).find();
+    }
+
+    // Destructive/irreversible or account-leaving actions — never tapped by an unsupervised
+    // randomized crawl (Monkey testing): signing the session out, deleting the account/data, or
+    // handing off to a real payment flow (card number entry, "Pay now", UPI/wallet checkout).
+    private static final java.util.regex.Pattern SENSITIVE_ACTION_MARKERS = java.util.regex.Pattern.compile(
+            "(?i)\\b(log\\s?out|sign\\s?out|log\\s?off|delete account|deactivate account|remove account|" +
+            "delete my account|close account|erase (all )?data|factory reset|pay now|make payment|" +
+            "confirm payment|place order|checkout|add card|card number|cvv|debit card|credit card|upi pin|" +
+            "bank account number|withdraw funds?)\\b");
+
+    public static boolean isSensitiveActionWidget(SmartWidget w) {
+        if (w == null) return false;
+        String label = (w.text() == null ? "" : w.text()) + " " + (w.contentDesc() == null ? "" : w.contentDesc())
+                + " " + (w.resourceId() == null ? "" : w.resourceId());
+        return SENSITIVE_ACTION_MARKERS.matcher(label).find();
     }
 
     private static final java.util.regex.Pattern EXIT_INTENT = java.util.regex.Pattern.compile(

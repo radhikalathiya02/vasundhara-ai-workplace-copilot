@@ -7,6 +7,7 @@ import com.vasundhara.atf.device.DeviceManager;
 import com.vasundhara.atf.device.DriverFactory;
 import com.vasundhara.atf.model.ApkInfo;
 import com.vasundhara.atf.report.RunBridgeService;
+import com.vasundhara.atf.smartexec.figma.FigmaComparisonRunner;
 import io.appium.java_client.android.AndroidDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,14 +36,18 @@ public class SmartOrchestrator {
 
     /** Canonical execution order, matching the product spec exactly. */
     public static final List<String> CATEGORY_ORDER =
-            List.of("functional", "uiux", "monkey", "ads", "regression", "network");
-    public static final java.util.Map<String, String> CATEGORY_LABEL = java.util.Map.of(
-            "functional", "Functional testing",
-            "uiux", "UI quality and accessibility",
-            "monkey", "Monkey testing",
-            "ads", "AdMob / Firebase ad testing",
-            "regression", "Regression testing",
-            "network", "Online/offline views testing");
+            List.of("functional", "uiux", "monkey", "ads", "regression", "network", "security", "performance");
+    public static final java.util.Map<String, String> CATEGORY_LABEL = new java.util.LinkedHashMap<>();
+    static {
+        CATEGORY_LABEL.put("functional", "Functional testing");
+        CATEGORY_LABEL.put("uiux", "UI quality and accessibility");
+        CATEGORY_LABEL.put("monkey", "Monkey testing");
+        CATEGORY_LABEL.put("ads", "AdMob / Firebase ad testing");
+        CATEGORY_LABEL.put("regression", "Regression testing");
+        CATEGORY_LABEL.put("network", "Online/offline views testing");
+        CATEGORY_LABEL.put("security", "Security testing");
+        CATEGORY_LABEL.put("performance", "Performance testing");
+    }
 
     private final AtfProperties props;
     private final ApkAnalyzer apkAnalyzer;
@@ -53,11 +58,13 @@ public class SmartOrchestrator {
     private final SmartVisionClient vision;
     private final SmartSessionStore store;
     private final RunBridgeService runBridge;
+    private final FigmaComparisonRunner figmaRunner;
 
     public SmartOrchestrator(AtfProperties props, ApkAnalyzer apkAnalyzer, AdbClient adb,
                              DeviceManager deviceManager, DriverFactory driverFactory,
                              SmartOcrEngine ocr, SmartVisionClient vision,
-                             SmartSessionStore store, RunBridgeService runBridge) {
+                             SmartSessionStore store, RunBridgeService runBridge,
+                             FigmaComparisonRunner figmaRunner) {
         this.props = props;
         this.apkAnalyzer = apkAnalyzer;
         this.adb = adb;
@@ -67,6 +74,7 @@ public class SmartOrchestrator {
         this.vision = vision;
         this.store = store;
         this.runBridge = runBridge;
+        this.figmaRunner = figmaRunner;
     }
 
     public void run(SmartSession session, File apkFile) {
@@ -126,7 +134,7 @@ public class SmartOrchestrator {
 
             ScheduledFuture<?> guard = startForegroundGuard(serial, apk.getPackageName());
             try {
-                runCategory(category, session, apk, serial, runDir, graph, dedupeKeys);
+                runCategory(category, session, apk, serial, runDir, graph, dedupeKeys, apkFile);
             } catch (Exception e) {
                 log.warn("Smart Execution category {} errored: {}", category, e.toString());
                 session.addStep(CATEGORY_LABEL.getOrDefault(category, category) + " — error: " + e.getMessage());
@@ -143,6 +151,19 @@ public class SmartOrchestrator {
             session.addStep(CATEGORY_LABEL.getOrDefault(category, category) + " — completed in " + (dur / 1000) + "s");
         }
 
+        // Figma comparison is performed inside the UI Quality & Accessibility category (see
+        // runCategory) — the whole-app end-of-run pass was removed so the design comparison is scoped
+        // to the uiux screens only and never leaves the app idle behind a long end-of-run network
+        // step. If a Figma URL was provided but uiux wasn't selected, there was nothing to compare;
+        // record why so the report doesn't look like it silently ignored the link.
+        if (session.getFigmaUrl() != null && !session.getFigmaUrl().isBlank() && !categories.contains("uiux")) {
+            session.setFigmaNote("A Figma link was provided, but the UI quality & accessibility "
+                    + "category wasn't selected — the design comparison runs only during that category.");
+            session.addStep("Figma comparison — skipped: select the UI quality and accessibility "
+                    + "category to compare the app against the Figma design.");
+            store.save(session);
+        }
+
         adb.forceStop(serial, apk.getPackageName());
         session.setCurrentCategory("");
         if (session.isStopRequested()) {
@@ -156,10 +177,18 @@ public class SmartOrchestrator {
     }
 
     private void runCategory(String category, SmartSession session, ApkInfo apk, String serial, File runDir,
-                             SmartNavigationGraph graph, Set<String> dedupeKeys) throws Exception {
+                             SmartNavigationGraph graph, Set<String> dedupeKeys, File apkFile) throws Exception {
         String pkg = apk.getPackageName();
         if ("monkey".equals(category)) {
-            runMonkey(session, apk, serial, dedupeKeys);
+            runMonkey(session, apk, serial, runDir, graph, dedupeKeys);
+            return;
+        }
+        if ("security".equals(category)) {
+            runSecurity(session, apk, serial, apkFile, dedupeKeys);
+            return;
+        }
+        if ("performance".equals(category)) {
+            runPerformance(session, apk, serial, apkFile, dedupeKeys);
             return;
         }
 
@@ -215,6 +244,10 @@ public class SmartOrchestrator {
         // be misattributed as a bug in the app under test.
         Set<String> ownPids = new HashSet<>();
         capturePid(serial, pkg, ownPids);
+        // Screens discovered during THIS category's crawl — captured only for uiux, so the Figma
+        // design comparison below compares exactly the screens the UI Quality & Accessibility pass
+        // saw, and never screens from any other category.
+        java.util.Map<String, String> uiuxScreenshots = null;
         AndroidDriver driver = driverFactory.create(serial, apk);
         try {
             boolean allowAds = "ads".equals(category);
@@ -231,6 +264,8 @@ public class SmartOrchestrator {
                         runDir, maxSteps, allowAds, uiChecks, ocr, vision, session, graph, session::isStopRequested);
                 SmartCrawler.Result result = crawler.explore(params);
                 List<SmartFinding> raw = new ArrayList<>(crawler.findings());
+                mergeScreenshots(session, crawler.screenshotFiles());
+                if (uiChecks) uiuxScreenshots = new java.util.LinkedHashMap<>(crawler.screenshotFiles());
 
                 if ("network".equals(category)) {
                     adb.setWifi(serial, true);
@@ -242,6 +277,7 @@ public class SmartOrchestrator {
                             runDir, maxSteps, false, false, ocr, vision, session, graph, session::isStopRequested);
                     crawler2.explore(p2);
                     raw.addAll(crawler2.findings());
+                    mergeScreenshots(session, crawler2.screenshotFiles());
                 }
 
                 capturePid(serial, pkg, ownPids); // catch any relaunch (crash-recovery / network toggle) pid change
@@ -281,31 +317,297 @@ public class SmartOrchestrator {
         } finally {
             try { driver.quit(); } catch (Exception ignored) {}
         }
+
+        // ── Figma design comparison — UI Quality & Accessibility category ONLY ──────────────────
+        // Runs as the final step of the uiux category, comparing each screen this category
+        // discovered against the matching Figma design (layout, spacing, alignment, typography,
+        // colours, icons/images, padding/margins, buttons, cards). It's a pure network + on-disk
+        // audit that reads the screenshots already captured above — it never touches the device or
+        // the Appium driver (deliberately run AFTER driver.quit()), so it cannot close/relaunch the
+        // app, stall the crawl, or otherwise destabilise execution. Any failure is caught and turned
+        // into a note, never propagated. This block is unreachable for every other category, so the
+        // Figma URL can never influence Functional/Monkey/Ads/Regression/Network/etc. execution.
+        if ("uiux".equals(category) && session.getFigmaUrl() != null && !session.getFigmaUrl().isBlank()) {
+            try {
+                figmaRunner.run(session, runDir, uiuxScreenshots, ocr);
+            } catch (Exception e) {
+                log.warn("Figma comparison errored: {}", e.toString());
+                session.addStep("Figma comparison — error: " + e.getMessage());
+            }
+            store.save(session);
+        }
     }
 
-    private void runMonkey(SmartSession session, ApkInfo apk, String serial, Set<String> dedupeKeys) {
+    // Monkey testing now runs through the same accessibility-tree crawler as every other category
+    // (SmartCrawler.exploreMonkey) instead of shelling out to the native `adb shell monkey` tool —
+    // that tool is a blind coordinate-random event injector with no concept of screens or widgets,
+    // so it couldn't spread interactions across the app, couldn't avoid purchase/logout/delete-
+    // account controls, and only ever produced two generic findings from grepping its own console
+    // output. The crawler-based version explores real screens, performs randomized taps/long-
+    // presses/swipes/scrolls/back/text-input weighted across them, applies the same foreign-app and
+    // sensitive-action safeguards as the rest of Smart Execution, and reports evidenced, deduped
+    // findings (including UI-freeze detection) exactly like every other category.
+    private void runMonkey(SmartSession session, ApkInfo apk, String serial, File runDir,
+                          SmartNavigationGraph graph, Set<String> dedupeKeys) throws Exception {
         String pkg = apk.getPackageName();
-        adb.launchApp(serial, pkg);
-        sleep(1200);
+        adb.launchAndWaitForeground(serial, pkg);
+        sleep(1500);
+        for (int attempt = 0; attempt < 4; attempt++) {
+            String fg = adb.currentForegroundPackage(serial);
+            if (pkg.equals(fg)) break;
+            session.addStep("Monkey testing — app did not reach the foreground yet (currently '" + fg + "'); relaunching (attempt " + (attempt + 1) + "/4)…");
+            adb.forceStop(serial, pkg);
+            if (fg != null && !fg.isBlank() && SmartForeignAppPolicy.shouldForceStopForeign(fg, pkg)) {
+                try { adb.forceStop(serial, fg); } catch (Exception ignored) {}
+            }
+            adb.pressHome(serial);
+            sleep(500);
+            adb.launchAndWaitForeground(serial, pkg);
+            sleep(2000 + attempt * 1000L);
+        }
+        if (!pkg.equals(adb.currentForegroundPackage(serial))) {
+            session.addStep("Monkey testing — app never reached the foreground after 4 attempts; skipping.");
+            String crashBuf = safeCrashBuffer(serial);
+            boolean genuineCrash = crashBuf != null && !crashBuf.isBlank();
+            SmartFinding launchFail = withEvidence(session, serial, runDir, "crash", "CRITICAL", "App Launch",
+                    "Application startup", List.of("Install and launch " + pkg, "Wait for the app to reach the foreground"),
+                    "The app should launch and reach the foreground within a few seconds.",
+                    "The app did not reach the foreground after 4 launch attempts" + (genuineCrash ? " and the crash log shows it terminating on startup." : "."),
+                    genuineCrash ? excerpt(crashBuf) : null);
+            List<SmartFinding> accepted = SmartBugValidator.validate(List.of(launchFail), dedupeKeys);
+            for (SmartFinding f : accepted) session.addFinding(f);
+            return;
+        }
+        if (!driverFactory.isAppiumReachable()) {
+            session.addStep("Monkey testing — Appium not reachable, skipping.");
+            return;
+        }
+        Set<String> ownPids = new HashSet<>();
+        capturePid(serial, pkg, ownPids);
         adb.clearLogcat(serial);
-        var result = adb.monkey(serial, pkg, 300, System.currentTimeMillis() % 100000, 50);
-        String out = result.combined();
+        AndroidDriver driver = driverFactory.create(serial, apk);
+        try {
+            SmartCrawler crawler = new SmartCrawler();
+            SmartCrawler.Params params = new SmartCrawler.Params(adb, driver, serial, pkg, session.getAppLabel(),
+                    runDir, props.getMonkeyEvents(), false, false, ocr, vision, session, graph, session::isStopRequested);
+            SmartCrawler.Result result = crawler.exploreMonkey(params);
+            List<SmartFinding> raw = new ArrayList<>(crawler.findings());
+
+            capturePid(serial, pkg, ownPids); // catch any relaunch (crash-recovery) pid change
+            String logcat = adb.dumpLogcat(serial);
+            for (SmartLogRuleEngine.Hit h : SmartLogRuleEngine.analyze(logcat, pkg, ownPids)) {
+                raw.add(withEvidence(session, serial, runDir, "crash", h.severity(), "App", h.title(),
+                        List.of("Run Monkey testing (randomized taps/swipes/long-presses/scrolls/back/text input)"),
+                        "App should tolerate randomized input without crashing or ANRs.", h.detail(), h.snippet()));
+            }
+
+            List<SmartFinding> accepted = SmartBugValidator.validate(raw, dedupeKeys);
+            for (SmartFinding f : accepted) session.addFinding(f);
+            session.addStep("Monkey testing — " + result.screensFound() + " screen(s), " + result.actionsPerformed()
+                    + " action(s), " + accepted.size() + " finding(s).");
+        } finally {
+            try { driver.quit(); } catch (Exception ignored) {}
+        }
+        adb.forceStop(serial, pkg);
+    }
+
+    // Security Testing — mostly static (APK manifest/bytecode analysis, no device interaction
+    // needed at all for most checks) plus a short best-effort runtime slice (logcat plaintext-
+    // secret scanning, and a private-data-directory inspection that only works on a debuggable
+    // build — see SecurityScanner's own doc comments for exactly why each check is scoped as it is).
+    private void runSecurity(SmartSession session, ApkInfo apk, String serial, File apkFile, Set<String> dedupeKeys) {
+        String pkg = apk.getPackageName();
+        session.addStep("Security testing — running static APK analysis…");
         List<SmartFinding> raw = new ArrayList<>();
-        if (out.contains("CRASH") || out.contains("Exception")) {
-            raw.add(withEvidence(session, serial, null, "crash", "CRITICAL", "App", "Monkey testing",
-                    List.of("Run adb monkey with 300 random events against " + pkg),
-                    "App should tolerate randomized input without crashing.",
-                    "Monkey run reported a crash/exception.", excerpt(out)));
+        raw.addAll(com.vasundhara.atf.smartexec.security.SecurityScanner.scanApkInfo(apk));
+        raw.addAll(com.vasundhara.atf.smartexec.security.SecurityScanner.scanApkBytes(apkFile));
+        raw.addAll(com.vasundhara.atf.smartexec.security.SecurityScanner.scanOverlayRisk(apk));
+        raw.addAll(com.vasundhara.atf.smartexec.security.SecurityScanner.scanThirdPartySdks(apk));
+        session.addStep("Security testing — static analysis found " + raw.size() + " candidate finding(s); running device checks…");
+
+        try {
+            adb.launchApp(serial, pkg);
+            sleep(1500);
+            adb.clearLogcat(serial);
+            sleep(2000); // let the app run briefly so any early plaintext logging surfaces
+            String logcat = adb.dumpLogcat(serial);
+            raw.addAll(com.vasundhara.atf.smartexec.security.SecurityScanner.scanLogcatForSecrets(logcat));
+            raw.addAll(com.vasundhara.atf.smartexec.security.SecurityScanner.scanDeviceStorage(adb, serial, pkg, apk.isDebuggable()));
+        } catch (Exception e) {
+            session.addStep("Security testing — device checks skipped: " + e.getMessage());
+        } finally {
+            adb.forceStop(serial, pkg);
         }
-        if (out.contains("NOT RESPONDING") || out.contains("ANR")) {
-            raw.add(finding("crash", "HIGH", "App", "Monkey testing", "ANR during monkey stress",
-                    List.of("Run adb monkey with 300 random events against " + pkg),
-                    "App should remain responsive under randomized input.", "Monkey run reported an ANR.", null));
-        }
+
         List<SmartFinding> accepted = SmartBugValidator.validate(raw, dedupeKeys);
         for (SmartFinding f : accepted) session.addFinding(f);
-        session.addStep("Monkey testing — 300 events, " + accepted.size() + " finding(s).");
+        session.addStep("Security testing — " + accepted.size() + " finding(s).");
+    }
+
+    // Performance Testing — built entirely on standard Android platform instrumentation
+    // (`am start -W`, `dumpsys meminfo/gfxinfo`, logcat) so it's generic across any runtime
+    // (native/Compose/Flutter/RN/Xamarin/WebView); no hardcoded package/activity/screen names.
+    // Findings from this category's OWN logcat capture are tagged category="performance" (not the
+    // shared "crash" bucket every other category routes ANR/FATAL hits to) — deliberate, since the
+    // product spec asks for ANR/jank/restart visibility inside the Performance report specifically;
+    // this doesn't remove anything from other categories' own crash detection.
+    private void runPerformance(SmartSession session, ApkInfo apk, String serial, File apkFile, Set<String> dedupeKeys) {
+        String pkg = apk.getPackageName();
+        List<SmartFinding> raw = new ArrayList<>();
+        String activity = null;
+        try { activity = adb.resolveLauncherActivity(serial, pkg); } catch (Exception ignored) {}
+        boolean haveActivity = activity != null && !activity.isBlank();
+
+        // ── App Launch Performance + Background Behavior ──
+        session.addStep("Performance testing — measuring launch times…");
+        long coldMs = -1, warmMs = -1, hotMs = -1, backgroundResumeMs = -1;
+        try {
+            adb.forceStop(serial, pkg);
+            sleep(500);
+            coldMs = haveActivity ? adb.launchActivityTimed(serial, pkg, activity) : timeFallbackLaunch(serial, pkg);
+            sleep(1500);
+
+            adb.pressHome(serial);
+            sleep(1200);
+            warmMs = haveActivity ? adb.launchActivityTimed(serial, pkg, activity) : timeFallbackLaunch(serial, pkg);
+            sleep(1000);
+
+            long bgStart = System.currentTimeMillis();
+            adb.pressHome(serial);
+            sleep(300);
+            hotMs = haveActivity ? adb.launchActivityTimed(serial, pkg, activity) : timeFallbackLaunch(serial, pkg);
+            backgroundResumeMs = System.currentTimeMillis() - bgStart;
+            sleep(1000);
+        } catch (Exception e) {
+            session.addStep("Performance testing — launch timing error: " + e.getMessage());
+        }
+        raw.addAll(com.vasundhara.atf.smartexec.performance.PerformanceScanner.scanLaunch(
+                new com.vasundhara.atf.smartexec.performance.PerformanceScanner.LaunchTimes(coldMs, warmMs, hotMs)));
+        raw.addAll(com.vasundhara.atf.smartexec.performance.PerformanceScanner.scanBackgroundResume(backgroundResumeMs));
+
+        // ── Resource Usage / Rendering / Stability / Stress — one bounded interaction+stress loop,
+        // sampling memory each step and finishing with a gfxinfo (jank) snapshot ──
+        session.addStep("Performance testing — sampling resource usage and stress-testing…");
+        Set<String> ownPidsBefore = new HashSet<>();
+        capturePid(serial, pkg, ownPidsBefore);
+        try { adb.resetGfxinfo(serial, pkg); } catch (Exception ignored) {}
+        adb.clearLogcat(serial);
+
+        List<Long> pssSamples = new ArrayList<>();
+        long foregroundPss = -1;
+        int actions = 0;
+        boolean frozen = false;
+        int freezeStreak = 0;
+        long lastCrc = -1;
+        int[] size = null;
+        try { size = adb.screenSize(serial); } catch (Exception ignored) {}
+        int sw = size != null && size.length >= 2 ? size[0] : 1080;
+        int sh = size != null && size.length >= 2 ? size[1] : 1920;
+        java.util.Random rnd = new java.util.Random();
+        int stressSteps = Math.min(40, Math.max(12, props.getMonkeyEvents() / 30));
+
+        for (int i = 0; i < stressSteps; i++) {
+            if (session.isStopRequested()) break;
+            try {
+                if (rnd.nextInt(3) == 0) {
+                    adb.swipe(serial, sw / 2, (int) (sh * 0.75), sw / 2, (int) (sh * 0.25), 250);
+                } else {
+                    adb.tap(serial, 40 + rnd.nextInt(Math.max(1, sw - 80)), 60 + rnd.nextInt(Math.max(1, sh - 120)));
+                }
+                actions++;
+                sleep(350);
+
+                String meminfoDump = adb.meminfo(serial, pkg);
+                long pss = com.vasundhara.atf.smartexec.performance.PerformanceScanner.parseTotalPssKb(meminfoDump);
+                if (pss > 0) { pssSamples.add(pss); if (foregroundPss < 0) foregroundPss = pss; }
+
+                byte[] shot = adb.screencapPng(serial);
+                if (shot != null && shot.length > 0) {
+                    java.util.zip.CRC32 crc = new java.util.zip.CRC32();
+                    crc.update(shot);
+                    long h = crc.getValue();
+                    if (h == lastCrc) freezeStreak++; else freezeStreak = 0;
+                    lastCrc = h;
+                    if (freezeStreak >= 8) { frozen = true; break; }
+                }
+            } catch (Exception ignored) {}
+        }
+
+        raw.addAll(com.vasundhara.atf.smartexec.performance.PerformanceScanner.scanMemory(pssSamples));
+        raw.addAll(com.vasundhara.atf.smartexec.performance.PerformanceScanner.scanFreeze(frozen, freezeStreak));
+
+        Set<String> ownPidsAfter = new HashSet<>();
+        capturePid(serial, pkg, ownPidsAfter);
+        boolean pidChanged = !ownPidsBefore.isEmpty() && !ownPidsAfter.isEmpty() && !ownPidsBefore.equals(ownPidsAfter);
+        raw.addAll(com.vasundhara.atf.smartexec.performance.PerformanceScanner.scanUnexpectedRestart(pidChanged, pidChanged ? "pid changed from " + ownPidsBefore + " to " + ownPidsAfter : null));
+
+        try {
+            String gfxDump = adb.gfxinfo(serial, pkg);
+            var gfx = com.vasundhara.atf.smartexec.performance.PerformanceScanner.parseGfxinfo(gfxDump);
+            boolean isFlutter = zipEntryExists(apkFile, "assets/flutter_assets/");
+            // WebView usage has no distinctive bundled asset the way Flutter does (it's a plain
+            // framework class) — a reliable check needs the same dex-string scan Security Testing
+            // already performs; left false here to avoid a misleading heuristic. Run Security
+            // Testing alongside Performance for WebView-specific findings.
+            raw.addAll(com.vasundhara.atf.smartexec.performance.PerformanceScanner.scanRendering(gfx, false, isFlutter));
+        } catch (Exception ignored) {}
+
+        // Background-service impact: brief background sample vs. the foreground samples above.
+        try {
+            adb.pressHome(serial);
+            sleep(3000);
+            long bgPss = com.vasundhara.atf.smartexec.performance.PerformanceScanner.parseTotalPssKb(adb.meminfo(serial, pkg));
+            raw.addAll(com.vasundhara.atf.smartexec.performance.PerformanceScanner.scanBackgroundServiceImpact(foregroundPss, bgPss));
+        } catch (Exception ignored) {}
+
+        raw.addAll(com.vasundhara.atf.smartexec.performance.PerformanceScanner.scanStorageAndBattery(apk.getApkSizeBytes() / (1024 * 1024)));
+        raw.addAll(com.vasundhara.atf.smartexec.performance.PerformanceScanner.scanNetworkNote());
+        raw.addAll(com.vasundhara.atf.smartexec.performance.PerformanceScanner.scanStressSummary(actions, 1, !frozen && !pidChanged));
+
+        // ANR/jank/crash signal from this category's own logcat window — tagged "performance" (see
+        // class-level comment above) so it surfaces in this run's Performance report.
+        try {
+            String logcat = adb.dumpLogcat(serial);
+            for (SmartLogRuleEngine.Hit h : SmartLogRuleEngine.analyze(logcat, pkg, ownPidsAfter.isEmpty() ? ownPidsBefore : ownPidsAfter)) {
+                raw.add(new SmartFinding(java.util.UUID.randomUUID().toString(), "performance", h.severity(),
+                        SmartFinding.priorityFor(h.severity()), "Stability", h.title(), h.title(),
+                        List.of("Run Performance testing (launch timing + stress interaction)"),
+                        "App should not crash/ANR/jank under normal + stress interaction.", h.detail(),
+                        null, null, h.snippet(), System.currentTimeMillis(), SmartFinding.keyOf("Stability", h.title(), h.title())));
+            }
+        } catch (Exception ignored) {}
+
         adb.forceStop(serial, pkg);
+
+        List<SmartFinding> accepted = SmartBugValidator.validate(raw, dedupeKeys);
+        for (SmartFinding f : accepted) session.addFinding(f);
+        session.addStep("Performance testing — " + actions + " stress action(s), " + accepted.size() + " finding(s).");
+    }
+
+    private boolean zipEntryExists(File apkFile, String prefix) {
+        try (var zip = new java.util.zip.ZipFile(apkFile)) {
+            var entries = zip.entries();
+            while (entries.hasMoreElements()) {
+                if (entries.nextElement().getName().startsWith(prefix)) return true;
+            }
+        } catch (Exception ignored) {}
+        return false;
+    }
+
+    /** Best-effort launch timing when the launcher activity can't be resolved by name — falls back
+     *  to wall-clock time until the package's own PID appears, a generic (if slightly coarser) proxy. */
+    private long timeFallbackLaunch(String serial, String pkg) {
+        long t0 = System.currentTimeMillis();
+        try { adb.launchApp(serial, pkg); } catch (Exception ignored) {}
+        long deadline = t0 + 8000;
+        while (System.currentTimeMillis() < deadline) {
+            try {
+                String fg = adb.currentForegroundPackage(serial);
+                if (fg != null && fg.contains(pkg)) return System.currentTimeMillis() - t0;
+            } catch (Exception ignored) {}
+            sleep(150);
+        }
+        return -1;
     }
 
     // ── evidence-on-critical-only capture ────────────────────────────────────
@@ -348,6 +650,13 @@ public class SmartOrchestrator {
 
     private String safeCrashBuffer(String serial) {
         try { return adb.dumpCrashBuffer(serial); } catch (Exception e) { return null; }
+    }
+
+    /** First-seen-wins merge of a crawler's per-screen screenshots into the session's cumulative
+     *  map (screens get re-discovered across categories; the earliest capture is kept). */
+    private void mergeScreenshots(SmartSession session, java.util.Map<String, String> fromCrawler) {
+        if (fromCrawler == null || fromCrawler.isEmpty()) return;
+        for (var e : fromCrawler.entrySet()) session.getScreenShots().putIfAbsent(e.getKey(), e.getValue());
     }
 
     /** Adds the app's current live process id(s) (if any) to {@code ownPids}, for log attribution. */

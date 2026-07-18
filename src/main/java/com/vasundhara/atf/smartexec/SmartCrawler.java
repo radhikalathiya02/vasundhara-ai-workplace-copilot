@@ -14,6 +14,7 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -25,9 +26,11 @@ import java.util.function.BooleanSupplier;
  * WebView apps: no hardcoded package/activity/screen names or locators.
  *
  * <p>Guarantees enforced on every step: stays inside the app's own package (foreign apps are
- * force-stopped instantly via {@link SmartForeignAppPolicy}), never taps ad content except the
- * single sanctioned close-and-return check when {@code allowAdInteraction} is set, never taps a
- * purchase/subscription control, never confirms an exit dialog.
+ * force-stopped instantly via {@link SmartForeignAppPolicy}), never taps ad content itself (only
+ * its close/skip control, when found — never a live/production ad click), never taps a
+ * purchase/subscription control, never confirms an exit dialog. When {@code allowAdInteraction}
+ * is set (the AdMob/Firebase category), ad format/placement/close-control/app-stability are
+ * additionally validated and reported as findings.
  */
 public class SmartCrawler {
 
@@ -58,8 +61,19 @@ public class SmartCrawler {
     private final List<Integer> opaqueCursors = new ArrayList<>();
     private final List<SmartFinding> findings = new ArrayList<>();
     private int screenIndex = 0;
+    // Set whenever an ad widget was seen (AdMob/Firebase category only) — lets the generic
+    // app-exit/crash detection a few lines below flag it as an ad-related stability finding when
+    // the app leaves the foreground shortly after an ad was shown/closed, not only in the single
+    // step immediately after tapping a close control.
+    private int lastAdSeenAtStep = Integer.MIN_VALUE;
+    private static final int AD_STABILITY_WINDOW_STEPS = 3;
+    // screenName -> evidence filename, one screenshot per newly-discovered screen — feeds the
+    // optional Figma design comparison (com.vasundhara.atf.smartexec.figma), which otherwise has no
+    // way to see what the app under test actually looked like on each screen.
+    private final Map<String, String> screenshotFiles = new LinkedHashMap<>();
 
     public List<SmartFinding> findings() { return findings; }
+    public Map<String, String> screenshotFiles() { return screenshotFiles; }
 
     public Result explore(Params p) {
         int steps = 0, actions = 0, appExits = 0, noProgress = 0;
@@ -74,6 +88,16 @@ public class SmartCrawler {
             // else in this framework for exactly this reason.
             String fg = safe(() -> p.adb().currentForegroundPackage(p.serial()));
             if (fg == null || fg.isBlank() || !fg.equals(p.pkg())) {
+                // Debounce before treating this as a real app-exit — a screen/activity transition
+                // animation, or a transient system surface (IME, a momentary system dialog) briefly
+                // taking focus, can make one single dumpsys round-trip report something other than
+                // our package even though the app is still genuinely in the foreground. Re-checking
+                // once after a short pause avoids counting that blip toward MAX_APP_EXITS and
+                // relaunching an app that never actually left.
+                sleep(400);
+                String fgRecheck = safe(() -> p.adb().currentForegroundPackage(p.serial()));
+                if (fgRecheck != null && fgRecheck.equals(p.pkg())) { continue; }
+                fg = fgRecheck;
                 if (SmartForeignAppPolicy.isPermissionDialog(fg) && tapPermissionAllow(p)) { steps++; sleep(500); continue; }
                 if (SmartForeignAppPolicy.shouldForceStopForeign(fg, p.pkg())) {
                     try { p.adb().forceStop(p.serial(), fg); } catch (Exception ignored) {}
@@ -85,6 +109,7 @@ public class SmartCrawler {
                     try { p.adb().pressHome(p.serial()); } catch (Exception ignored) {}
                     p.session().addStep("Foreign app '" + fg + "' appeared — force-stopped it and returned to the app.");
                 }
+                flagIfAdRelatedExit(p, steps, "A foreign surface ('" + fg + "') appeared");
                 appExits++;
                 if (appExits > MAX_APP_EXITS) return new Result(seenScreens.size(), actions, true);
                 try { p.adb().launchApp(p.serial(), p.pkg()); } catch (Exception ignored) {}
@@ -114,6 +139,7 @@ public class SmartCrawler {
                 appExits++;
                 if (appExits > MAX_APP_EXITS) return new Result(seenScreens.size(), actions, true);
                 p.session().addStep("Foreign surface '" + dumpPkg + "' detected mid-crawl (app likely crashed) — relaunching.");
+                flagIfAdRelatedExit(p, steps, "The app left the foreground (surface: '" + dumpPkg + "')");
                 if (SmartForeignAppPolicy.shouldForceStopForeign(dumpPkg, p.pkg())) {
                     try { p.adb().forceStop(p.serial(), dumpPkg); } catch (Exception ignored) {}
                 }
@@ -140,8 +166,9 @@ public class SmartCrawler {
             if (seenScreens.add(sig)) {
                 p.session().addStep("Screen — " + screenName);
                 int idx = screenIndex++;
-                p.graph().observeScreen(sig, screenName, candidateKeys(widgets, p.allowAdInteraction(), adDisclosure));
+                p.graph().observeScreen(sig, screenName, candidateKeys(widgets, adDisclosure));
                 if (p.uiChecks()) runUiChecks(widgets, sw, sh, screenName, p.session().getId());
+                captureScreenSnapshot(p, screenName, idx);
             }
             int visits = visitCounts.merge(sig, 1, Integer::sum);
             if (visits > MAX_VISITS_PER_SCREEN) { noProgress++; }
@@ -152,30 +179,61 @@ public class SmartCrawler {
                 steps++; sleep(500); continue;
             }
 
-            // Ad content — close-and-move-on by default; the sanctioned single click+return only
-            // when explicitly permitted (AdMob category), and only on first visit to this screen.
+            // Ad content — validate (AdMob/Firebase category) and close, never tap the ad creative
+            // itself (that would risk an accidental/live ad click, which the product spec explicitly
+            // forbids — only load/display/lifecycle/stability are validated).
             SmartWidget adClose = findAdCloseControl(widgets);
             boolean screenIsAdDominated = isAdDominated(widgets, adDisclosure);
-            if (screenIsAdDominated || adClose != null) {
-                if (p.allowAdInteraction() && screenIsAdDominated && visits == 1) {
-                    SmartWidget target = adClose != null ? adClose : pickAnyAdWidget(widgets);
-                    if (target != null) {
-                        tap(p, target.cx(), target.cy());
-                        actions++;
-                        sleep(1200);
-                        String after = safe(() -> p.adb().currentForegroundPackage(p.serial()));
-                        if (after == null || after.isBlank() || !after.equals(p.pkg())) {
-                            // Ad click opened an external surface (Play Store/browser) — return immediately.
-                            if (after != null) { try { p.adb().forceStop(p.serial(), after); } catch (Exception ignored) {} }
-                            try { p.adb().pressHome(p.serial()); } catch (Exception ignored) {}
-                            try { p.adb().launchApp(p.serial(), p.pkg()); } catch (Exception ignored) {}
-                            sleep(1200);
-                        }
-                        steps++; continue;
+            // Classification/validation runs whenever ANY ad widget is present — not only when the
+            // screen is ad-dominated or a close control was found — otherwise a banner ad sitting
+            // alongside normal app content (the single most common placement) would never be
+            // classified or size/position-checked at all. This does NOT force a `continue`: a
+            // banner coexisting with real content shouldn't block exploring the rest of the screen.
+            boolean anyAdWidget = widgets.stream().anyMatch(w -> SmartForeignAppPolicy.isAdWidget(w, adDisclosure));
+            if (p.allowAdInteraction() && anyAdWidget) lastAdSeenAtStep = steps;
+            if (p.allowAdInteraction() && anyAdWidget && visits == 1) {
+                SmartForeignAppPolicy.AdFormat fmt = SmartForeignAppPolicy.classifyAdFormat(
+                        widgets, sw, sh, screenIsAdDominated, seenScreens.size() <= 1);
+                p.session().addStep("AdMob/Firebase — " + fmt + " ad detected on '" + screenName + "'.");
+                if (screenIsAdDominated && adClose == null) {
+                    findings.add(evidencedFinding(p, "ads", "HIGH", screenName, fmt + " ad",
+                            List.of("Reach the '" + screenName + "' screen where a " + fmt + " ad is shown",
+                                    "Look for a close/skip control"),
+                            "A full-screen ad should always offer a visible, tappable close/skip control.",
+                            "No close, skip, or dismiss control could be found on this ad.",
+                            safeScreenshot(p)));
+                } else if (fmt == SmartForeignAppPolicy.AdFormat.BANNER) {
+                    SmartWidget bw = widgets.stream().filter(w -> SmartForeignAppPolicy.isAdWidget(w, adDisclosure)).findFirst().orElse(null);
+                    if (bw != null && sh > 0 && bw.height() > sh * 0.28) {
+                        findings.add(evidencedFinding(p, "ads", "MEDIUM", screenName, "Banner ad",
+                                List.of("Reach the '" + screenName + "' screen where a banner ad is shown"),
+                                "A banner ad should occupy a thin strip, typically anchored to the top or bottom edge.",
+                                "The banner ad measures ~" + Math.round(bw.height() * 100.0 / sh) + "% of the screen height, which may obscure app content.",
+                                safeScreenshot(p)));
                     }
                 }
-                if (adClose != null) { tap(p, adClose.cx(), adClose.cy()); actions++; sleep(700); }
-                else safe(() -> { p.driver().navigate().back(); return null; });
+            }
+            if (screenIsAdDominated || adClose != null) {
+                if (adClose != null) {
+                    tap(p, adClose.cx(), adClose.cy());
+                    actions++;
+                    sleep(900);
+                    if (p.allowAdInteraction()) {
+                        String after = safe(() -> p.adb().currentForegroundPackage(p.serial()));
+                        if (after == null || after.isBlank() || !after.equals(p.pkg())) {
+                            findings.add(evidencedFinding(p, "ads", "HIGH", screenName, "App stability",
+                                    List.of("Close the ad shown on '" + screenName + "'"),
+                                    "The app should return to the foreground and remain stable after an ad is closed.",
+                                    "The app did not return to the foreground after the ad's close control was tapped (possible crash, or the ad handed off to an external surface).",
+                                    null));
+                        }
+                    }
+                } else {
+                    // No close control detected — wait briefly in case it's still loading, then back
+                    // out, WITHOUT ever tapping the ad content itself.
+                    sleep(600);
+                    safe(() -> { p.driver().navigate().back(); return null; });
+                }
                 steps++; continue;
             }
 
@@ -185,7 +243,7 @@ public class SmartCrawler {
                 steps++; continue;
             }
 
-            SmartWidget next = pickNextAction(widgets, sig, p.allowAdInteraction(), adDisclosure);
+            SmartWidget next = pickNextAction(widgets, sig, adDisclosure);
             if (next != null) {
                 markTried(p, sig, next);
                 if (next.editable()) { typeSample(p, next); } else { tap(p, next.cx(), next.cy()); }
@@ -228,12 +286,254 @@ public class SmartCrawler {
         return new Result(seenScreens.size(), actions, false);
     }
 
+    // ── Monkey testing: intelligent randomized interaction, not deterministic exploration ──────
+    //
+    // Unlike explore() (which systematically tries every widget exactly once, in order, to reach
+    // full deterministic coverage), Monkey testing intentionally injects RANDOM taps, long-presses,
+    // swipes, scrolls, back presses and text input — including repeated interactions with the same
+    // control — to stress the app the way a real chaotic user would, while still (a) staying inside
+    // the app's own package, (b) never touching purchase/subscription/payment/logout/delete-account
+    // controls or ad content, (c) spreading interactions across every reachable screen instead of
+    // hammering just the first one or two, and (d) reporting only real, evidenced, deduped findings.
+    private static final int MONKEY_MAX_APP_EXITS = 4;
+    private static final int MONKEY_FREEZE_STREAK = 6;      // consecutive near-identical screenshots despite action = frozen UI
+    private static final int MONKEY_FREEZE_HAMMING_BITS = 4; // aHash distance below this counts as "unchanged"
+
+    private enum MonkeyAction { TAP, LONG_PRESS, SWIPE, SCROLL, BACK, TEXT_INPUT }
+
+    public Result exploreMonkey(Params p) {
+        java.util.Random rnd = new java.util.Random();
+        int actions = 0, appExits = 0, freezeStreak = 0;
+        long lastScreenshotHash = 0L;
+        int steps = 0;
+        while (steps++ < p.maxSteps() && !p.stopRequested().getAsBoolean()) {
+            String fg = safe(() -> p.adb().currentForegroundPackage(p.serial()));
+            if (fg == null || fg.isBlank() || !fg.equals(p.pkg())) {
+                // Debounce — see explore()'s identical reasoning: a transition animation or a
+                // momentary system surface can make a single dumpsys read look like an app-exit.
+                sleep(400);
+                String recheck = safe(() -> p.adb().currentForegroundPackage(p.serial()));
+                if (recheck != null && recheck.equals(p.pkg())) continue;
+                fg = recheck;
+                if (SmartForeignAppPolicy.isPermissionDialog(fg) && tapPermissionAllow(p)) { sleep(500); continue; }
+                if (SmartForeignAppPolicy.shouldForceStopForeign(fg, p.pkg())) {
+                    try { p.adb().forceStop(p.serial(), fg); } catch (Exception ignored) {}
+                    try { p.adb().pressHome(p.serial()); } catch (Exception ignored) {}
+                    p.session().addStep("Monkey testing — foreign app '" + fg + "' appeared, force-stopped and returned.");
+                }
+                appExits++;
+                if (appExits > MONKEY_MAX_APP_EXITS) return new Result(seenScreens.size(), actions, true);
+                try { p.adb().launchApp(p.serial(), p.pkg()); } catch (Exception ignored) {}
+                sleep(1500);
+                continue;
+            }
+
+            String dump = safe(() -> p.driver().getPageSource());
+            if (dump == null) dump = "";
+            String dumpPkg = SmartAccessibilityReader.rootPackage(dump);
+            if (dumpPkg != null && !dumpPkg.isBlank() && !dumpPkg.equals(p.pkg())) {
+                appExits++;
+                if (appExits > MONKEY_MAX_APP_EXITS) return new Result(seenScreens.size(), actions, true);
+                p.session().addStep("Monkey testing — foreign surface '" + dumpPkg + "' detected (app likely crashed), relaunching.");
+                if (SmartForeignAppPolicy.shouldForceStopForeign(dumpPkg, p.pkg())) {
+                    try { p.adb().forceStop(p.serial(), dumpPkg); } catch (Exception ignored) {}
+                }
+                try { p.adb().pressHome(p.serial()); } catch (Exception ignored) {}
+                try { p.adb().launchApp(p.serial(), p.pkg()); } catch (Exception ignored) {}
+                sleep(1800);
+                continue;
+            }
+
+            List<SmartWidget> widgets = SmartAccessibilityReader.parse(dump);
+            int[] extents = SmartAccessibilityReader.screenExtents(widgets);
+            int sw = extents[0], sh = extents[1];
+            String sig = structureSignature(widgets);
+            String screenName = inferScreenName(widgets);
+            p.session().setLiveScreenName(screenName);
+            if (seenScreens.add(sig)) {
+                p.session().addStep("Monkey testing — Screen: " + screenName);
+                p.graph().observeScreen(sig, screenName, candidateKeys(widgets, false));
+            }
+
+            if (SmartForeignAppPolicy.looksLikeExitDialog(widgets)) { tapStayButton(p, widgets); sleep(500); continue; }
+
+            boolean adDisclosure = SmartForeignAppPolicy.screenHasAdDisclosure(widgets);
+            SmartWidget adClose = findAdCloseControl(widgets);
+            if (isAdDominated(widgets, adDisclosure) || adClose != null) {
+                if (adClose != null) { tap(p, adClose.cx(), adClose.cy()); actions++; sleep(700); }
+                else safe(() -> { p.driver().navigate().back(); return null; });
+                continue;
+            }
+
+            // Freeze detection: a screenshot that keeps coming back near-identical despite this loop
+            // performing real actions means the UI genuinely stopped responding — a real, reportable
+            // defect distinct from "nothing new to try" (which explore() would instead interpret as
+            // exploration being complete; Monkey testing has no such notion since it never runs out
+            // of random actions to attempt).
+            byte[] shot = safeScreenshot(p);
+            long hash = aHash(shot);
+            if (hash != 0L && lastScreenshotHash != 0L && hamming(hash, lastScreenshotHash) <= MONKEY_FREEZE_HAMMING_BITS) {
+                freezeStreak++;
+                if (freezeStreak >= MONKEY_FREEZE_STREAK) {
+                    findings.add(evidencedFinding(p, "crash", "HIGH", screenName, "UI Freeze",
+                            List.of("Run Monkey testing (randomized taps/swipes/long-presses/scrolls/back/text input)"),
+                            "The UI should keep responding to input.",
+                            "The screen did not change across " + MONKEY_FREEZE_STREAK + " consecutive randomized interactions — the app appears frozen/unresponsive.",
+                            shot));
+                    freezeStreak = 0;
+                    // Recovery attempt: back, then relaunch if that alone doesn't help next iteration.
+                    safe(() -> { p.driver().navigate().back(); return null; });
+                    sleep(800);
+                    continue;
+                }
+            } else {
+                freezeStreak = 0;
+            }
+            lastScreenshotHash = hash;
+
+            List<SmartWidget> candidates = new ArrayList<>();
+            for (SmartWidget w : widgets) {
+                if (!w.actionable() || !w.displayed()) continue;
+                if (SmartForeignAppPolicy.isAdWidget(w, adDisclosure)) continue;
+                if (SmartForeignAppPolicy.isSubscriptionWidget(w)) continue;
+                if (SmartForeignAppPolicy.isSensitiveActionWidget(w)) continue;
+                String label = w.text() == null ? "" : w.text().trim().toLowerCase();
+                if (label.equals("exit") || label.equals("exit app") || label.equals("quit") || label.equals("quit app") || label.equals("close app")) continue;
+                candidates.add(w);
+            }
+
+            MonkeyAction action = pickMonkeyAction(rnd, candidates);
+            switch (action) {
+                case TAP -> { SmartWidget w = candidates.get(rnd.nextInt(candidates.size())); tap(p, w.cx(), w.cy()); actions++; sleep(500 + rnd.nextInt(500)); }
+                case LONG_PRESS -> { SmartWidget w = candidates.get(rnd.nextInt(candidates.size())); longPress(p, w.cx(), w.cy()); actions++; sleep(600 + rnd.nextInt(500)); }
+                case TEXT_INPUT -> {
+                    List<SmartWidget> editable = candidates.stream().filter(SmartWidget::editable).toList();
+                    SmartWidget w = editable.get(rnd.nextInt(editable.size()));
+                    typeSample(p, w);
+                    actions++;
+                }
+                case SCROLL, SWIPE -> { doRandomSwipe(p, sw, sh, rnd); actions++; sleep(500 + rnd.nextInt(400)); }
+                case BACK -> { safe(() -> { p.driver().navigate().back(); return null; }); actions++; sleep(500 + rnd.nextInt(400)); }
+            }
+        }
+        return new Result(seenScreens.size(), actions, false);
+    }
+
+    /** Weighted-random action choice — mostly taps (the most information-dense action), with the
+     *  other gesture types mixed in per the product spec, degrading gracefully when a type has no
+     *  eligible target on the current screen (e.g. no editable field → TEXT_INPUT is never picked). */
+    private MonkeyAction pickMonkeyAction(java.util.Random rnd, List<SmartWidget> candidates) {
+        boolean hasEditable = candidates.stream().anyMatch(SmartWidget::editable);
+        List<MonkeyAction> weighted = new ArrayList<>();
+        if (!candidates.isEmpty()) {
+            for (int i = 0; i < 5; i++) weighted.add(MonkeyAction.TAP);
+            weighted.add(MonkeyAction.LONG_PRESS);
+        }
+        weighted.add(MonkeyAction.SWIPE);
+        weighted.add(MonkeyAction.SCROLL);
+        weighted.add(MonkeyAction.BACK);
+        if (hasEditable) weighted.add(MonkeyAction.TEXT_INPUT);
+        return weighted.get(rnd.nextInt(weighted.size()));
+    }
+
+    /** A generic directional swipe/scroll (up, down, left or right) within the screen bounds. */
+    private void doRandomSwipe(Params p, int sw, int sh, java.util.Random rnd) {
+        if (sw <= 0 || sh <= 0) { sw = 1080; sh = 1920; }
+        int cx = sw / 2, cy = sh / 2;
+        int dir = rnd.nextInt(4);
+        int x1, y1, x2, y2;
+        switch (dir) {
+            case 0 -> { x1 = cx; y1 = (int) (sh * 0.75); x2 = cx; y2 = (int) (sh * 0.25); } // swipe up
+            case 1 -> { x1 = cx; y1 = (int) (sh * 0.25); x2 = cx; y2 = (int) (sh * 0.75); } // swipe down
+            case 2 -> { x1 = (int) (sw * 0.80); y1 = cy; x2 = (int) (sw * 0.20); y2 = cy; } // swipe left
+            default -> { x1 = (int) (sw * 0.20); y1 = cy; x2 = (int) (sw * 0.80); y2 = cy; } // swipe right
+        }
+        swipe(p, x1, y1, x2, y2, 300);
+    }
+
+    private void swipe(Params p, int x1, int y1, int x2, int y2, int durationMs) {
+        try {
+            p.driver().executeScript("mobile: swipeGesture", Map.of(
+                    "left", Math.min(x1, x2), "top", Math.min(y1, y2),
+                    "width", Math.max(1, Math.abs(x2 - x1)), "height", Math.max(1, Math.abs(y2 - y1)),
+                    "direction", y1 != y2 ? (y1 > y2 ? "up" : "down") : (x1 > x2 ? "left" : "right"),
+                    "percent", 1.0));
+        } catch (Exception e) {
+            try { p.adb().swipe(p.serial(), x1, y1, x2, y2, durationMs); } catch (Exception ignored) {}
+        }
+    }
+
+    private void longPress(Params p, int x, int y) {
+        try { p.driver().executeScript("mobile: longClickGesture", Map.of("x", x, "y", y, "duration", 700)); }
+        catch (Exception e) { try { p.adb().longPress(p.serial(), x, y, 700); } catch (Exception ignored) {} }
+    }
+
+    /** AdMob/Firebase category only: the app just left the foreground / a foreign surface showed
+     *  up shortly (within {@link #AD_STABILITY_WINDOW_STEPS} steps) after an ad was shown or
+     *  closed — report it as an ad-attributable stability finding, in addition to (not instead of)
+     *  the generic crash/foreign-app recovery the caller already performs. Best-effort/heuristic:
+     *  the window can't prove causation, only correlation, so this is worded accordingly. */
+    private void flagIfAdRelatedExit(Params p, int steps, String what) {
+        if (!p.allowAdInteraction()) return;
+        if (steps - lastAdSeenAtStep > AD_STABILITY_WINDOW_STEPS) return;
+        findings.add(evidencedFinding(p, "ads", "HIGH", "App", "App stability around ads",
+                List.of("Encounter and dismiss/close an ad shown by the app"),
+                "The app should remain stable and stay in the foreground before and after an ad is shown.",
+                what + " shortly after an ad was shown — possible crash, ANR, or the ad taking over navigation.",
+                safeScreenshot(p)));
+    }
+
+    /** Screenshot-evidenced finding — every detected issue gets a screenshot, timestamp and
+     *  reproduction steps, per the product spec (used by Monkey testing and AdMob/Firebase ad
+     *  validation; explore()'s uiChecks findings don't need this — they're structural/static,
+     *  not crash-level). */
+    /** One screenshot per newly-discovered screen, saved into the run's evidence directory
+     *  alongside finding screenshots (served by the same existing artifacts endpoint). Best-effort —
+     *  a failure here never affects exploration. */
+    private void captureScreenSnapshot(Params p, String screenName, int idx) {
+        if (p.runDir() == null) return;
+        try {
+            byte[] png = safeScreenshot(p);
+            if (png == null || png.length == 0) return;
+            File dir = new File(p.runDir(), "evidence");
+            dir.mkdirs();
+            String name = "screen-" + slug(screenName) + "-" + idx + ".png";
+            Files.write(new File(dir, name).toPath(), png);
+            screenshotFiles.put(screenName, name);
+        } catch (Exception ignored) {}
+    }
+
+    private static String slug(String s) {
+        if (s == null) return "screen";
+        String t = s.toLowerCase(java.util.Locale.ROOT).replaceAll("[^a-z0-9]+", "-").replaceAll("(^-+|-+$)", "");
+        return t.isBlank() ? "screen" : (t.length() > 40 ? t.substring(0, 40) : t);
+    }
+
+    private SmartFinding evidencedFinding(Params p, String category, String severity, String screenName,
+                                          String feature, List<String> steps, String expected, String actual, byte[] screenshot) {
+        String screenshotPath = null;
+        if (p.runDir() != null && screenshot != null && screenshot.length > 0) {
+            try {
+                File dir = new File(p.runDir(), "evidence"); dir.mkdirs();
+                String name = category + "-" + System.currentTimeMillis() + ".png";
+                Files.write(new File(dir, name).toPath(), screenshot);
+                screenshotPath = name;
+            } catch (Exception ignored) {}
+        }
+        return new SmartFinding(java.util.UUID.randomUUID().toString(), category, severity,
+                SmartFinding.priorityFor(severity), screenName, feature, feature, steps, expected, actual,
+                screenshotPath, null, null, System.currentTimeMillis(), SmartFinding.keyOf(screenName, feature, feature));
+    }
+
     // ── candidate selection ──────────────────────────────────────────────────
 
-    private SmartWidget pickNextAction(List<SmartWidget> widgets, String sig, boolean allowAds, boolean adDisclosure) {
+    private SmartWidget pickNextAction(List<SmartWidget> widgets, String sig, boolean adDisclosure) {
         for (SmartWidget w : widgets) {
             if (!w.actionable() || !w.displayed()) continue;
-            if (!allowAds && SmartForeignAppPolicy.isAdWidget(w, adDisclosure)) continue;
+            // Ad widgets are never tapped as ordinary exploration candidates, in any category —
+            // ad interaction (close-control only) is handled exclusively by the dedicated ad
+            // block above, never as part of general exploration.
+            if (SmartForeignAppPolicy.isAdWidget(w, adDisclosure)) continue;
             if (SmartForeignAppPolicy.isSubscriptionWidget(w)) continue;
             String label = w.text() == null ? "" : w.text().trim().toLowerCase();
             if (label.equals("back") || label.equals("close") || label.equals("exit") || label.equals("cancel")) continue;
@@ -248,11 +548,14 @@ public class SmartCrawler {
         p.graph().markTried(sig, w.signature());
     }
 
-    private List<String> candidateKeys(List<SmartWidget> widgets, boolean allowAds, boolean adDisclosure) {
+    private List<String> candidateKeys(List<SmartWidget> widgets, boolean adDisclosure) {
         List<String> out = new ArrayList<>();
         for (SmartWidget w : widgets) {
             if (!w.actionable() || !w.displayed()) continue;
-            if (!allowAds && SmartForeignAppPolicy.isAdWidget(w, adDisclosure)) continue;
+            // Ad widgets are never tapped as ordinary exploration candidates, in any category —
+            // ad interaction (close-control only) is handled exclusively by the dedicated ad
+            // block above, never as part of general exploration.
+            if (SmartForeignAppPolicy.isAdWidget(w, adDisclosure)) continue;
             if (SmartForeignAppPolicy.isSubscriptionWidget(w)) continue;
             out.add(w.signature());
         }
@@ -304,9 +607,6 @@ public class SmartCrawler {
     private boolean isAdDominated(List<SmartWidget> widgets, boolean adDisclosure) {
         long adish = widgets.stream().filter(w -> SmartForeignAppPolicy.isAdWidget(w, adDisclosure)).count();
         return adish >= 3;
-    }
-    private SmartWidget pickAnyAdWidget(List<SmartWidget> widgets) {
-        return widgets.stream().filter(w -> w.actionable() && w.displayed()).findFirst().orElse(null);
     }
     private void tapStayButton(Params p, List<SmartWidget> widgets) {
         for (SmartWidget w : widgets) {
@@ -462,9 +762,37 @@ public class SmartCrawler {
     }
 
     private String structureSignature(List<SmartWidget> widgets) {
-        StringBuilder sb = new StringBuilder();
-        for (SmartWidget w : widgets) if (w.actionable()) sb.append(w.simpleClass()).append('#').append(w.resourceId()).append(';');
-        return Integer.toHexString(sb.toString().hashCode());
+        // Class+resourceId alone is too coarse: apps that reuse a stable shell across screens
+        // (single-Activity + Fragments, Compose screens all wrapping one ComposeView, WebViews,
+        // list/RecyclerView rows sharing a generic resourceId) produce the SAME signature for
+        // genuinely different screens, which made the crawler think a new screen was already
+        // "seen" — it never recorded it, its visit counter kept climbing on someone else's tally,
+        // and every widget on it looked already-tried, so exploration stalled after 1-2 real
+        // screens. Folding in each actionable widget's own label, a digest of the screen's static
+        // (non-actionable) text, and the widget counts distinguishes same-shell-different-content
+        // screens while still collapsing genuine re-visits of the same screen.
+        StringBuilder actionable = new StringBuilder();
+        StringBuilder staticText = new StringBuilder();
+        int actionableCount = 0;
+        for (SmartWidget w : widgets) {
+            if (w.actionable()) {
+                actionableCount++;
+                String label = w.effectiveLabel(widgets);
+                actionable.append(w.simpleClass()).append('#').append(w.resourceId()).append(':').append(clip(label)).append(';');
+            } else if (w.hasLabel()) {
+                String t = w.text() != null && !w.text().isBlank() ? w.text() : w.contentDesc();
+                if (t != null) staticText.append(clip(t)).append('|');
+            }
+        }
+        String key = actionable + "#n=" + widgets.size() + ",a=" + actionableCount
+                + "#t=" + Integer.toHexString(staticText.toString().hashCode());
+        return Integer.toHexString(key.hashCode());
+    }
+
+    private static String clip(String s) {
+        if (s == null) return "";
+        String t = s.trim();
+        return t.length() > 40 ? t.substring(0, 40) : t;
     }
 
     private String inferScreenName(List<SmartWidget> widgets) {

@@ -30,6 +30,9 @@ spring:
   flyway:
     enabled: true
     baseline-on-migrate: true
+    # Tolerates history rows for migrations that no longer exist in source (e.g. after a rollback).
+    # Fresh DBs are unaffected; existing DBs that recorded rolled-back scripts start cleanly.
+    ignore-migration-patterns: "*:missing"
     locations: classpath:db/migration
   h2:
     console:

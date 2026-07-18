@@ -24,7 +24,6 @@ public class SpaController {
         "/smart-execution-running",
         "/localization",
         "/test-cases",
-        "/generate-test-case",
         "/settings",
         "/compat",
         "/devices",

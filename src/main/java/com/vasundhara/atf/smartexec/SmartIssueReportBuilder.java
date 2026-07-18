@@ -32,7 +32,7 @@ public final class SmartIssueReportBuilder {
 
         StringBuilder body = new StringBuilder();
         if (findings.isEmpty()) {
-            body.append("<div class='pass-box'><span class='badge'>PASS</span> No Issues Found in this category.</div>");
+            body.append("<div class='pass-box'><span class='badge'>PASS</span> Bug Report Not Available.</div>");
         } else {
             for (SmartFinding f : findings) {
                 body.append("<div class='finding sev-").append(esc(f.severity())).append("'>")
