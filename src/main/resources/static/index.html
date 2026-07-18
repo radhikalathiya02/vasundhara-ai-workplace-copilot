@@ -74,6 +74,8 @@
     align-items:center;justify-content:space-between;padding:0 26px;position:sticky;top:0;z-index:4}
   .crumb{font-size:18px;font-weight:700;letter-spacing:-.2px;line-height:1.15}
   .crumb-group{display:block;font-size:11px;font-weight:600;color:var(--mut);letter-spacing:.3px;margin-bottom:2px}
+  .crumb-group.is-link{cursor:pointer}
+  .crumb-group.is-link:hover{color:var(--brand);text-decoration:underline}
   .crumb small{display:block;font-size:12px;font-weight:400;color:var(--mut);letter-spacing:0;margin-top:1px}
   .topbar-right{display:flex;align-items:center;gap:10px}
   .topbar-ic{display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:9px;
@@ -714,36 +716,20 @@
       <button class="nav-item active" data-view="overview">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg>
         Dashboard</button>
+      <button class="nav-item" data-view="aiqa">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 17l10 5 10-5" stroke-linecap="round"/><path d="M2 12l10 5 10-5" stroke-linecap="round"/></svg>
+        AI QA Automation</button>
       <button class="nav-item" data-view="runs">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6h12M9 12h12M9 18h12" stroke-linecap="round"/><path d="M4 5.5l1.2 1.3L7.5 4M4 11.5l1.2 1.3L7.5 10M4 17.5l1.2 1.3L7.5 16" stroke-linecap="round" stroke-linejoin="round"/></svg>
         Test Runs</button>
-      <button class="nav-item" data-view="smartexec">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2.4"/><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5v2.2M12 18.3v2.2M3.5 12h2.2M18.3 12h2.2" stroke-linecap="round"/></svg>
-        Smart Execution</button>
       <div class="nav-label">Analysis</div>
-      <button class="nav-item" data-view="tc">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M10 8.5v7l6-3.5z" stroke-linejoin="round"/></svg>
-        Test Case Runner</button>
-      <button class="nav-item" data-view="tcgen">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6z" stroke-linejoin="round"/><path d="M19 3.5v3M20.5 5h-3" stroke-linecap="round"/><path d="M5 17v3M6.5 18.5h-3" stroke-linecap="round"/></svg>
-        AI Test Case Generator</button>
-      <button class="nav-item" data-view="compat">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M9 7h6M9 11h6M9 15h4" stroke-linecap="round"/><path d="M14 15l1.5 1.5L18 13" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        Compatibility</button>
       <button class="nav-item" data-view="reports">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6" stroke-linecap="round"/></svg>
         Reports</button>
-      <div class="nav-label">Configuration</div>
-      <button class="nav-item" data-view="l10n">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.8 2.5 15.2 0 18M12 3c-2.5 2.8-2.5 15.2 0 18" stroke-linecap="round"/></svg>
-        Localization</button>
       <div class="nav-label">Infrastructure</div>
       <button class="nav-item" data-view="devices">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4" stroke-linecap="round"/></svg>
         Device Manager</button>
-      <button class="nav-item" data-view="aiqa">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 17l10 5 10-5" stroke-linecap="round"/><path d="M2 12l10 5 10-5" stroke-linecap="round"/></svg>
-        AI QA Automation</button>
     </nav>
     <div class="side-foot">
       <button class="nav-item" data-view="settings">
@@ -1144,7 +1130,10 @@ function closeConnectModal(){
 
 /* ---------- nav / router ---------- */
 // Maps view keys to their canonical browser URL paths.
-const VIEW_TO_PATH={overview:'/overview',runs:'/runs',smartexec:'/smart-execution',l10n:'/localization',tc:'/test-cases',tcgen:'/generate-test-case',settings:'/settings',compat:'/compat',devices:'/devices',reports:'/reports',aiqa:'/ai-qa-automation'};
+const VIEW_TO_PATH={overview:'/overview',runs:'/runs',smartexec:'/smart-execution',l10n:'/localization',tc:'/test-cases',tcgen:'/generate-test-case',settings:'/settings',compat:'/compat',devices:'/devices',reports:'/reports',aiqa:'/ai-qa-automation',androidqa:'/ai-qa-automation/android'};
+// Views relocated under the Android Application Testing page (no longer in the sidebar) —
+// their breadcrumb "back" link returns here instead of the default group behavior.
+const PARENT_VIEW={androidqa:'aiqa',smartexec:'androidqa',smartexecRunning:'androidqa',l10n:'androidqa',compat:'androidqa',tc:'androidqa',tcgen:'androidqa'};
 // Reverse map — URL path → view key (detail is handled separately via /runs/{id} regex).
 const PATH_TO_VIEW=Object.fromEntries(Object.entries(VIEW_TO_PATH).map(([k,v])=>[v,k]));
 
@@ -1189,7 +1178,7 @@ function go(view,runId,replace,urlOverride,mod){
   unmountLogcat();   // stop the client poll; the execution page re-binds streaming from run state
   // The console streams only on the execution pages (detail/l10n); free the device process elsewhere.
   if(view!=='detail'&&view!=='l10n'&&view!=='tc'&&view!=='smartexecRunning'){ logcat.streaming=false; fetch('/api/logcat/stop',{method:'POST'}).catch(()=>{}); }
-  setNav(view==='detail'?'runs':view==='devices'?'devices':view==='smartexecRunning'?'smartexec':view);
+  setNav(view==='detail'?'runs':view==='devices'?'devices':PARENT_VIEW[view]?'aiqa':view);
   const C={overview:['Dashboard','Automated APK test runs'],
     runs:['Test Runs','All executed test runs'],detail:['Application Test Run Dashboard','Execution status, findings, and coverage'],
     smartexec:['Smart Execution','AI-powered, generic end-to-end APK testing — no locators, no hardcoding'],
@@ -1201,16 +1190,18 @@ function go(view,runId,replace,urlOverride,mod){
     settings:['Settings','Configure the framework — changes apply to future test runs'],
     devices:['Device Manager','Manage emulators and physical devices — multi-device parallel testing'],
     reports:['Reports','Consolidated per-run reports — view, download and export'],
-    aiqa:['AI QA Automation','']};
+    aiqa:['AI QA Automation',''],
+    androidqa:['Android Application Testing','Automation modules available for Android apps']};
   const VIEW_GROUP={overview:'Workspace',runs:'Workspace',detail:'Workspace',
-    smartexec:'Workspace',smartexecRunning:'Workspace',
-    tc:'Analysis',tcgen:'Analysis',compat:'Analysis',reports:'Analysis',
-    l10n:'Configuration',
-    devices:'Infrastructure',aiqa:'Infrastructure',settings:'System'};
-  $('#crumbGroup').textContent=VIEW_GROUP[view]||'Workspace';
+    reports:'Analysis',
+    devices:'Infrastructure',aiqa:'Workspace',settings:'System'};
+  const group=PARENT_VIEW[view]?'AI QA Automation':(VIEW_GROUP[view]||'Workspace');
+  $('#crumbGroup').textContent=group;
+  $('#crumbGroup').classList.toggle('is-link',!!PARENT_VIEW[view]);
+  $('#crumbGroup').onclick=PARENT_VIEW[view]?(()=>go(PARENT_VIEW[view])):null;
   $('#crumbTitle').textContent=C[view][0];
   startExecLockPolling();
-  ({overview:renderOverview,runs:renderRuns,detail:renderDetail,smartexec:renderSmartExec,smartexecRunning:renderSmartExecRunning,compat:renderCompat,l10n:renderL10n,tc:renderTc,tcgen:renderTcgenPage,settings:renderSettings,devices:renderDeviceManager,reports:renderReports,aiqa:renderAiQa})[view]();
+  ({overview:renderOverview,runs:renderRuns,detail:renderDetail,smartexec:renderSmartExec,smartexecRunning:renderSmartExecRunning,compat:renderCompat,l10n:renderL10n,tc:renderTc,tcgen:renderTcgenPage,settings:renderSettings,devices:renderDeviceManager,reports:renderReports,aiqa:renderAiQa,androidqa:renderAndroidQa})[view]();
 }
 
 /**
@@ -4875,6 +4866,7 @@ html[data-theme="dark"] .tc-zone .tc-zi{background:#152033}
   display:flex;align-items:flex-start;justify-content:flex-end;padding:16px;
   opacity:0;pointer-events:none;transition:opacity .2s}
 .tc-modal-overlay.open{opacity:1;pointer-events:all}
+.content>.tc-modal-overlay{animation:none}
 .tc-modal{width:680px;max-width:100%;max-height:calc(100vh - 32px);overflow-y:auto;
   background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow-lg);
   transform:translateX(40px);transition:transform .2s;display:flex;flex-direction:column}
@@ -6005,9 +5997,34 @@ function dmCleanup(){
 }
 
 function renderAiQa(){
-  $('#content').innerHTML=`<div class="card"><div class="card-b" style="padding:40px;text-align:center;color:var(--txt-2)">
-    Coming soon.
-  </div></div>`;
+  $('#content').innerHTML=`<div class="grid" style="grid-template-columns:repeat(3,1fr)">${PLATFORMS.map(m=>`
+    <div class="mod-card" onclick="${m.k==='android'?"go('androidqa')":"toast('"+esc(m.n)+" is on our roadmap.')"}">
+      <span class="mod-badge ${m.s==='active'?'ok':''}">${m.s==='active'?'Available':'Soon'}</span>
+      <div class="mod-ic">${m.ic}</div>
+      <div class="mod-t">${esc(m.n)}</div>
+      <div class="mod-d">${esc(m.d)}</div>
+    </div>`).join('')}</div>`;
+}
+
+const ANDROID_QA_MODULES=[
+  {view:'smartexec',n:'Smart Execution',d:'AI-powered, generic end-to-end APK testing — no locators, no hardcoding',
+   ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2.4"/><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5v2.2M12 18.3v2.2M3.5 12h2.2M18.3 12h2.2" stroke-linecap="round"/></svg>'},
+  {view:'tc',n:'Test Case Runner',d:'Upload APK + test sheet — AI-driven sequential execution on device',
+   ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M10 8.5v7l6-3.5z" stroke-linejoin="round"/></svg>'},
+  {view:'tcgen',n:'AI Test Case Generator',d:'Upload an APK — AI generates a structured test-case sheet',
+   ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6z" stroke-linejoin="round"/><path d="M19 3.5v3M20.5 5h-3" stroke-linecap="round"/><path d="M5 17v3M6.5 18.5h-3" stroke-linecap="round"/></svg>'},
+  {view:'compat',n:'Compatibility',d:'Automatic UI & functionality testing across Android 9–16 emulators',
+   ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M9 7h6M9 11h6M9 15h4" stroke-linecap="round"/><path d="M14 15l1.5 1.5L18 13" stroke-linecap="round" stroke-linejoin="round"/></svg>'},
+  {view:'l10n',n:'Localization',d:'Automatic per-language translation & functionality testing',
+   ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.8 2.5 15.2 0 18M12 3c-2.5 2.8-2.5 15.2 0 18" stroke-linecap="round"/></svg>'}
+];
+function renderAndroidQa(){
+  $('#content').innerHTML=`<div class="grid" style="grid-template-columns:repeat(3,1fr)">${ANDROID_QA_MODULES.map(m=>`
+    <div class="mod-card" onclick="go('${m.view}')">
+      <div class="mod-ic">${m.ic}</div>
+      <div class="mod-t">${esc(m.n)}</div>
+      <div class="mod-d">${esc(m.d)}</div>
+    </div>`).join('')}</div>`;
 }
 
 async function renderDeviceManager(){
