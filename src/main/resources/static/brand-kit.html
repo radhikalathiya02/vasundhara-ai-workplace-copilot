@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Brand Kit · AI-Powered Automation Tools</title>
+<link rel="icon" type="image/svg+xml" href="brand/logo-icon.svg"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{--brand:#3b6cf6;--brand2:#8b5cf6;--grad:linear-gradient(135deg,#3b6cf6,#8b5cf6)}
+  html[data-theme="light"]{--bg:#f5f7fb;--surface:#fff;--line:#e7ebf3;--txt:#0e1524;--mut:#7c869e}
+  html[data-theme="dark"]{--bg:#0b0d12;--surface:#14171f;--line:#252932;--txt:#e8eaf0;--mut:#7b8493}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Manrope,system-ui,sans-serif;background:var(--bg);color:var(--txt);-webkit-font-smoothing:antialiased}
+  header{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;
+    padding:18px 32px;background:color-mix(in srgb,var(--surface) 82%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+  header .h-l{display:flex;align-items:center;gap:12px}
+  header img{height:34px}
+  .toggle{border:1px solid var(--line);background:var(--surface);color:var(--txt);border-radius:10px;padding:9px 15px;font:600 13px Manrope;cursor:pointer}
+  .wrap{max-width:1080px;margin:0 auto;padding:36px 32px 80px}
+  h1{font-size:30px;font-weight:800;letter-spacing:-.6px;margin:0 0 4px}
+  .sub{color:var(--mut);font-size:15px;margin:0 0 34px}
+  h2{font-size:13px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--mut);margin:38px 0 14px}
+  .grid{display:grid;gap:18px;grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}
+  .tile{border:1px solid var(--line);border-radius:16px;overflow:hidden;background:var(--surface);box-shadow:0 6px 18px rgba(16,24,40,.05)}
+  .canvas{display:grid;place-items:center;padding:34px 20px;min-height:150px}
+  .canvas.lt{background:#f5f7fb}.canvas.dk{background:#0b0d12}.canvas.gr{background:var(--grad)}
+  .canvas img{max-width:100%;max-height:96px}
+  .cap{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 15px;border-top:1px solid var(--line);font-size:12.5px}
+  .cap b{font-weight:700}.cap a{color:var(--brand);text-decoration:none;font-weight:700;font-size:12px}
+  .cap a:hover{text-decoration:underline}
+  .mono-demo{color:var(--txt)}
+  .pal{display:flex;gap:12px;flex-wrap:wrap}
+  .sw{border:1px solid var(--line);border-radius:12px;overflow:hidden;width:150px}
+  .sw .c{height:64px}.sw .m{padding:9px 12px;font-size:12px}.sw .m b{display:block;font-weight:700}
+  .sw .m span{color:var(--mut);font-family:ui-monospace,Menlo,monospace}
+  .row{display:flex;gap:18px;flex-wrap:wrap;align-items:stretch}
+</style>
+</head>
+<body>
+<header>
+  <div class="h-l"><img src="brand/logo-full.svg" id="hdrLogo" alt="AI-Powered Automation Tools"/></div>
+  <button class="toggle" onclick="tog()">Toggle theme</button>
+</header>
+<div class="wrap">
+  <h1>Brand Kit</h1>
+  <p class="sub">AI-Powered Automation Tools — Intelligent App Testing Platform. Hexagon (framework) · check (QA) · spark (AI).</p>
+
+  <h2>1 · Full Logo — Light &amp; Dark</h2>
+  <div class="grid">
+    <div class="tile"><div class="canvas lt"><img src="brand/logo-full.svg"></div><div class="cap"><b>Full · Light</b><a href="brand/logo-full.svg" download>SVG</a></div></div>
+    <div class="tile"><div class="canvas dk"><img src="brand/logo-full-dark.svg"></div><div class="cap"><b>Full · Dark</b><a href="brand/logo-full-dark.svg" download>SVG</a></div></div>
+  </div>
+
+  <h2>2 · Icon Only &amp; Sidebar Icon</h2>
+  <div class="grid">
+    <div class="tile"><div class="canvas lt"><img src="brand/logo-icon.svg"></div><div class="cap"><b>Icon</b><a href="brand/logo-icon.svg" download>SVG</a></div></div>
+    <div class="tile"><div class="canvas dk"><img src="brand/logo-sidebar.svg"></div><div class="cap"><b>Sidebar Icon</b><a href="brand/logo-sidebar.svg" download>SVG</a></div></div>
+    <div class="tile"><div class="canvas gr"><img src="brand/logo-mono.svg" style="color:#fff"></div><div class="cap"><b>On gradient</b><span style="color:var(--mut)">mono/white</span></div></div>
+  </div>
+
+  <h2>3 · App Icon &amp; Favicon</h2>
+  <div class="grid">
+    <div class="tile"><div class="canvas lt"><img src="brand/logo-app-icon.svg" style="max-height:120px;border-radius:24px"></div><div class="cap"><b>App Icon (squircle)</b><a href="brand/logo-app-icon.svg" download>SVG</a></div></div>
+    <div class="tile"><div class="canvas dk"><img src="brand/logo-app-icon.png" style="max-height:120px;border-radius:24px"></div><div class="cap"><b>App Icon</b><a href="brand/logo-app-icon.png" download>PNG 512</a></div></div>
+    <div class="tile"><div class="canvas lt"><img src="brand/logo-icon.svg" style="max-height:32px"></div><div class="cap"><b>Favicon 32</b><a href="brand/logo-icon.svg" download>SVG</a></div></div>
+  </div>
+
+  <h2>4 · Monochrome</h2>
+  <div class="grid">
+    <div class="tile"><div class="canvas lt mono-demo"><img src="brand/logo-mono.svg"></div><div class="cap"><b>Mono · dark ink</b><a href="brand/logo-mono.svg" download>SVG</a></div></div>
+    <div class="tile"><div class="canvas dk" style="color:#fff"><img src="brand/logo-mono.svg"></div><div class="cap"><b>Mono · reversed</b><span style="color:var(--mut)">currentColor</span></div></div>
+  </div>
+
+  <h2>5 · Splash Logo</h2>
+  <div class="row">
+    <div class="tile" style="flex:1;min-width:320px"><div class="canvas lt"><img src="brand/logo-splash.svg" style="max-height:180px"></div><div class="cap"><b>Splash · Light</b><a href="brand/logo-splash.svg" download>SVG</a></div></div>
+    <div class="tile" style="flex:1;min-width:320px"><div class="canvas dk"><img src="brand/logo-splash-dark.svg" style="max-height:180px"></div><div class="cap"><b>Splash · Dark</b><a href="brand/logo-splash-dark.svg" download>SVG</a></div></div>
+  </div>
+
+  <h2>6 · PNG Exports</h2>
+  <div class="grid">
+    <div class="tile"><div class="canvas lt"><img src="brand/logo-icon.png" style="max-height:96px"></div><div class="cap"><b>Icon</b><a href="brand/logo-icon.png" download>PNG 512</a></div></div>
+    <div class="tile"><div class="canvas lt"><img src="brand/logo-full.png"></div><div class="cap"><b>Full · Light</b><a href="brand/logo-full.png" download>PNG</a></div></div>
+    <div class="tile"><div class="canvas dk"><img src="brand/logo-full-dark.png"></div><div class="cap"><b>Full · Dark</b><a href="brand/logo-full-dark.png" download>PNG</a></div></div>
+  </div>
+
+  <h2>7 · Palette &amp; Type</h2>
+  <div class="pal">
+    <div class="sw"><div class="c" style="background:#3b6cf6"></div><div class="m"><b>Primary</b><span>#3B6CF6</span></div></div>
+    <div class="sw"><div class="c" style="background:#8b5cf6"></div><div class="m"><b>Secondary</b><span>#8B5CF6</span></div></div>
+    <div class="sw"><div class="c" style="background:var(--grad)"></div><div class="m"><b>Gradient</b><span>135°</span></div></div>
+    <div class="sw"><div class="c" style="background:#0e1524"></div><div class="m"><b>Ink</b><span>#0E1524</span></div></div>
+  </div>
+  <p class="sub" style="margin-top:16px">Typeface — <b style="color:var(--txt)">Manrope</b> (800 headings · 600 UI · 400 body). Wordmark: <b style="color:var(--txt)">AI-POWERED</b> eyebrow + <b style="color:var(--txt)">Automation Tools</b>.</p>
+</div>
+<script>
+  const root=document.documentElement;
+  root.setAttribute('data-theme', matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');
+  function syncHdr(){document.getElementById('hdrLogo').src=root.getAttribute('data-theme')==='dark'?'/brand/logo-full-dark.svg':'/brand/logo-full.svg';}
+  function tog(){root.setAttribute('data-theme',root.getAttribute('data-theme')==='dark'?'light':'dark');syncHdr();}
+  syncHdr();
+</script>
+</body>
+</html>

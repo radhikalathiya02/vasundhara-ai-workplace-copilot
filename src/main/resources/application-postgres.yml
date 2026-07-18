@@ -1,0 +1,26 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# PostgreSQL production profile
+# Activate with: --spring.profiles.active=postgres
+# Override credentials via environment variables or -D flags:
+#   SPRING_DATASOURCE_URL, SPRING_DATASOURCE_USERNAME, SPRING_DATASOURCE_PASSWORD
+# ──────────────────────────────────────────────────────────────────────────────
+spring:
+  datasource:
+    url:      jdbc:postgresql://127.0.0.1:5432/AppTestFramework
+    username: appframework
+    password: appframework
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size:   10
+      minimum-idle:         2
+      connection-timeout: 20000
+      idle-timeout:       600000
+      max-lifetime:      1800000
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+  flyway:
+    enabled: true
+    baseline-on-migrate: true

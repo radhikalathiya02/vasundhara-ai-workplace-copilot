@@ -1,0 +1,9 @@
+# Runtime test output — screenshots, generated reports, crawl artifacts, logs.
+# These are produced per test run and are not source code.
+/data/
+
+# Build output — compiled classes and packaged jars, not source code.
+/target/
+
+# OS/editor junk files.
+.DS_Store

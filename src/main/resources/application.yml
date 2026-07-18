@@ -1,0 +1,58 @@
+server:
+  port: 8080
+  error:
+    include-message: always
+    include-stacktrace: on_param
+    include-binding-errors: always
+
+spring:
+  application:
+    name: AppTestFramework
+  servlet:
+    multipart:
+      max-file-size: 600MB
+      max-request-size: 600MB
+  jackson:
+    default-property-inclusion: non_null
+
+  # ── Database (H2 embedded by default — no external server required) ─────────
+  # To use PostgreSQL instead: --spring.profiles.active=postgres
+  datasource:
+    url: jdbc:h2:file:./data/atf-db
+    username: atf
+    password: atf
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    show-sql: false
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+  h2:
+    console:
+      enabled: false
+
+# Framework configuration — override via env vars (ATF_ADBPATH, ATF_APPIUMSERVERURL, ...)
+atf:
+  adb-path: /Users/ios/Library/Android/sdk/platform-tools/adb
+  appium-server-url: http://127.0.0.1:4723
+  device-serial: ""          # blank = auto-pick first online device
+  upload-dir: data/uploads
+  work-dir: data/runs
+  max-run-seconds: 7200
+  crawl-max-steps: 800
+  monkey-events: 1500
+  # Dashboard sign-in (override in production via ATF_AUTHUSERNAME / ATF_AUTHPASSWORD)
+  auth-username: admin
+  auth-password: admin
+  # Compatibility emulator matrix
+  emulator-boot-timeout-sec: 480
+
+logging:
+  level:
+    com.vasundhara.atf: INFO
+  file:
+    name: data/logs/atf.log

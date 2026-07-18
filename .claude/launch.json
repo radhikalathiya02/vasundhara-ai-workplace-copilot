@@ -1,0 +1,25 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "atf",
+      "runtimeExecutable": "java",
+      "runtimeArgs": [
+        "-jar",
+        "target/app-test-framework.jar"
+      ],
+      "port": 8080,
+      "autoPort": false
+    },
+    {
+      "name": "atf-dev",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": [
+        "-c",
+        "export ANDROID_HOME=\"$HOME/Library/Android/sdk\"; export ANDROID_SDK_ROOT=\"$ANDROID_HOME\"; exec mvn -q spring-boot:run"
+      ],
+      "port": 8080,
+      "autoPort": false
+    }
+  ]
+}
