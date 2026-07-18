@@ -51,11 +51,19 @@ atf:
   # Compatibility emulator matrix
   emulator-boot-timeout-sec: 480
 
+# ── AI Product Dev: workspace for Claude-driven Android builds ───────────────
+ai:
+  build:
+    workspace:
+      base: /tmp/ai-builds
+    # Java 17/21 required — Gradle 8.x Kotlin DSL compiler can't parse Java 25
+    java-home: /Users/android/Library/Java/JavaVirtualMachines/ms-17.0.17/Contents/Home
+
 # ── V-Legal AI: Vasundhara legal document generator ─────────────────────────
 vlegal:
   gemini:
-    api-key: ${VLEGAL_GEMINI_API_KEY:PASTE_YOUR_GEMINI_KEY_HERE}
-    model: gemini-2.0-flash
+    api-key: ${VLEGAL_GEMINI_API_KEY:AIzaSyB1VQyjxy08sCgyKFkVUME10yb1gBcv5ws}
+    model: gemini-2.5-flash
     base-url: https://generativelanguage.googleapis.com
   url-fetch:
     timeout-seconds: 10

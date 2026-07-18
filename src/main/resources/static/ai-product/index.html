@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>AI Product Dev — Vasundhara</title>
+<style>
+  :root{--primary:#6C63FF;--primary-dark:#5a52d5;--bg:#0f0f1a;--card:#1a1a2e;--card2:#16213e;--border:#2d2d4e;--text:#e0e0f0;--muted:#8888aa;--success:#4ade80;--warn:#fbbf24;--danger:#f87171;--radius:12px;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+  a{color:var(--primary);}
+
+  /* Header */
+  .header{background:var(--card2);border-bottom:1px solid var(--border);padding:16px 24px;display:flex;align-items:center;gap:12px;}
+  .header-logo{width:36px;height:36px;background:var(--primary);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;}
+  .header h1{font-size:1.2rem;font-weight:700;}
+  .header p{font-size:0.8rem;color:var(--muted);}
+
+  /* Wizard steps indicator */
+  .steps-bar{display:flex;align-items:center;gap:0;padding:24px;justify-content:center;flex-wrap:wrap;gap:8px;}
+  .step-indicator{display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;opacity:.4;transition:opacity .2s;}
+  .step-indicator.active{opacity:1;}
+  .step-indicator.done{opacity:.7;}
+  .step-num{width:36px;height:36px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;background:var(--card);transition:all .2s;}
+  .step-indicator.active .step-num{border-color:var(--primary);background:var(--primary);color:#fff;}
+  .step-indicator.done .step-num{border-color:var(--success);background:transparent;color:var(--success);}
+  .step-label{font-size:.7rem;color:var(--muted);text-align:center;max-width:70px;}
+  .step-connector{width:32px;height:2px;background:var(--border);margin-bottom:16px;}
+
+  /* Main content */
+  .main{max-width:760px;margin:0 auto;padding:0 24px 60px;}
+
+  /* Card */
+  .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:28px;margin-bottom:20px;}
+  .card h2{font-size:1.1rem;margin-bottom:6px;}
+  .card p.hint{font-size:.85rem;color:var(--muted);margin-bottom:20px;}
+
+  /* Form */
+  label{display:block;font-size:.85rem;color:var(--muted);margin-bottom:6px;margin-top:16px;}
+  label:first-child{margin-top:0;}
+  input[type=text],input[type=url],textarea,select{width:100%;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:.9rem;outline:none;transition:border-color .2s;}
+  input[type=text]:focus,input[type=url]:focus,textarea:focus,select:focus{border-color:var(--primary);}
+  textarea{resize:vertical;min-height:80px;}
+  select option{background:var(--card2);}
+
+  .tag-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;}
+  .tag{background:var(--card2);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:.8rem;cursor:pointer;transition:all .2s;user-select:none;}
+  .tag.selected{background:var(--primary);border-color:var(--primary);color:#fff;}
+
+  /* Buttons */
+  .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 22px;border-radius:8px;border:none;cursor:pointer;font-size:.9rem;font-weight:600;transition:all .2s;}
+  .btn-primary{background:var(--primary);color:#fff;}
+  .btn-primary:hover{background:var(--primary-dark);}
+  .btn-secondary{background:transparent;border:1px solid var(--border);color:var(--text);}
+  .btn-secondary:hover{border-color:var(--primary);color:var(--primary);}
+  .btn:disabled{opacity:.4;cursor:not-allowed;}
+  .btn-row{display:flex;gap:12px;margin-top:24px;justify-content:flex-end;}
+
+  /* Analyze result */
+  .analyze-result{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:16px;margin-top:16px;display:none;}
+  .analyze-result.show{display:block;}
+  .analyze-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;}
+  .analyze-item label{color:var(--muted);font-size:.75rem;margin:0 0 2px;}
+  .analyze-item p{font-size:.9rem;}
+
+  /* Screen tags list */
+  .screen-list{display:flex;flex-direction:column;gap:8px;margin-top:8px;}
+  .screen-item{display:flex;align-items:center;gap:8px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;}
+  .screen-item input{flex:1;background:transparent;border:none;color:var(--text);font-size:.9rem;outline:none;}
+  .screen-item .rm{cursor:pointer;color:var(--danger);font-size:1.1rem;line-height:1;}
+  .add-screen-btn{font-size:.8rem;color:var(--primary);cursor:pointer;margin-top:8px;display:inline-block;}
+
+  /* Review */
+  .review-table{width:100%;border-collapse:collapse;margin-top:12px;}
+  .review-table tr td{padding:8px 4px;border-bottom:1px solid var(--border);font-size:.88rem;}
+  .review-table tr td:first-child{color:var(--muted);width:40%;}
+  .badge{display:inline-block;padding:2px 10px;border-radius:12px;font-size:.75rem;font-weight:600;}
+  .badge-blue{background:rgba(108,99,255,.2);color:var(--primary);}
+  .badge-green{background:rgba(74,222,128,.15);color:var(--success);}
+  .badge-warn{background:rgba(251,191,36,.15);color:var(--warn);}
+
+  /* Build progress */
+  .progress-wrap{margin:20px 0;}
+  .progress-bar-bg{background:var(--card2);border-radius:8px;height:10px;overflow:hidden;}
+  .progress-bar-fill{height:100%;background:linear-gradient(90deg,var(--primary),#9f7aea);transition:width .4s;border-radius:8px;}
+  .progress-label{display:flex;justify-content:space-between;font-size:.8rem;color:var(--muted);margin-top:6px;}
+
+  .status-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 14px;border-radius:20px;font-size:.8rem;font-weight:600;margin-bottom:16px;}
+  .status-QUEUED{background:rgba(251,191,36,.15);color:var(--warn);}
+  .status-ANALYZING,.status-GENERATING{background:rgba(108,99,255,.2);color:var(--primary);}
+  .status-BUILDING{background:rgba(74,222,128,.12);color:#60d394;}
+  .status-SIGNING,.status-DONE{background:rgba(74,222,128,.2);color:var(--success);}
+  .status-FAILED{background:rgba(248,113,113,.15);color:var(--danger);}
+  .status-dot{width:8px;height:8px;border-radius:50%;background:currentColor;animation:pulse 1.2s infinite;}
+  .status-DONE .status-dot,.status-FAILED .status-dot{animation:none;}
+
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+
+  .log-box{background:#0a0a14;border:1px solid var(--border);border-radius:8px;padding:14px;font-family:monospace;font-size:.78rem;color:#a0a0c0;height:220px;overflow-y:auto;white-space:pre-wrap;word-break:break-all;margin-top:16px;}
+  .log-box .log-line{line-height:1.5;}
+
+  .download-btn{display:inline-flex;align-items:center;gap:8px;padding:12px 28px;background:var(--success);color:#0f0f1a;border-radius:8px;font-weight:700;text-decoration:none;margin-top:20px;font-size:.95rem;}
+  .download-btn:hover{opacity:.9;}
+
+  .error-box{background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.3);border-radius:8px;padding:14px;color:var(--danger);font-size:.85rem;margin-top:16px;}
+
+  .queue-info{background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.2);border-radius:8px;padding:12px 16px;font-size:.85rem;margin-top:12px;}
+  .queue-info strong{color:var(--warn);}
+
+  .spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  /* Step panels */
+  .step-panel{display:none;}
+  .step-panel.active{display:block;}
+
+  /* Project detected info */
+  .detect-info{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:12px 16px;font-size:.85rem;margin-top:12px;display:none;}
+  .detect-info.show{display:flex;gap:16px;flex-wrap:wrap;}
+  .detect-info span{color:var(--muted);}
+  .detect-info strong{color:var(--text);}
+
+  @media(max-width:540px){
+    .analyze-grid{grid-template-columns:1fr;}
+    .steps-bar{gap:4px;}
+    .step-connector{width:16px;}
+  }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-logo">🤖</div>
+  <div>
+    <h1>AI Product Dev</h1>
+    <p>Let Claude Code modify your Android app. Powered by Gemini + Claude.</p>
+  </div>
+</div>
+
+<!-- Step indicators -->
+<div class="steps-bar" id="stepsBar">
+  <div class="step-indicator active" data-step="1" onclick="goStep(1)">
+    <div class="step-num" id="stepNum1">1</div>
+    <div class="step-label">Reference URL</div>
+  </div>
+  <div class="step-connector"></div>
+  <div class="step-indicator" data-step="2" onclick="goStep(2)">
+    <div class="step-num" id="stepNum2">2</div>
+    <div class="step-label">Project Path</div>
+  </div>
+  <div class="step-connector"></div>
+  <div class="step-indicator" data-step="3" onclick="goStep(3)">
+    <div class="step-num" id="stepNum3">3</div>
+    <div class="step-label">Configure</div>
+  </div>
+  <div class="step-connector"></div>
+  <div class="step-indicator" data-step="4" onclick="goStep(4)">
+    <div class="step-num" id="stepNum4">4</div>
+    <div class="step-label">Review</div>
+  </div>
+  <div class="step-connector"></div>
+  <div class="step-indicator" data-step="5" onclick="goStep(5)">
+    <div class="step-num" id="stepNum5">5</div>
+    <div class="step-label">Build</div>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- ── STEP 1: Reference URL ─────────────────────────── -->
+  <div class="step-panel active" id="panel1">
+    <div class="card">
+      <h2>🌐 Reference App URL <span style="font-size:.75rem;color:var(--muted);font-weight:400;">(optional)</span></h2>
+      <p class="hint">Paste a Play Store listing, website, or landing page. Gemini will analyze the app and pre-fill screens &amp; features for you.</p>
+      <label>App / Play Store URL</label>
+      <input type="url" id="referenceUrl" placeholder="https://play.google.com/store/apps/details?id=..." />
+      <div style="margin-top:12px;">
+        <button class="btn btn-primary" onclick="analyzeUrl()" id="analyzeBtn">
+          <span class="spinner" id="analyzeSpinner" style="display:none;"></span>
+          <span id="analyzeBtnText">✨ Analyze with Gemini</span>
+        </button>
+        <span style="margin-left:12px;font-size:.8rem;color:var(--muted);">or skip to enter details manually</span>
+      </div>
+
+      <div class="analyze-result" id="analyzeResult">
+        <div style="font-size:.85rem;font-weight:600;color:var(--success);">✓ Gemini Analysis Complete</div>
+        <div class="analyze-grid">
+          <div class="analyze-item"><label>App Name</label><p id="ar_appName">—</p></div>
+          <div class="analyze-item"><label>Package</label><p id="ar_pkg">—</p></div>
+          <div class="analyze-item"><label>Primary Color</label><p id="ar_color">—</p></div>
+          <div class="analyze-item"><label>Navigation</label><p id="ar_nav">—</p></div>
+        </div>
+        <div style="margin-top:12px;font-size:.8rem;color:var(--muted);">Screens: <span id="ar_screens" style="color:var(--text);"></span></div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="goStep(2)">Next →</button>
+    </div>
+  </div>
+
+  <!-- ── STEP 2: Project Path ──────────────────────────── -->
+  <div class="step-panel" id="panel2">
+    <div class="card">
+      <h2>📁 Android Project Path</h2>
+      <p class="hint">Full path to your existing Android project directory on this machine. Claude will copy it to a workspace, keeping the original untouched.</p>
+      <label>Project Directory Path</label>
+      <input type="text" id="projectPath" placeholder="/Users/you/MyAndroidApp" oninput="clearDetect()"/>
+      <div style="margin-top:10px;">
+        <button class="btn btn-secondary" onclick="detectProject()" id="detectBtn">
+          <span class="spinner" id="detectSpinner" style="display:none;"></span>
+          <span id="detectBtnText">🔍 Detect Project Info</span>
+        </button>
+      </div>
+      <div class="detect-info" id="detectInfo">
+        <div><span>Package: </span><strong id="di_pkg">—</strong></div>
+        <div><span>App Name: </span><strong id="di_app">—</strong></div>
+        <div><span>Existing Screens: </span><strong id="di_screens">—</strong></div>
+      </div>
+      <div id="detectError" style="color:var(--danger);font-size:.82rem;margin-top:8px;display:none;"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="goStep(1)">← Back</button>
+      <button class="btn btn-primary" onclick="validateStep2()">Next →</button>
+    </div>
+  </div>
+
+  <!-- ── STEP 3: Configure ─────────────────────────────── -->
+  <div class="step-panel" id="panel3">
+    <div class="card">
+      <h2>⚙️ Configure Build</h2>
+      <p class="hint">These fields are pre-filled from Gemini analysis (if you ran it). Edit as needed.</p>
+
+      <label>App Name</label>
+      <input type="text" id="appName" placeholder="My Awesome App"/>
+
+      <label>Package Name</label>
+      <input type="text" id="packageName" placeholder="com.example.myapp"/>
+
+      <label>Description</label>
+      <textarea id="description" placeholder="Brief description of the app and what screens to add..."></textarea>
+
+      <label>Theme Color (hex)</label>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <input type="text" id="themeColor" value="#6C63FF" style="flex:1;"/>
+        <input type="color" id="colorPicker" value="#6C63FF" style="width:44px;height:38px;border-radius:6px;border:1px solid var(--border);cursor:pointer;background:transparent;" oninput="document.getElementById('themeColor').value=this.value"/>
+      </div>
+
+      <label>Screens to Add/Modify</label>
+      <div class="screen-list" id="screenList"></div>
+      <span class="add-screen-btn" onclick="addScreen()">+ Add screen</span>
+
+      <label style="margin-top:20px;">Merge Strategy</label>
+      <select id="mergeStrategy">
+        <option value="SKIP_DUPLICATES">Skip Duplicates — only add new screens, leave existing untouched</option>
+        <option value="READ_AND_MERGE">Read &amp; Merge — Claude reads existing code, integrates naturally</option>
+        <option value="OVERWRITE">Overwrite — replace all screens (destructive)</option>
+      </select>
+
+      <label>If Build Server Busy</label>
+      <select id="queueBehavior">
+        <option value="QUEUE">Queue my build</option>
+        <option value="REJECT">Reject — notify me immediately</option>
+      </select>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="goStep(2)">← Back</button>
+      <button class="btn btn-primary" onclick="goStep(4)">Review →</button>
+    </div>
+  </div>
+
+  <!-- ── STEP 4: Review ────────────────────────────────── -->
+  <div class="step-panel" id="panel4">
+    <div class="card">
+      <h2>📋 Review &amp; Submit</h2>
+      <p class="hint">Confirm everything looks right before starting the build.</p>
+      <table class="review-table" id="reviewTable"></table>
+    </div>
+    <div class="card" style="padding:20px;background:rgba(108,99,255,.06);border-color:rgba(108,99,255,.2);">
+      <div style="font-size:.85rem;color:var(--muted);">⏱️ First-run Gradle builds can take <strong style="color:var(--text);">10–15 minutes</strong> to download dependencies. Subsequent builds are much faster.</div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="goStep(3)">← Back</button>
+      <button class="btn btn-primary" onclick="submitBuild()" id="submitBtn">
+        <span class="spinner" id="submitSpinner" style="display:none;"></span>
+        <span id="submitBtnText">🚀 Start Build</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── STEP 5: Build Progress ────────────────────────── -->
+  <div class="step-panel" id="panel5">
+    <div class="card">
+      <h2>🔨 Build Progress</h2>
+      <div id="statusBadge" class="status-badge status-QUEUED"><span class="status-dot"></span> <span id="statusText">Queued</span></div>
+
+      <div class="progress-wrap">
+        <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressFill" style="width:0%;"></div></div>
+        <div class="progress-label"><span id="progressStep">Waiting…</span><span id="progressPct">0%</span></div>
+      </div>
+
+      <div id="queueBanner" class="queue-info" style="display:none;">
+        Queue position: <strong id="queuePos">—</strong> &nbsp;|&nbsp; Est. wait: <strong id="queueWait">—</strong>
+      </div>
+
+      <div class="log-box" id="logBox"><div class="log-line" style="color:var(--muted);">Waiting for build to start…</div></div>
+
+      <div id="downloadSection" style="display:none;text-align:center;">
+        <a id="downloadLink" class="download-btn" href="#" target="_blank">⬇️ Download APK</a>
+        <div style="margin-top:12px;">
+          <button class="btn btn-secondary" onclick="resetWizard()">Build Another</button>
+        </div>
+      </div>
+
+      <div class="error-box" id="errorBox" style="display:none;"></div>
+
+      <div style="margin-top:16px;text-align:right;">
+        <a id="fullLogLink" href="#" target="_blank" style="font-size:.8rem;color:var(--muted);">View Full Log</a>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────
+let currentStep = 1;
+let geminiSpec = null;
+let detectedInfo = null;
+let currentJobId = null;
+let sseSource = null;
+let defaultScreens = ['Home','Settings'];
+
+const JOB_KEY = 'ai_build_job_id';
+
+// ── On page load: reconnect to in-progress build ───────────
+window.addEventListener('DOMContentLoaded', async () => {
+  const savedId = localStorage.getItem(JOB_KEY);
+  if (!savedId) return;
+  try {
+    const res = await fetch('/api/ai-product/build/' + savedId);
+    if (!res.ok) { localStorage.removeItem(JOB_KEY); return; } // server restarted, job gone
+    const d = await res.json();
+    if (!d.status) { localStorage.removeItem(JOB_KEY); return; }
+    // Restore job and jump to step 5
+    currentJobId = savedId;
+    goStep(5);
+    document.getElementById('fullLogLink').href = '/api/ai-product/build/' + savedId + '/logs';
+    updateProgress(d);
+    if (d.status !== 'DONE' && d.status !== 'FAILED') {
+      startSse(savedId); // reconnect live stream
+    }
+  } catch(e) { localStorage.removeItem(JOB_KEY); }
+});
+
+// ── Step navigation ────────────────────────────────────────
+function goStep(n) {
+  if (n > currentStep + 1 && n !== 5) return; // must go in order
+  [1,2,3,4,5].forEach(i => {
+    document.getElementById('panel' + i).classList.toggle('active', i === n);
+    const ind = document.querySelector('[data-step="' + i + '"]');
+    ind.classList.remove('active','done');
+    if (i === n) ind.classList.add('active');
+    else if (i < n) { ind.classList.add('done'); document.getElementById('stepNum' + i).textContent = '✓'; }
+    else document.getElementById('stepNum' + i).textContent = i;
+  });
+  currentStep = n;
+  if (n === 3) prefillStep3();
+  if (n === 4) buildReview();
+}
+
+// ── Step 1: Analyze URL ────────────────────────────────────
+async function analyzeUrl() {
+  const url = document.getElementById('referenceUrl').value.trim();
+  if (!url) { goStep(2); return; }
+
+  setLoading('analyzeBtn','analyzeSpinner','analyzeBtnText','Analyzing…',true);
+  try {
+    const res = await fetch('/api/ai-product/analyze', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({referenceUrl: url})
+    });
+    const data = await res.json();
+    if (data.error) { alert('Gemini error: ' + data.error); return; }
+    geminiSpec = data;
+    showAnalyzeResult(data);
+  } catch(e) { alert('Request failed: ' + e.message); }
+  finally { setLoading('analyzeBtn','analyzeSpinner','analyzeBtnText','✨ Analyze with Gemini',false); }
+}
+
+function showAnalyzeResult(spec) {
+  document.getElementById('ar_appName').textContent = spec.appName || '—';
+  document.getElementById('ar_pkg').textContent = spec.suggestedPackageName || '—';
+  document.getElementById('ar_color').textContent = spec.primaryColor || '—';
+  document.getElementById('ar_nav').textContent = spec.navigationPattern || '—';
+  document.getElementById('ar_screens').textContent = (spec.screens || []).join(', ') || '—';
+  document.getElementById('analyzeResult').classList.add('show');
+}
+
+// ── Step 2: Detect project ─────────────────────────────────
+async function detectProject() {
+  const path = document.getElementById('projectPath').value.trim();
+  if (!path) { alert('Enter a project path first.'); return; }
+  setLoading('detectBtn','detectSpinner','detectBtnText','Detecting…',true);
+  document.getElementById('detectError').style.display = 'none';
+  try {
+    const res = await fetch('/api/ai-product/detect-project', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({path})
+    });
+    const data = await res.json();
+    if (data.error) {
+      document.getElementById('detectError').textContent = data.error;
+      document.getElementById('detectError').style.display = 'block';
+      return;
+    }
+    detectedInfo = data;
+    document.getElementById('di_pkg').textContent = data.packageName || '(not detected)';
+    document.getElementById('di_app').textContent = data.appName || '(not detected)';
+    document.getElementById('di_screens').textContent = (data.existingScreens||[]).join(', ') || 'none';
+    document.getElementById('detectInfo').classList.add('show');
+  } catch(e) { alert('Detection failed: ' + e.message); }
+  finally { setLoading('detectBtn','detectSpinner','detectBtnText','🔍 Detect Project Info',false); }
+}
+
+function clearDetect() {
+  document.getElementById('detectInfo').classList.remove('show');
+  detectedInfo = null;
+}
+
+function validateStep2() {
+  const path = document.getElementById('projectPath').value.trim();
+  if (!path) { alert('Please enter a project path.'); return; }
+  goStep(3);
+}
+
+// ── Step 3: Prefill from Gemini ────────────────────────────
+function prefillStep3() {
+  const sl = document.getElementById('screenList');
+  if (sl.children.length === 0) {
+    let screens = defaultScreens;
+    if (geminiSpec && geminiSpec.screens && geminiSpec.screens.length) screens = geminiSpec.screens;
+    screens.forEach(s => addScreen(s));
+  }
+  if (geminiSpec) {
+    if (geminiSpec.appName && !document.getElementById('appName').value) document.getElementById('appName').value = geminiSpec.appName;
+    if (geminiSpec.suggestedPackageName && !document.getElementById('packageName').value) document.getElementById('packageName').value = geminiSpec.suggestedPackageName;
+    if (geminiSpec.primaryColor && !document.getElementById('themeColor').value.startsWith('#6C')) {
+      document.getElementById('themeColor').value = geminiSpec.primaryColor;
+      document.getElementById('colorPicker').value = geminiSpec.primaryColor;
+    }
+    if (geminiSpec.description && !document.getElementById('description').value) document.getElementById('description').value = geminiSpec.description;
+  }
+  if (detectedInfo) {
+    if (detectedInfo.packageName && !document.getElementById('packageName').value) document.getElementById('packageName').value = detectedInfo.packageName;
+    if (detectedInfo.appName && !document.getElementById('appName').value) document.getElementById('appName').value = detectedInfo.appName;
+  }
+}
+
+function addScreen(name) {
+  const sl = document.getElementById('screenList');
+  const div = document.createElement('div');
+  div.className = 'screen-item';
+  div.innerHTML = '<input type="text" placeholder="Screen name" value="'+(name||'')+'">' +
+    '<span class="rm" onclick="this.parentElement.remove()">×</span>';
+  sl.appendChild(div);
+}
+
+// ── Step 4: Review ─────────────────────────────────────────
+function buildReview() {
+  const screens = Array.from(document.querySelectorAll('#screenList .screen-item input')).map(i=>i.value.trim()).filter(Boolean);
+  const rows = [
+    ['App Name', document.getElementById('appName').value || '(not set)'],
+    ['Package', document.getElementById('packageName').value || '(not set)'],
+    ['Project Path', document.getElementById('projectPath').value],
+    ['Reference URL', document.getElementById('referenceUrl').value || '(none)'],
+    ['Screens', screens.join(', ') || '(none)'],
+    ['Theme Color', '<span class="badge badge-blue">' + document.getElementById('themeColor').value + '</span>'],
+    ['Merge Strategy', '<span class="badge badge-green">' + document.getElementById('mergeStrategy').value + '</span>'],
+    ['If Busy', '<span class="badge badge-warn">' + document.getElementById('queueBehavior').value + '</span>'],
+    ['Gemini Analysis', geminiSpec ? '<span class="badge badge-green">✓ Included</span>' : '<span class="badge badge-warn">Skipped</span>'],
+  ];
+  document.getElementById('reviewTable').innerHTML = rows.map(([k,v])=>
+    '<tr><td>'+k+'</td><td>'+v+'</td></tr>').join('');
+}
+
+// ── Step 5: Submit build ───────────────────────────────────
+async function submitBuild() {
+  const screens = Array.from(document.querySelectorAll('#screenList .screen-item input')).map(i=>i.value.trim()).filter(Boolean);
+  const payload = {
+    referenceUrl: document.getElementById('referenceUrl').value.trim(),
+    projectPath: document.getElementById('projectPath').value.trim(),
+    appName: document.getElementById('appName').value.trim(),
+    packageName: document.getElementById('packageName').value.trim(),
+    description: document.getElementById('description').value.trim(),
+    screens,
+    themeColor: document.getElementById('themeColor').value.trim(),
+    mergeStrategy: document.getElementById('mergeStrategy').value,
+    queueBehavior: document.getElementById('queueBehavior').value,
+    geminiSpecJson: geminiSpec ? JSON.stringify(geminiSpec) : null
+  };
+
+  setLoading('submitBtn','submitSpinner','submitBtnText','Submitting…',true);
+  try {
+    const res = await fetch('/api/ai-product/build', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (data.error) { alert('Error: ' + data.error); return; }
+    currentJobId = data.jobId;
+    localStorage.setItem(JOB_KEY, currentJobId);
+    goStep(5);
+    document.getElementById('fullLogLink').href = '/api/ai-product/build/' + currentJobId + '/logs';
+    startSse(currentJobId);
+  } catch(e) { alert('Submission failed: ' + e.message); }
+  finally { setLoading('submitBtn','submitSpinner','submitBtnText','🚀 Start Build',false); }
+}
+
+function startSse(jobId) {
+  if (sseSource) { sseSource.close(); sseSource = null; }
+  const logBox = document.getElementById('logBox');
+  logBox.innerHTML = '';
+
+  sseSource = new EventSource('/api/ai-product/build/' + jobId + '/stream');
+  sseSource.onmessage = function(e) {
+    try {
+      const d = JSON.parse(e.data);
+      updateProgress(d);
+    } catch(ex) { appendLog(e.data); }
+  };
+  sseSource.onerror = function() {
+    appendLog('[SSE disconnected — polling for final status]');
+    sseSource.close();
+    setTimeout(() => pollFinalStatus(jobId), 3000);
+  };
+}
+
+async function pollFinalStatus(jobId) {
+  try {
+    const res = await fetch('/api/ai-product/build/' + jobId);
+    const d = await res.json();
+    updateProgress(d);
+    if (d.status !== 'DONE' && d.status !== 'FAILED') {
+      setTimeout(() => pollFinalStatus(jobId), 5000);
+    }
+  } catch(e) {}
+}
+
+function updateProgress(d) {
+  // Status badge
+  const badge = document.getElementById('statusBadge');
+  badge.className = 'status-badge status-' + d.status;
+  document.getElementById('statusText').textContent = d.status;
+
+  // Progress bar
+  document.getElementById('progressFill').style.width = (d.progress || 0) + '%';
+  document.getElementById('progressStep').textContent = d.currentStep || '…';
+  document.getElementById('progressPct').textContent = (d.progress || 0) + '%';
+
+  // Queue banner
+  if (d.queuePosition && d.status === 'QUEUED') {
+    document.getElementById('queueBanner').style.display = 'block';
+    document.getElementById('queuePos').textContent = '#' + d.queuePosition;
+    const wait = d.estimatedWaitSeconds;
+    document.getElementById('queueWait').textContent = wait > 60 ? Math.round(wait/60) + ' min' : wait + 's';
+  } else {
+    document.getElementById('queueBanner').style.display = 'none';
+  }
+
+  // Log tail
+  if (d.logTail) {
+    const logBox = document.getElementById('logBox');
+    logBox.innerHTML = '';
+    d.logTail.split('\n').forEach(line => appendLog(line));
+  }
+
+  // Done
+  if (d.status === 'DONE') {
+    document.getElementById('downloadSection').style.display = 'block';
+    document.getElementById('downloadLink').href = d.downloadUrl || ('/api/ai-product/build/' + currentJobId + '/download');
+    if (sseSource) sseSource.close();
+    localStorage.removeItem(JOB_KEY);
+  }
+
+  // Failed
+  if (d.status === 'FAILED') {
+    document.getElementById('errorBox').style.display = 'block';
+    document.getElementById('errorBox').textContent = '✗ ' + (d.error || d.errorMessage || 'Build failed');
+    if (sseSource) sseSource.close();
+    localStorage.removeItem(JOB_KEY);
+  }
+}
+
+function appendLog(text) {
+  if (!text) return;
+  const logBox = document.getElementById('logBox');
+  const div = document.createElement('div');
+  div.className = 'log-line';
+  div.textContent = text;
+  logBox.appendChild(div);
+  logBox.scrollTop = logBox.scrollHeight;
+}
+
+// ── Helpers ────────────────────────────────────────────────
+function setLoading(btnId, spinnerId, textId, text, loading) {
+  document.getElementById(spinnerId).style.display = loading ? 'inline-block' : 'none';
+  document.getElementById(textId).textContent = text;
+  document.getElementById(btnId).disabled = loading;
+}
+
+function resetWizard() {
+  currentJobId = null; geminiSpec = null; detectedInfo = null;
+  localStorage.removeItem(JOB_KEY);
+  if (sseSource) { sseSource.close(); sseSource = null; }
+  document.getElementById('referenceUrl').value = '';
+  document.getElementById('projectPath').value = '';
+  document.getElementById('appName').value = '';
+  document.getElementById('packageName').value = '';
+  document.getElementById('description').value = '';
+  document.getElementById('themeColor').value = '#6C63FF';
+  document.getElementById('screenList').innerHTML = '';
+  document.getElementById('analyzeResult').classList.remove('show');
+  document.getElementById('detectInfo').classList.remove('show');
+  document.getElementById('downloadSection').style.display = 'none';
+  document.getElementById('errorBox').style.display = 'none';
+  document.getElementById('logBox').innerHTML = '';
+  goStep(1);
+}
+</script>
+</body>
+</html>
