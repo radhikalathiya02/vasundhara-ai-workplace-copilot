@@ -54,7 +54,7 @@ atf:
 # ── V-Legal AI: Vasundhara legal document generator ─────────────────────────
 vlegal:
   gemini:
-    api-key: ${VLEGAL_GEMINI_API_KEY:YOUR_GEMINI_API_KEY_HERE}
+    api-key: ${VLEGAL_GEMINI_API_KEY:PASTE_YOUR_GEMINI_KEY_HERE}
     model: gemini-2.0-flash
     base-url: https://generativelanguage.googleapis.com
   url-fetch:

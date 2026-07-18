@@ -158,12 +158,9 @@
       "Skill(code-review)",
       "Skill(code-review:*)",
       "Bash(xargs -I {} basename {})",
-      "Bash(git checkout *)",
-      "Bash(git push *)",
-      "Bash(grep -iE '\\\\.\\(tsx|ts|jsx|js\\)$')",
-      "Bash(grep -rniE \"remote config|priority.{0,3}logs\" /Users/ios/vasundhara-ai-workplace-copilot --include='*' -l)",
-      "Bash(grep -niE \"remote config|priority.{0,3}logs\" /Users/ios/vasundhara-ai-workplace-copilot/src/main/resources/static/index.html)",
-      "Bash(awk 'NR==7253,NR==7300{print NR\": \"$0}' /Users/ios/vasundhara-ai-workplace-copilot/src/main/resources/static/index.html)"
+      "Bash(git -C /Users/android/hackathon_july26/vasundhara-ai-workplace-copilot remote -v)",
+      "Bash(git -C /Users/android/hackathon_july26/vasundhara-ai-workplace-copilot config user.name)",
+      "Bash(git -C /Users/android/hackathon_july26/vasundhara-ai-workplace-copilot config user.email)"
     ]
   }
 }
