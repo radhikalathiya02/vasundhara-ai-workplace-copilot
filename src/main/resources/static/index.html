@@ -1272,12 +1272,9 @@ function closeConnectModal(){
 
 /* ---------- nav / router ---------- */
 // Maps view keys to their canonical browser URL paths.
-const VIEW_TO_PATH={overview:'/overview',runs:'/runs',smartexec:'/smart-execution',l10n:'/localization',tc:'/test-cases',tcgen:'/generate-test-case',settings:'/settings',compat:'/compat',devices:'/devices',reports:'/reports',aiqa:'/ai-qa-automation',androidqa:'/ai-qa-automation/android',webqa:'/website-testing'};
-// Views relocated under the Android Application Testing page (no longer in the sidebar) —
 const VIEW_TO_PATH={overview:'/overview',runs:'/runs',smartexec:'/smart-execution',l10n:'/localization',tc:'/test-cases',settings:'/settings',compat:'/compat',devices:'/devices',reports:'/reports',aiqa:'/ai-qa-automation'};
 // Views folded into the AI QA Automation page (no longer in the sidebar, no separate page) —
 // their breadcrumb "back" link returns here instead of the default group behavior.
-const PARENT_VIEW={androidqa:'aiqa',smartexec:'androidqa',smartexecRunning:'androidqa',l10n:'androidqa',compat:'androidqa',tc:'androidqa',tcgen:'androidqa',webqa:'aiqa'};
 const PARENT_VIEW={smartexec:'aiqa',smartexecRunning:'aiqa',l10n:'aiqa',compat:'aiqa',tc:'aiqa'};
 // Reverse map — URL path → view key (detail is handled separately via /runs/{id} regex).
 const PATH_TO_VIEW=Object.fromEntries(Object.entries(VIEW_TO_PATH).map(([k,v])=>[v,k]));
@@ -1334,9 +1331,6 @@ function go(view,runId,replace,urlOverride,mod){
     settings:['Settings','Configure the framework — changes apply to future test runs'],
     devices:['Device Manager','Manage emulators and physical devices — multi-device parallel testing'],
     reports:['Reports','Consolidated per-run reports — view, download and export'],
-    aiqa:['AI QA Automation',''],
-    androidqa:['Android Application Testing','Automation modules available for Android apps'],
-    webqa:['Website Testing','Enter a URL — automated full-site audit (performance, a11y, SEO, security & more)']};
     aiqa:['AI QA Automation','Automation modules available for Android apps']};
   const VIEW_GROUP={overview:'Workspace',runs:'Workspace',detail:'Workspace',
     reports:'Analysis',
@@ -1347,7 +1341,6 @@ function go(view,runId,replace,urlOverride,mod){
   $('#crumbGroup').onclick=PARENT_VIEW[view]?(()=>go(PARENT_VIEW[view])):null;
   $('#crumbTitle').textContent=C[view][0];
   startExecLockPolling();
-  ({overview:renderOverview,runs:renderRuns,detail:renderDetail,smartexec:renderSmartExec,smartexecRunning:renderSmartExecRunning,compat:renderCompat,l10n:renderL10n,tc:renderTc,tcgen:renderTcgenPage,settings:renderSettings,devices:renderDeviceManager,reports:renderReports,aiqa:renderAiQa,androidqa:renderAndroidQa,webqa:renderWebQa})[view]();
   ({overview:renderOverview,runs:renderRuns,detail:renderDetail,smartexec:renderSmartExec,smartexecRunning:renderSmartExecRunning,compat:renderCompat,l10n:renderL10n,tc:renderTc,settings:renderSettings,devices:renderDeviceManager,reports:renderReports,aiqa:renderAiQa})[view]();
 }
 
@@ -1463,14 +1456,6 @@ async function renderOverview(){
     <div class="ic" style="background:color-mix(in srgb,${col} 14%,transparent);color:${col}">${ic}</div>
     <div><div class="val">${val}</div><div class="lbl">${lbl}</div></div></div>`;
   $('#ovTrends').innerHTML=`
-    <div class="grid" style="grid-template-columns:1fr 1.4fr 1fr">
-      <div class="card"><div class="card-h"><h3>Available Platform</h3></div>
-        <div class="card-b" style="padding:8px;display:flex;flex-direction:column;gap:6px">${PLATFORMS.map(m=>`
-          <div onclick="${m.k==='android'?"go('smartexec')":m.k==='web'?"go('webqa')":"toast('"+m.n+" is on our roadmap.')"}" style="display:flex;align-items:center;gap:9px;padding:7px 8px;border:1px solid var(--line);border-radius:9px;cursor:pointer;transition:border-color .15s" onmouseenter="this.style.borderColor='var(--brand)'" onmouseleave="this.style.borderColor='var(--line)'">
-            <span class="mod-ic mod-ic-sm" style="margin-bottom:0;flex:none">${m.ic}</span>
-            <div style="flex:1;min-width:0"><div style="font-weight:600;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.n}</div></div>
-            <span class="mod-badge ${m.s==='active'?'ok':''}" style="position:static;flex:none;font-size:9.5px;padding:2px 7px">${m.s==='active'?'Available':'Soon'}</span>
-          </div>`).join('')}</div></div>
     <div class="grid ov-row">
       <div class="card ov-metrics"><div class="card-h"><h3>Overview Metrics</h3></div>
         <div class="card-b">
@@ -1774,9 +1759,6 @@ function showConfirmDialog(title,bodyHtml,onConfirm){
 const PLATFORMS=[
   {k:'android',n:'Android Application Testing',d:'Upload an APK and auto-test the whole app',s:'active',
    ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 9h10v6a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1z"/><path d="M7 9a5 5 0 0 1 10 0"/><path d="M4.5 10v4M19.5 10v4"/><path d="M8 5.5L6.5 4M16 5.5L17.5 4"/><circle cx="9.5" cy="8" r=".5" fill="currentColor" stroke="none"/><circle cx="14.5" cy="8" r=".5" fill="currentColor" stroke="none"/></svg>'},
-  {k:'ios',n:'iOS Application Testing',d:'Automated testing for iOS apps',s:'soon',
-   ic:'<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M17.05 12.5c-.03-2.7 2.2-4 2.3-4.05-1.25-1.83-3.2-2.08-3.9-2.1-1.66-.17-3.24.98-4.08.98-.85 0-2.15-.96-3.53-.93-1.82.03-3.5 1.06-4.43 2.7-1.9 3.3-.5 8.15 1.35 10.82.9 1.3 1.98 2.77 3.4 2.72 1.36-.05 1.88-.88 3.53-.88 1.64 0 2.1.88 3.55.85 1.46-.03 2.4-1.32 3.3-2.63 1.03-1.5 1.46-2.96 1.48-3.03-.03-.02-2.85-1.1-2.87-4.37z"/><path d="M14.6 4.3c.75-.9 1.24-2.16.98-3.3-1.06.04-2.36.7-3.13 1.6-.7.8-1.3 2.1-1.05 3.2 1.2.1 2.44-.6 3.2-1.5z"/></svg>'},
-  {k:'web',n:'Web Application Testing',d:'Enter a URL — auto-audit the whole site',s:'active',
   {k:'web',n:'Web Application Testing',d:'Automated testing for web apps',s:'soon',
    ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.7 2.6 15.3 0 18M12 3c-2.6 2.7-2.6 15.3 0 18" stroke-linecap="round"/></svg>'}
 ];
@@ -6232,16 +6214,6 @@ const dm={devices:[],avds:[],pollTimer:null};
 function dmCleanup(){
   if(dm.pollTimer){clearInterval(dm.pollTimer);dm.pollTimer=null;}
   const dmm=document.getElementById('dmModal');if(dmm)dmm.remove();
-}
-
-function renderAiQa(){
-  $('#content').innerHTML=`<div class="grid" style="grid-template-columns:repeat(3,1fr)">${PLATFORMS.map(m=>`
-    <div class="mod-card" onclick="${m.s==='active'?("go('"+(m.k==='android'?'androidqa':'webqa')+"')"):("toast('"+esc(m.n)+" is on our roadmap.')")}">
-      <span class="mod-badge ${m.s==='active'?'ok':''}">${m.s==='active'?'Available':'Soon'}</span>
-      <div class="mod-ic">${m.ic}</div>
-      <div class="mod-t">${esc(m.n)}</div>
-      <div class="mod-d">${esc(m.d)}</div>
-    </div>`).join('')}</div>`;
 }
 
 const ANDROID_QA_MODULES=[
