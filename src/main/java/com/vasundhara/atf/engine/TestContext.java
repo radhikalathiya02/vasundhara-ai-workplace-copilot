@@ -40,7 +40,7 @@ public class TestContext {
      * Optional extra sink for screen-navigation log entries. When set, every
      * "▶ Screen — X" event produced by the exploration engine is also forwarded
      * here in addition to {@link TestRun#addExecutionStep}. Callers that run
-     * exploration against a stub TestRun (e.g. Compatibility, Remote Config) set
+     * exploration against a stub TestRun (e.g. Compatibility) set
      * this to route screen nav entries into their session's own log.
      */
     private Consumer<String> screenNavLogger;

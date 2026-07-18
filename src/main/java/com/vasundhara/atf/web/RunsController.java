@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
  * (every module's finished runs, including "shadow" records {@link com.vasundhara.atf.report.RunBridgeService}
  * writes for non-New-Test modules), and generic run artifacts. Deliberately module-agnostic — it
  * has no knowledge of any specific test category or orchestrator; each module (Smart Execution,
- * Compatibility, Localization, Ads, Remote Config, Test Case) owns its own start/stop/report
+ * Compatibility, Localization, Test Case) owns its own start/stop/report
  * endpoints under its own {@code /api/<module>} prefix.
  */
 @RestController
