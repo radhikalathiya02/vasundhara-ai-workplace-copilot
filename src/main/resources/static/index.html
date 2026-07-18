@@ -296,6 +296,13 @@
   .mod-d{color:var(--mut);font-size:12.5px;margin-top:3px}
   .mod-badge{position:absolute;top:14px;right:14px;font-size:10.5px;font-weight:700;padding:3px 10px;border-radius:20px;background:var(--track);color:var(--mut)}
   .mod-badge.ok{background:color-mix(in srgb,var(--pass) 14%,transparent);color:var(--pass)}
+  .androidqa-stack{display:flex;flex-direction:column;gap:8px}
+  .androidqa-section{padding-top:22px}
+  .androidqa-section:first-child{padding-top:0}
+  .androidqa-section+.androidqa-section{border-top:1px solid var(--line);margin-top:14px}
+  .androidqa-sec-h{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+  .androidqa-sec-t{font-weight:800;font-size:17px}
+  .androidqa-sec-d{color:var(--mut);font-size:12.5px;margin-top:2px}
   .suite.closed .suite-body{display:none}
   .cs-wrap{text-align:center;padding:52px 24px}
   .cs-ic{width:66px;height:66px;border-radius:18px;background:var(--brand-50);color:var(--brand);display:grid;place-items:center;margin:0 auto 18px}
@@ -845,6 +852,11 @@
 
 <script>
 const $=s=>document.querySelector(s);
+// Sub-view root container. Defaults to '#content' (whole page); the Android Application Testing
+// hub page temporarily points this at one of its section containers while rendering each of the
+// combined modules into it, so their existing render functions work unmodified either standalone
+// (own page/route, own execution lock banner) or embedded (hub page, shared banner shown once).
+let RENDER_ROOT='#content';
 const SVG=b=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+b+'</svg>';
 const ICONS={
   grid:SVG('<rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/>'),
@@ -1130,10 +1142,10 @@ function closeConnectModal(){
 
 /* ---------- nav / router ---------- */
 // Maps view keys to their canonical browser URL paths.
-const VIEW_TO_PATH={overview:'/overview',runs:'/runs',smartexec:'/smart-execution',l10n:'/localization',tc:'/test-cases',tcgen:'/generate-test-case',settings:'/settings',compat:'/compat',devices:'/devices',reports:'/reports',aiqa:'/ai-qa-automation',androidqa:'/ai-qa-automation/android'};
+const VIEW_TO_PATH={overview:'/overview',runs:'/runs',smartexec:'/smart-execution',l10n:'/localization',tc:'/test-cases',settings:'/settings',compat:'/compat',devices:'/devices',reports:'/reports',aiqa:'/ai-qa-automation',androidqa:'/ai-qa-automation/android'};
 // Views relocated under the Android Application Testing page (no longer in the sidebar) —
 // their breadcrumb "back" link returns here instead of the default group behavior.
-const PARENT_VIEW={androidqa:'aiqa',smartexec:'androidqa',smartexecRunning:'androidqa',l10n:'androidqa',compat:'androidqa',tc:'androidqa',tcgen:'androidqa'};
+const PARENT_VIEW={androidqa:'aiqa',smartexec:'androidqa',smartexecRunning:'androidqa',l10n:'androidqa',compat:'androidqa',tc:'androidqa'};
 // Reverse map — URL path → view key (detail is handled separately via /runs/{id} regex).
 const PATH_TO_VIEW=Object.fromEntries(Object.entries(VIEW_TO_PATH).map(([k,v])=>[v,k]));
 
@@ -1186,7 +1198,6 @@ function go(view,runId,replace,urlOverride,mod){
     compat:['Compatibility Testing','Automatic UI & functionality testing across Android 9–16 emulators'],
     l10n:['Localization','Automatic per-language translation & functionality testing'],
     tc:['Test Case Execution','Upload APK + test sheet — AI-driven sequential execution on device'],
-    tcgen:['Generate Test-Case','Upload an APK — AI generates a structured test-case sheet'],
     settings:['Settings','Configure the framework — changes apply to future test runs'],
     devices:['Device Manager','Manage emulators and physical devices — multi-device parallel testing'],
     reports:['Reports','Consolidated per-run reports — view, download and export'],
@@ -1201,7 +1212,7 @@ function go(view,runId,replace,urlOverride,mod){
   $('#crumbGroup').onclick=PARENT_VIEW[view]?(()=>go(PARENT_VIEW[view])):null;
   $('#crumbTitle').textContent=C[view][0];
   startExecLockPolling();
-  ({overview:renderOverview,runs:renderRuns,detail:renderDetail,smartexec:renderSmartExec,smartexecRunning:renderSmartExecRunning,compat:renderCompat,l10n:renderL10n,tc:renderTc,tcgen:renderTcgenPage,settings:renderSettings,devices:renderDeviceManager,reports:renderReports,aiqa:renderAiQa,androidqa:renderAndroidQa})[view]();
+  ({overview:renderOverview,runs:renderRuns,detail:renderDetail,smartexec:renderSmartExec,smartexecRunning:renderSmartExecRunning,compat:renderCompat,l10n:renderL10n,tc:renderTc,settings:renderSettings,devices:renderDeviceManager,reports:renderReports,aiqa:renderAiQa,androidqa:renderAndroidQa})[view]();
 }
 
 /**
@@ -1818,58 +1829,16 @@ function wifiMsg(kind,text,output){
   return `<div style="padding:10px 12px;border-radius:9px;background:${bg};color:${col};font-size:13px;font-weight:600">${text}</div>`
     +(output?`<details style="margin-top:8px"><summary class="muted" style="cursor:pointer;font-size:11.5px">adb output</summary><pre class="steps-log" style="margin-top:6px;max-height:160px">${esc(output)}</pre></details>`:'');
 }
-function setFile(f){
-  if(!f)return;
-  if(!f.name.toLowerCase().endsWith('.apk')){toast('Please choose an .apk file');return;}
-  // A previous file's analysis (if any) no longer applies to this new selection.
-  if(state.file!==f)resetAnalyzeState();
-  state.file=f;
-  const ft=$('#fileTag');
-  if(ft)ft.innerHTML=`<div class="file-tag"><div class="fi">APK</div>
-    <div style="flex:1"><div style="font-weight:600;word-break:break-all">${esc(f.name)}</div>
-    <div class="muted" style="font-size:12px">${(f.size/1048576).toFixed(1)} MB</div></div>
-    <button class="btn ghost sm" onclick="clearSelectedFile()">Remove</button></div>`;
-  // #startBtn only exists on the New Test page — the Generate Test-Case page has no Start button.
-  const sb=$('#startBtn'); if(sb)sb.disabled=false;
-  const ab=$('#analyzeBtn'); if(ab)ab.disabled=false;
-}
-
-/** Null-safe reset of the selected APK + any analysis — shared by the New Test and
- *  Generate Test-Case pages (each has a different subset of the buttons). */
-function clearSelectedFile(){
-  state.file=null;
-  resetAnalyzeState();
-  const ft=$('#fileTag'); if(ft)ft.innerHTML='';
-  const sb=$('#startBtn'); if(sb)sb.disabled=true;
-  const ab=$('#analyzeBtn'); if(ab)ab.disabled=true;
-  const ac=$('#analyzeCard'); if(ac){ac.style.display='none';ac.innerHTML='';}
-}
-
-/* ---------- Generate Test-Case (standalone module) ---------- */
-// Reuses the exact same Analyze-APK / AI test-case-generation pipeline as New Test
-// (startAnalyzeApk, pollAnalysis, tcgen* functions, state.file/_analyzeId/_tcgenMerge) —
-// just its own page shell, with no category picker or Start Automated Testing button.
-async function renderTcgenPage(){
-  clearSelectedFile();
-  $('#content').innerHTML=`<div class="grid" style="grid-template-columns:1fr;max-width:640px">
-    <div class="card"><div class="card-h"><h3>Upload APK</h3></div><div class="card-b">
-      <div class="drop" id="drop"><div class="big">Drop your .apk here</div><div class="sm">or click to browse — up to 600 MB</div></div>
-      <input type="file" id="file" accept=".apk" hidden/><div id="fileTag"></div>
-      <button class="btn ghost sm" id="analyzeBtn" disabled style="width:100%;margin-top:12px" onclick="startAnalyzeApk()">${ic('activity',14)} Generate Test Cases</button>
-      <div id="analyzeCard" style="display:none;margin-top:12px"></div>
-    </div></div>
-  </div>`;
-  const drop=$('#drop'),fi=$('#file');
-  drop.onclick=()=>fi.click();
-  fi.onchange=e=>setFile(e.target.files[0]);
-  ['dragover','dragenter'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('drag');}));
-  ['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('drag');}));
-  drop.addEventListener('drop',e=>{if(e.dataTransfer.files[0])setFile(e.dataTransfer.files[0]);});
-}
+/* ---------- AI Test Case Generator ----------
+ * Folded into the Smart Execution workflow (no longer a standalone page/module) — it now
+ * runs against the same uploaded APK as Smart Execution (state._smartExecFile) as an optional
+ * step on that page. startAnalyzeApk / pollAnalysis / tcgen* functions below are unchanged. */
 
 /* ================= SMART EXECUTION (brand-new, independent module) =================
- * Entirely separate state/UI from New Test / Test Cases / Generate Test-Case — its own upload
- * page, its own live running page, its own polling, backed by /api/smartexec/* endpoints. */
+ * Entirely separate state/UI from New Test / Test Cases — its own upload page, its own live
+ * running page, its own polling, backed by /api/smartexec/* endpoints. The AI Test Case
+ * Generator (analyze/generate/merge/execute — startAnalyzeApk & friends, further below) is
+ * folded in as an optional step 3 on this same page, sharing the uploaded APK below. */
 const SMARTEXEC_CATEGORIES=[
   {k:'functional', label:'Functional testing'},
   {k:'uiux',       label:'UI quality and accessibility'},
@@ -1882,17 +1851,28 @@ const SMARTEXEC_CATEGORIES=[
 function smartexecSetFile(f){
   if(!f)return;
   if(!f.name.toLowerCase().endsWith('.apk')){toast('Please choose an .apk file');return;}
+  // A previous file's AI-generated test cases (if any) no longer apply to this new selection.
+  if(state._smartExecFile!==f)resetAnalyzeState();
   state._smartExecFile=f;
   $('#smartexecFileTag').innerHTML=`<div class="file-tag"><div class="fi">APK</div>
     <div style="flex:1"><div style="font-weight:600;word-break:break-all">${esc(f.name)}</div>
     <div class="muted" style="font-size:12px">${(f.size/1048576).toFixed(1)} MB</div></div>
-    <button class="btn ghost sm" onclick="state._smartExecFile=null;$('#smartexecFileTag').innerHTML='';$('#smartexecStartBtn').disabled=true">Remove</button></div>`;
+    <button class="btn ghost sm" onclick="smartexecClearFile()">Remove</button></div>`;
   $('#smartexecStartBtn').disabled=false;
+  const ab=$('#analyzeBtn'); if(ab)ab.disabled=false;
+}
+function smartexecClearFile(){
+  state._smartExecFile=null;
+  resetAnalyzeState();
+  const ft=$('#smartexecFileTag'); if(ft)ft.innerHTML='';
+  const sb=$('#smartexecStartBtn'); if(sb)sb.disabled=true;
+  const ab=$('#analyzeBtn'); if(ab)ab.disabled=true;
+  const ac=$('#analyzeCard'); if(ac){ac.style.display='none';ac.innerHTML='';}
 }
 
 async function renderSmartExec(){
   state._smartExecCategories=state._smartExecCategories||new Set(SMARTEXEC_CATEGORIES.map(c=>c.k));
-  $('#content').innerHTML=`<div class="grid" style="grid-template-columns:1.3fr 1fr;align-items:start;max-width:980px">
+  $(RENDER_ROOT).innerHTML=`<div class="grid" style="grid-template-columns:1.3fr 1fr;align-items:start;max-width:980px">
     <div style="display:flex;flex-direction:column;gap:18px">
       <div class="card"><div class="card-h"><h3>1 · Upload APK</h3></div><div class="card-b">
         <div class="drop" id="smartexecDrop"><div class="big">Drop your .apk here</div><div class="sm">Native, Flutter, Compose, React Native, Xamarin, WebView/Hybrid — up to 600 MB</div></div>
@@ -1904,6 +1884,12 @@ async function renderSmartExec(){
           ${SMARTEXEC_CATEGORIES.map(c=>`<label class="cat">
             <input type="checkbox" ${state._smartExecCategories.has(c.k)?'checked':''} onchange="smartexecToggleCat('${c.k}',this.checked)"/>
             <div><div class="nm">${esc(c.label)}</div></div></label>`).join('')}
+        </div></div>
+      <div class="card"><div class="card-h"><h3>3 · AI Test Case Generator <span class="muted" style="font-weight:400;font-size:11.5px">(optional)</span></h3></div>
+        <div class="card-b">
+          <div class="muted" style="font-size:12px;margin-bottom:10px">Generates a structured test-case sheet from the APK uploaded above — independent of Start Smart Execution.</div>
+          <button class="btn ghost sm" id="analyzeBtn" disabled style="width:100%" onclick="startAnalyzeApk()">${ic('activity',14)} Generate Test Cases</button>
+          <div id="analyzeCard" style="display:none;margin-top:12px"></div>
         </div></div>
     </div>
     <div style="position:sticky;top:84px;display:flex;flex-direction:column;gap:18px">
@@ -1922,6 +1908,7 @@ async function renderSmartExec(){
   ['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('drag');}));
   drop.addEventListener('drop',e=>{if(e.dataTransfer.files[0])smartexecSetFile(e.dataTransfer.files[0]);});
   if(state._smartExecFile)smartexecSetFile(state._smartExecFile);
+  restoreAnalyzeCard();
 }
 function smartexecToggleCat(key,on){ if(on)state._smartExecCategories.add(key); else state._smartExecCategories.delete(key); }
 function smartexecToggleAll(){
@@ -2114,16 +2101,16 @@ function smartexecReportHtml(s,id){
     + section('Bug Reports',bugReports);
 }
 
-/* ---------- Analyze APK (New Test module, pre-execution) ---------- */
+/* ---------- Analyze APK (AI Test Case Generator, part of the Smart Execution workflow) ---------- */
 let _analyzeTimer=null;
 async function startAnalyzeApk(){
-  if(!state.file)return;
+  if(!state._smartExecFile)return;
   if(_analyzeTimer){clearInterval(_analyzeTimer);_analyzeTimer=null;}
   const btn=$('#analyzeBtn');btn.disabled=true;
   const card=$('#analyzeCard');card.style.display='block';
   card.innerHTML=analyzeProgressHtml(0,'Reading APK',false,false);
   try{
-    const fd=new FormData();fd.append('file',state.file);
+    const fd=new FormData();fd.append('file',state._smartExecFile);
     const r=await api('/api/analyze',{method:'POST',body:fd});
     if(!r.ok)throw new Error((await r.json().catch(()=>({}))).message||'Analysis failed to start');
     const {id}=await r.json();
@@ -2231,7 +2218,7 @@ async function tcgenLaunch(serial){
   const fd=new FormData();
   fd.append('sheet',new File([blob],(state._tcgenMerge?'merged':'generated')+'-testcases.xlsx',
     {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
-  if(state.file)fd.append('apk',state.file);
+  if(state._smartExecFile)fd.append('apk',state._smartExecFile);
   if(serial)fd.append('serial',serial);
   const r=await fetch('/api/tc/execute',{method:'POST',body:fd});
   const d=await r.json().catch(()=>({}));
@@ -3473,7 +3460,7 @@ async function renderCompat(){
   if(compatPollTimer){clearInterval(compatPollTimer);compatPollTimer=null;}
   if(compatSessScreenTimer){clearInterval(compatSessScreenTimer);compatSessScreenTimer=null;}
   if(!state.compatSessionId){renderCompatSetup();return;}
-  $('#content').innerHTML=`<div id="compatMain"></div><div id="logcatMount" style="margin-top:18px">${logcatPanel()}</div>`;
+  $(RENDER_ROOT).innerHTML=`<div id="compatMain"></div><div id="logcatMount" style="margin-top:18px">${logcatPanel()}</div>`;
   mountLogcat();
   await paintCompat();
   const s=await jget('/api/compat/sessions/'+state.compatSessionId).catch(()=>null);
@@ -3487,7 +3474,7 @@ async function renderCompat(){
 
 function renderCompatSetup(){
   compatFile=null;
-  $('#content').innerHTML=`${execLockBanner()}<div class="grid" style="grid-template-columns:1.5fr 1fr;align-items:start">
+  $(RENDER_ROOT).innerHTML=`${RENDER_ROOT==='#content'?execLockBanner():''}<div class="grid" style="grid-template-columns:1.5fr 1fr;align-items:start">
     <div class="card"><div class="card-h"><h3>Compatibility Testing</h3></div><div class="card-b">
       <p class="muted" style="margin:0 0 16px;font-size:13px;line-height:1.6">
         Upload an APK, then choose a connected device or a running emulator. The framework installs and
@@ -4013,7 +4000,7 @@ async function renderL10n(){
   if(l10nPollTimer){clearInterval(l10nPollTimer);l10nPollTimer=null;}
   if(!state.l10nSessionId){renderL10nSetup();return;}
   // Stable shell so the live console survives the session auto-refresh (same pattern as New Test/Detail).
-  $('#content').innerHTML=`<div id="l10nMain"></div><div id="logcatMount" style="margin-top:18px">${logcatPanel()}</div>`;
+  $(RENDER_ROOT).innerHTML=`<div id="l10nMain"></div><div id="logcatMount" style="margin-top:18px">${logcatPanel()}</div>`;
   mountLogcat();
   await paintL10n();
   const s=await jget('/api/l10n/sessions/'+state.l10nSessionId).catch(()=>null);
@@ -4038,7 +4025,7 @@ async function stopL10n(){
 }
 function renderL10nSetup(){
   l10nFile=null;
-  $('#content').innerHTML=`${execLockBanner()}<div class="grid" style="grid-template-columns:1.5fr 1fr;align-items:start">
+  $(RENDER_ROOT).innerHTML=`${RENDER_ROOT==='#content'?execLockBanner():''}<div class="grid" style="grid-template-columns:1.5fr 1fr;align-items:start">
     <div class="card"><div class="card-h"><h3>Automatic Localization Testing</h3></div><div class="card-b">
       <p class="muted" style="margin:0 0 16px;font-size:13px;line-height:1.6">
         Upload an APK and the framework will <b>auto-detect every language the app ships</b>, then test each
@@ -4914,7 +4901,7 @@ async function renderTc() {
     document.head.appendChild(s);
   }
 
-  $('#content').innerHTML = `${execLockBanner()}
+  $(RENDER_ROOT).innerHTML = `${RENDER_ROOT==='#content'?execLockBanner():''}
 <div style="max-width:1160px;margin:0 auto">
 
   <!-- ── Setup panel ─────────────────────────────────────────── -->
@@ -5998,7 +5985,7 @@ function dmCleanup(){
 
 function renderAiQa(){
   $('#content').innerHTML=`<div class="grid" style="grid-template-columns:repeat(3,1fr)">${PLATFORMS.map(m=>`
-    <div class="mod-card" onclick="${m.k==='android'?"go('androidqa')":"toast('"+esc(m.n)+" is on our roadmap.')"}">
+    <div class="mod-card${m.k==='android'?' active':''}" onclick="${m.k==='android'?"go('androidqa')":"toast('"+esc(m.n)+" is on our roadmap.')"}">
       <span class="mod-badge ${m.s==='active'?'ok':''}">${m.s==='active'?'Available':'Soon'}</span>
       <div class="mod-ic">${m.ic}</div>
       <div class="mod-t">${esc(m.n)}</div>
@@ -6007,24 +5994,37 @@ function renderAiQa(){
 }
 
 const ANDROID_QA_MODULES=[
-  {view:'smartexec',n:'Smart Execution',d:'AI-powered, generic end-to-end APK testing — no locators, no hardcoding',
+  {view:'smartexec',n:'Smart Execution',d:'AI-powered, generic end-to-end APK testing — no locators, no hardcoding — with built-in AI test case generation',
    ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2.4"/><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5v2.2M12 18.3v2.2M3.5 12h2.2M18.3 12h2.2" stroke-linecap="round"/></svg>'},
   {view:'tc',n:'Test Case Runner',d:'Upload APK + test sheet — AI-driven sequential execution on device',
    ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M10 8.5v7l6-3.5z" stroke-linejoin="round"/></svg>'},
-  {view:'tcgen',n:'AI Test Case Generator',d:'Upload an APK — AI generates a structured test-case sheet',
-   ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6z" stroke-linejoin="round"/><path d="M19 3.5v3M20.5 5h-3" stroke-linecap="round"/><path d="M5 17v3M6.5 18.5h-3" stroke-linecap="round"/></svg>'},
   {view:'compat',n:'Compatibility',d:'Automatic UI & functionality testing across Android 9–16 emulators',
    ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M9 7h6M9 11h6M9 15h4" stroke-linecap="round"/><path d="M14 15l1.5 1.5L18 13" stroke-linecap="round" stroke-linejoin="round"/></svg>'},
   {view:'l10n',n:'Localization',d:'Automatic per-language translation & functionality testing',
    ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.8 2.5 15.2 0 18M12 3c-2.5 2.8-2.5 15.2 0 18" stroke-linecap="round"/></svg>'}
 ];
-function renderAndroidQa(){
-  $('#content').innerHTML=`<div class="grid" style="grid-template-columns:repeat(3,1fr)">${ANDROID_QA_MODULES.map(m=>`
-    <div class="mod-card" onclick="go('${m.view}')">
-      <div class="mod-ic">${m.ic}</div>
-      <div class="mod-t">${esc(m.n)}</div>
-      <div class="mod-d">${esc(m.d)}</div>
-    </div>`).join('')}</div>`;
+// Renders each module's existing, unmodified setup UI into its own section container on this
+// one page (RENDER_ROOT redirects their $('#content').innerHTML calls into that container) —
+// no separate pages to navigate to; starting an actual test still navigates to its live/execution
+// page exactly as before (Smart Execution → smartexecRunning, the others → the shared 'detail' page).
+const ANDROID_QA_RENDER={smartexec:renderSmartExec,tc:renderTc,compat:renderCompat,l10n:renderL10n};
+async function renderAndroidQa(){
+  $('#content').innerHTML=`${execLockBanner()}<div class="androidqa-stack">${ANDROID_QA_MODULES.map(m=>`
+    <section class="androidqa-section">
+      <div class="androidqa-sec-h">
+        <span class="mod-ic mod-ic-sm">${m.ic}</span>
+        <div><div class="androidqa-sec-t">${esc(m.n)}</div><div class="androidqa-sec-d">${esc(m.d)}</div></div>
+      </div>
+      <div id="aqa-${m.view}"></div>
+    </section>`).join('')}</div>`;
+  try{
+    for(const m of ANDROID_QA_MODULES){
+      RENDER_ROOT='#aqa-'+m.view;
+      await ANDROID_QA_RENDER[m.view]();
+    }
+  } finally {
+    RENDER_ROOT='#content';
+  }
 }
 
 async function renderDeviceManager(){
@@ -6284,7 +6284,7 @@ const DSEL_MODULES={
   tcgen:{title:'Test Case Wise Execution',singleAllowed:true,
     precheck(){
       if(!state._analyzeId||!state._analyzeSnapshot||!state._analyzeSnapshot.done)return 'Run Analyze APK first — execution follows the generated/merged test case sheet.';
-      if(!state.file)return 'The uploaded APK is no longer available — re-select the .apk file.';
+      if(!state._smartExecFile)return 'The uploaded APK is no longer available — re-select the .apk file.';
       return null;},
     startSingle(serial){tcgenStart(serial);},
     async launchOne(serial){const id=await tcgenLaunch(serial);if(typeof tcState!=='undefined')tcState.sessionId=id;return id;},
