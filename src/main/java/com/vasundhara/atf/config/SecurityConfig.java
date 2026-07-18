@@ -31,6 +31,8 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // Login page + the assets it needs before authentication (logo, favicon).
                 .requestMatchers("/login.html", "/login", "/error", "/favicon.ico", "/logo.svg").permitAll()
+                // V-Legal AI is publicly accessible (client-facing doc generator)
+                .requestMatchers("/vlegal", "/vlegal/**", "/api/vlegal/**").permitAll()
                 .anyRequest().authenticated())
             .formLogin(form -> form
                 .loginPage("/login.html")
