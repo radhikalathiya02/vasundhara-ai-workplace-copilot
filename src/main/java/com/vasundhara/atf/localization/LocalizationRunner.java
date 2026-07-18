@@ -135,6 +135,7 @@ public class LocalizationRunner {
                 emu = emulators.boot(avd, session::addLog);
                 serial = emu.serial();
             }
+            session.setDeviceSerial(serial);
             final String watchSerial = serial;
             watchdog.startWatch(session.getId(), watchSerial, () -> {
                 if (session.isStopRequested()) return; // manual stop already in flight

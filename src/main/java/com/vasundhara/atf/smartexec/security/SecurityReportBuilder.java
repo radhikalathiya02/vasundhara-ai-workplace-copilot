@@ -32,7 +32,7 @@ public final class SecurityReportBuilder {
         body.append("<div class='summary'>").append(esc(summaryText(findings.size(), critical, high, medium, low, score))).append("</div>");
 
         if (findings.isEmpty()) {
-            body.append("<div class='pass-box'><span class='badge'>PASS</span> No security findings for this run.</div>");
+            body.append("<div class='pass-box'><span class='badge'>PASS</span> Bug Report Not Available.</div>");
         } else {
             for (SmartFinding f : findings) {
                 body.append("<div class='finding sev-").append(esc(f.severity())).append("'>")

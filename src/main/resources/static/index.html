@@ -2354,7 +2354,7 @@ async function paintDetail(){
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;flex-wrap:wrap">
           <button class="btn ghost sm" onclick="go('runs')">${ic('back',13)} Back</button>
-          <button class="btn stop sm" id="stopBtn" style="display:${isActive?'inline-flex':'none'}" onclick="stopRun('${run.id}')">${ic('stop',14)} Stop</button>
+          <button class="btn stop sm" id="stopBtn" style="display:${isActive?'inline-flex':'none'}" onclick="stopRun('${run.id}')">${ic('stop',14)} Stop Execution</button>
           ${reportsMenu}
         </div>
       </div>
@@ -3188,7 +3188,7 @@ async function paintModuleRunning(){
         <div>
           <div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap">
             <h2 style="margin:0;font-size:19px;font-weight:800;letter-spacing:-.4px">${esc(m.title)}</h2>
-            <span class="badge b-${esc(s.state||'')}" style="display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:3px 10px">
+            <span class="badge b-${esc(s.state||'')}${active?' dotless':''}" style="display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:3px 10px">
               ${active?`<span style="width:7px;height:7px;border-radius:50%;background:var(--run);flex-shrink:0;animation:livePulse 1.4s ease-in-out infinite"></span>`:''}
               ${esc(map.label)}
             </span>
@@ -3209,16 +3209,37 @@ async function paintModuleRunning(){
   </div>`;
 
   const body=mod==='l10n'?moduleBodyL10n(s):mod==='tc'?moduleBodyTc(s):mod==='compat'?moduleBodyCompat(s):'';
-  const logs=(map.logs||[]).map(l=>`<div style="padding:3px 0;border-bottom:1px solid var(--line-2)">${esc(String(l))}</div>`).join('')
-    ||'<div class="muted">No log output yet.</div>';
-  const logPanel=`<div class="card" style="margin-top:16px"><div class="card-h"><h3>Live Log</h3></div>
-    <div class="card-b" style="max-height:260px;overflow-y:auto;font-family:ui-monospace,monospace;font-size:12px">${logs}</div></div>`;
+  const logPanel=liveLogPanel(map.logs||[],active);
 
+  const prevLog=$('#modLiveLog');
+  const wasAtBottom=!prevLog||(prevLog.scrollHeight-prevLog.scrollTop-prevLog.clientHeight<24);
   const main=$('#modRunMain'); if(main)main.innerHTML=head+body+logPanel;
+  const newLog=$('#modLiveLog'); if(newLog&&wasAtBottom)newLog.scrollTop=newLog.scrollHeight;
+}
+/** Shared "Live Log" console for the unified Test Running page (Localization/TC/Compat) — dark
+ *  terminal look with per-line severity coloring and sticks to the bottom as new lines arrive. */
+function liveLogPanel(rawLogs,active){
+  const LEVEL_RE=[[/\b(ERROR|FAILED?|DISCONNECTED|CRASH)\b/i,'#f87171'],[/\b(WARN(ING)?|RETRY)\b/i,'#fbbf24'],[/\b(DONE|SUCCESS|PASS(ED)?|COMPLETED)\b/i,'#4ade80']];
+  const lines=rawLogs.map(l=>{
+    const t=String(l);let color='#cbd5e1';
+    for(const [re,c] of LEVEL_RE)if(re.test(t)){color='#'+c.slice(1);break;}
+    return `<div style="padding:2.5px 0;color:${color}">${esc(t)}</div>`;
+  }).join('');
+  return `<div class="card" style="margin-top:16px">
+    <div class="card-h" style="display:flex;justify-content:space-between;align-items:center">
+      <h3 style="display:flex;align-items:center;gap:7px;margin:0">Live Log ${active?'<span style="font-size:10px;color:var(--run);font-weight:700">● LIVE</span>':''}</h3>
+      <span class="muted" style="font-size:11px">${rawLogs.length} line${rawLogs.length===1?'':'s'}</span>
+    </div>
+    <div id="modLiveLog" class="mono" style="max-height:320px;overflow-y:auto;background:#0f172a;color:#e2e8f0;padding:12px 16px;font-size:12px;line-height:1.5;border-radius:0 0 12px 12px">
+      ${lines||'<div class="muted" style="color:#64748b">No log output yet.</div>'}
+    </div></div>`;
 }
 function moduleBodyL10n(s){
   const kpi=(l,v,sub)=>`<div class="kpi"><div class="lbl">${l}</div><div class="val">${v}</div><div class="sub">${sub||''}</div></div>`;
   const langs=s.languages||[];
+  const active=['SETUP','RUNNING'].includes(s.state);
+  const langsDone=langs.filter(l=>l.state==='DONE'||l.state==='ERROR').length;
+  const detectPct=langs.length?Math.round(langsDone/langs.length*100):0;
   const rows=langs.map(l=>`<tr>
     <td>${esc(l.name)} (${esc(l.code)})</td>
     <td><span class="badge ${TR_BADGE[l.state]||'b-PENDING'}">${esc(LSTATE_LABEL[l.state]||l.state||'—')}</span></td>
@@ -3228,14 +3249,40 @@ function moduleBodyL10n(s){
     <td>${(l.localizationIssues||[]).length}</td>
     <td>${l.state==='DONE'?`<a href="/api/runs/${esc(s.id)}-${esc(l.code)}/artifacts/report.html" target="_blank">View report</a>`:'—'}</td>
   </tr>`).join('');
-  return `<div class="kpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-top:16px">
-      ${kpi('Languages',langs.length)}
-      ${kpi('Done',langs.filter(l=>l.state==='DONE').length)}
-    </div>
-    <div class="card" style="margin-top:16px"><div class="card-h"><h3>Per-language results</h3></div><div class="card-b" style="padding:0">
+
+  // Detected-languages progress bar — separate from the header's overall run progress, this one
+  // tracks specifically how many of the detected languages have finished testing.
+  const langProgress=`<div class="card" style="margin-top:16px"><div class="card-b" style="padding:13px 16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;font-size:12.5px;font-weight:700">
+        <span>${langs.length?'Language testing progress':'Detecting supported languages…'}</span>
+        <span style="color:var(--txt-3);font-weight:600">${langs.length?langsDone+' / '+langs.length+' languages':''}</span>
+      </div>
+      <div class="bar-track" style="margin-top:8px"><div class="bar-fill" style="width:${langs.length?detectPct:8}%;background:var(--run);transition:width .4s${langs.length?'':';animation:livePulse 1.4s ease-in-out infinite'}"></div></div>
+    </div></div>`;
+
+  // Live device preview — mirrors the Test Case Execution running page's device screen (moduleBodyTc),
+  // driven by the serial the runner picked for this session (LocalizationSession.deviceSerial).
+  const preview=s.deviceSerial?`<div class="card" style="margin-top:16px"><div class="card-h" style="padding:10px 16px"><h3 style="margin:0;font-size:13.5px">${ic('smartphone',14)} Live Device ${active?'<span style="margin-left:6px;font-size:10px;color:var(--run)">● LIVE</span>':''}</h3><span class="mono muted" style="font-size:11px">${esc(s.deviceSerial)}</span></div>
+      <div class="card-b" style="display:flex;justify-content:center;padding:12px">
+        <div style="width:200px;aspect-ratio:9/19.5;border-radius:14px;border:1px solid var(--line);overflow:hidden;background:#000">
+          <img src="/api/dm/devices/${encodeURIComponent(s.deviceSerial)}/screenshot?t=${Date.now()}" style="width:100%;height:100%;object-fit:contain" onerror="this.style.opacity=.25"/>
+        </div>
+      </div></div>`:'';
+
+  const table=`<div class="card" style="margin-top:16px"><div class="card-h"><h3>Per-language results</h3></div><div class="card-b" style="padding:0">
     <table><thead><tr><th>Language</th><th>State</th><th>Translation</th><th>Functionality</th><th>Screens</th><th>Issues</th><th>Report</th></tr></thead>
     <tbody>${rows||'<tr><td colspan="7" class="muted">Detecting the in-app Language Selection screen…</td></tr>'}</tbody></table>
   </div></div>`;
+
+  return `<div class="kpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-top:16px">
+      ${kpi('Languages',langs.length)}
+      ${kpi('Done',langsDone)}
+    </div>
+    ${langProgress}
+    <div style="display:grid;grid-template-columns:2fr 1fr;gap:16px;align-items:start">
+      <div>${table}</div>
+      <div>${preview}</div>
+    </div>`;
 }
 function moduleBodyTc(s){
   const kpi=(l,v,sub,col)=>`<div class="kpi"><div class="lbl">${l}</div><div class="val"${col?` style="color:${col}"`:''}>${v}</div><div class="sub">${sub||''}</div></div>`;
@@ -6278,9 +6325,14 @@ let mexec=null; // {key,mod,items:[{serial,id,name,version,type,isEmulator,sessi
 function dselMapL10n(s){
   const st=s.state;const done=['COMPLETED','FAILED','STOPPED'].includes(st);
   const outcome=st==='COMPLETED'?'COMPLETED':st==='FAILED'?'FAILED':st==='STOPPED'?'STOPPED':null;
-  const n=(s.languages||[]).length;
-  const label=st==='COMPLETED'?'Completed':st==='FAILED'?'Failed':st==='STOPPED'?'Stopped':st==='RUNNING'?('Testing'+(n?' · '+n+' lang':'')):'Starting';
-  return {done,outcome,label,pct:done?100:55,indet:!done,logs:(s.logs||[]).slice(-6),score:null};
+  const langs=s.languages||[];const n=langs.length;
+  const langsDone=langs.filter(l=>l.state==='DONE'||l.state==='ERROR').length;
+  const label=st==='COMPLETED'?'Completed':st==='FAILED'?'Failed':st==='STOPPED'?'Stopped':
+    st==='RUNNING'?(n?('Testing · '+langsDone+'/'+n+' lang'):'Detecting languages…'):'Starting';
+  // Before the language list is known, treat detection itself as the visible progress (indeterminate);
+  // once detected, drive the bar off actual per-language completion instead of a fixed guess.
+  const pct=done?100:(n?Math.max(5,Math.round(langsDone/n*100)):8);
+  return {done,outcome,label,pct,indet:!done&&!n,logs:(s.logs||[]).slice(-60),score:null};
 }
 function dselMapTc(s){
   const st=s.state;const done=['COMPLETED','STOPPED'].includes(st);
