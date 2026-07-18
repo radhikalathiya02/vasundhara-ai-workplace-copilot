@@ -22,15 +22,14 @@ public class SpaController {
         "/test-running",
         "/smart-execution",
         "/smart-execution-running",
-        "/remote-config",
-        "/priority-logs",
         "/localization",
         "/test-cases",
         "/generate-test-case",
         "/settings",
         "/compat",
         "/devices",
-        "/reports"
+        "/reports",
+        "/ai-qa-automation"
     })
     public String spaPage() {
         return "forward:/index.html";
